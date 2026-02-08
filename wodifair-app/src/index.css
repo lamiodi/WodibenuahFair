@@ -1,0 +1,70 @@
+@import "tailwindcss";
+
+@theme {
+  --color-gold: #B89329; /* Darkened for better contrast */
+  --color-deep-black: #21201c;
+  --color-cream: #f1f0ec;
+  --color-rose-gold: #B76E79;
+  --color-silver: #C0C0C0;
+  
+  --font-heading: "Playfair Display", serif;
+  --font-body: "Montserrat", sans-serif;
+}
+
+@layer base {
+  html {
+    @apply scroll-smooth;
+    scrollbar-color: var(--color-cream) var(--color-deep-black);
+    scrollbar-width: auto;
+  }
+  body {
+    @apply bg-cream text-deep-black font-body antialiased overflow-x-hidden;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading;
+  }
+
+  /* Custom Scrollbar */
+  ::-webkit-scrollbar {
+    width: 12px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: var(--color-deep-black);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-cream);
+    border: 3px solid var(--color-deep-black);
+    border-radius: 6px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-gold);
+  }
+
+  @media (min-width: 992px) {
+    html {
+      scrollbar-width: thin;
+    }
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+    ::-webkit-scrollbar-thumb {
+      border-width: 2px;
+    }
+  }
+}
+
+@layer utilities {
+  /* Hide scrollbar for Chrome, Safari and Opera */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  /* Hide scrollbar for IE, Edge and Firefox */
+  .no-scrollbar {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+}
+
