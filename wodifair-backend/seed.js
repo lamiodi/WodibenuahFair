@@ -118,22 +118,31 @@ const seed = async () => {
     // 3. Seed Events
     const events = [
         {
-            title: "Basal Stage",
-            location: "Main Hall, Abuja",
-            start_date: "2026-06-15 10:00:00",
-            description: "The opening ceremony featuring top designers.",
-            image_url: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?q=80&w=2070&auto=format&fit=crop",
+            title: "Wodibenuah Fair Abuja",
+            location: "Abuja",
+            start_date: "2026-04-04 10:00:00",
+            description: "The Wodibenuah Fair Abuja Edition.",
+            image_url: "/images/abuja may 9th edition.png",
             status: "upcoming",
             is_featured: true
         },
         {
-            title: "Apparel Flash",
-            location: "Fashion Tent",
-            start_date: "2026-06-16 14:00:00",
-            description: "A showcase of the latest trends in street wear.",
-            image_url: "https://images.unsplash.com/photo-1558769132-cb1aea458c5e?q=80&w=1974&auto=format&fit=crop",
+            title: "Wodibenuah Fair Port Harcourt",
+            location: "Port Harcourt",
+            start_date: "2026-08-01 10:00:00",
+            description: "The Wodibenuah Fair Port Harcourt Edition.",
+            image_url: "/images/pport harcourt.jpg",
             status: "upcoming",
-            is_featured: false
+            is_featured: true
+        },
+        {
+            title: "Wodibenuah Fair Lagos",
+            location: "Lagos",
+            start_date: "2026-12-01 10:00:00",
+            description: "The Wodibenuah Fair Lagos Edition.",
+            image_url: "/images/Lagosdecember12thedition.png",
+            status: "upcoming",
+            is_featured: true
         }
     ];
 

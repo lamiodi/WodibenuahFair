@@ -9,17 +9,17 @@ const EventInfo = () => {
   const events = [
     { 
       category: "WODIFAIR",
-      title: "Abuja May 9th 2026", 
+      title: "Abuja April 4th & 5th 2026", 
       video: "/video/IMG_7859.MP4"
     },
     { 
       category: "Wodibenuahfair",
-      title: "Customer Highlights", 
+      title: "Port Harcourt August 2026", 
       video: "/video/IMG_9437.MP4"
     },
     { 
       category: "Wodibenuahfair",
-      title: "Lagos Edition", 
+      title: "Lagos December 2026", 
       video: "https://www.youtube.com/embed/8XyJlVKUlAs?si=pWMK0JLNWNSXG9f2"
     }
   ];

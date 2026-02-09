@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import PaystackPop from '@paystack/inline-js';
 import Navigation from '../components/Navigation';
@@ -6,7 +7,11 @@ import Footer from '../components/Footer';
 import { apiRequest } from '../services/api';
 
 const Register = () => {
+  const [searchParams] = useSearchParams();
+  const locationParam = searchParams.get('location');
+  
   const [formData, setFormData] = useState({
+    eventId: '',
     email: '',
     fullName: '',
     phoneNumber: '',
@@ -23,13 +28,32 @@ const Register = () => {
   });
 
   const [status, setStatus] = useState('idle'); // idle, submitting, success, error
-  const [nextEvent, setNextEvent] = useState(null);
+  const [events, setEvents] = useState([]);
 
-  React.useEffect(() => {
-    apiRequest('/events/next').then(data => {
-      if (data) setNextEvent(data);
+  useEffect(() => {
+    // Fetch all events instead of just next
+    apiRequest('/events').then(data => {
+      if (data) {
+        // Handle both array and object response (just in case)
+        const eventsList = Array.isArray(data) ? data : [data];
+        setEvents(eventsList);
+
+        // Pre-select based on URL param
+        if (locationParam) {
+          const matchedEvent = eventsList.find(e => 
+            e.location.toLowerCase().includes(locationParam.toLowerCase()) || 
+            e.title.toLowerCase().includes(locationParam.toLowerCase())
+          );
+          if (matchedEvent) {
+            setFormData(prev => ({ ...prev, eventId: matchedEvent.id }));
+          }
+        } else if (eventsList.length > 0) {
+           // Default to first one if not specified
+           setFormData(prev => ({ ...prev, eventId: eventsList[0].id }));
+        }
+      }
     }).catch(err => console.error(err));
-  }, []);
+  }, [locationParam]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -85,7 +109,7 @@ const Register = () => {
     try {
       const data = await apiRequest('/vendors/register', {
         method: 'POST',
-        body: { ...formData, eventId: nextEvent?.id }
+        body: formData
       });
       
       if (data.vendor) {
@@ -199,6 +223,21 @@ const Register = () => {
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="md:col-span-2 group">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-2 group-focus-within:text-deep-black transition-colors">Select Event Location *</label>
+                  <select 
+                    required name="eventId" value={formData.eventId} onChange={handleChange}
+                    className="w-full px-0 py-3 border-b border-gray-300 focus:border-deep-black bg-transparent outline-none transition-colors text-lg font-body cursor-pointer"
+                  >
+                    <option value="">SELECT AN EVENT</option>
+                    {events.map(event => (
+                      <option key={event.id} value={event.id}>
+                        {event.title} - {event.location} ({new Date(event.start_date).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
                 <div className="md:col-span-2 group">
                   <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-2 group-focus-within:text-deep-black transition-colors">Full Name *</label>
                   <input 

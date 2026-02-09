@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import Navigation from '../components/Navigation';
 import ExploreButton from '../components/ExploreButton';
 import Footer from '../components/Footer';
@@ -12,22 +13,17 @@ import { motion, AnimatePresence } from 'framer-motion';
     {
       image: "/images/abuja may 9th edition.png",
       title: "ABUJA",
-      subtitle: "May 9th Edition"
+      subtitle: "April 4th & 5th Edition"
     },
     {
       image: "/images/pport harcourt.jpg",
       title: "PORT HARCOURT",
-      subtitle: "Unforgettable Crowd Experience"
-    },
-    {
-      image: "/images/Gemini_Generated_Image_45z3p945z3p945z3.png",
-      title: "CAMEROON",
-      subtitle: "Exhibition at Malyko Stadium"
+      subtitle: "August 2026 Edition"
     },
     {
       image: "/images/Lagosdecember12thedition.png",
       title: "LAGOS",
-      subtitle: "December 12th Edition"
+      subtitle: "December 2026 Edition"
     }
   ];
 
@@ -186,6 +182,60 @@ import { motion, AnimatePresence } from 'framer-motion';
           {/* Decorative Corner Element - Removed */}
         </div>
       </div>
+
+      {/* ============================================
+          LOCATION SPECIFIC REGISTRATION
+          ============================================ */}
+      <section className="bg-white border-b border-deep-black py-16 md:py-24 px-4 md:px-8">
+        <div className="max-w-[1600px] mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-6xl font-heading font-normal text-deep-black uppercase tracking-wide">
+              Select Your Location
+            </h2>
+            <p className="mt-4 text-gray-600 font-body text-lg uppercase tracking-widest">
+              Choose a city to register and pay
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {/* Abuja */}
+            <div className="group border border-deep-black p-8 hover:bg-deep-black hover:text-white transition-all duration-300 flex flex-col items-center text-center">
+              <h3 className="text-3xl font-heading font-bold uppercase mb-2">Abuja</h3>
+              <p className="text-sm font-bold tracking-[0.2em] uppercase mb-8 opacity-70">April 4th & 5th, 2026</p>
+              <Link 
+                to="/register?location=Abuja" 
+                className="mt-auto inline-block px-8 py-3 border border-current text-xs font-bold uppercase tracking-[0.2em] hover:bg-white hover:text-deep-black transition-colors"
+              >
+                Register Now
+              </Link>
+            </div>
+
+            {/* Port Harcourt */}
+            <div className="group border border-deep-black p-8 hover:bg-deep-black hover:text-white transition-all duration-300 flex flex-col items-center text-center">
+              <h3 className="text-3xl font-heading font-bold uppercase mb-2">Port Harcourt</h3>
+              <p className="text-sm font-bold tracking-[0.2em] uppercase mb-8 opacity-70">August 2026</p>
+              <Link 
+                to="/register?location=Port Harcourt" 
+                className="mt-auto inline-block px-8 py-3 border border-current text-xs font-bold uppercase tracking-[0.2em] hover:bg-white hover:text-deep-black transition-colors"
+              >
+                Register Now
+              </Link>
+            </div>
+
+            {/* Lagos */}
+            <div className="group border border-deep-black p-8 hover:bg-deep-black hover:text-white transition-all duration-300 flex flex-col items-center text-center">
+              <h3 className="text-3xl font-heading font-bold uppercase mb-2">Lagos</h3>
+              <p className="text-sm font-bold tracking-[0.2em] uppercase mb-8 opacity-70">December 2026</p>
+              <Link 
+                to="/register?location=Lagos" 
+                className="mt-auto inline-block px-8 py-3 border border-current text-xs font-bold uppercase tracking-[0.2em] hover:bg-white hover:text-deep-black transition-colors"
+              >
+                Register Now
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* ============================================
           NEXT EVENT COUNTDOWN
