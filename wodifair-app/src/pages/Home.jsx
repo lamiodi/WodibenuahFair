@@ -317,13 +317,6 @@ import { motion, AnimatePresence } from 'framer-motion';
               <p className="text-sm md:text-base lg:text-lg font-body leading-relaxed text-white mb-10 opacity-90">
                 Blending into the vibrant atmosphere, the crowd forms a living stream of connection, weaving the fabric of a new narrative. Transcending its commercial origins, the exhibition now heralds the unstoppable rise of African luxury and community. (Wodibenuahfair, 2026)
               </p>
-              
-              <button 
-                aria-label="View Magazine Details"
-                className="w-16 h-16 rounded-full border border-white flex items-center justify-center cursor-pointer hover:bg-white hover:text-deep-black transition-all duration-300 group focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-black"
-              >
-                <svg className="w-6 h-6 transform group-hover:rotate-45 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 17L17 7M17 7H7M17 7V17" /></svg>
-              </button>
             </div>
 
             {/* "COMMUNITY" Text - Foreground Layer (White text on Black) */}

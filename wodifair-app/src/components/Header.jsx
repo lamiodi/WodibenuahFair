@@ -41,9 +41,9 @@ const Header = () => {
           </svg>
         </Link>
         
-        {/* Subscribe button with arrow - dark background */}
+        {/* Register button with arrow - dark background */}
         <Link to="/register" className="h-full px-8 flex items-center gap-3 bg-deep-black text-white hover:bg-gray-800 transition-colors">
-          <span className="text-sm font-medium tracking-wide">Subscribe</span>
+          <span className="text-sm font-medium tracking-wide">Register</span>
           {/* Arrow icon pointing to top-right */}
           <svg 
             className="w-3 h-3" 

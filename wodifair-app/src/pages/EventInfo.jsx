@@ -140,7 +140,7 @@ const EventInfo = () => {
       {/* ============================================
           EVENT GRID (3 Columns)
           ============================================ */}
-      <div className="w-full px-4 md:px-8 py-16 md:py-24">
+      <div id="events-grid" className="w-full px-4 md:px-8 py-16 md:py-24">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {events.map((event, index) => (
             <div key={index} className="group cursor-pointer">
