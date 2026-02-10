@@ -1,18 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import Navigation from '../components/Navigation';
 import Footer from '../components/Footer';
 import { apiRequest } from '../services/api';
 
 const BlogPost = () => {
   const { slug } = useParams();
-  const navigate = useNavigate();
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    setLoading(true);
+    // setLoading(true); // Removed to prevent cascading render lint error
     apiRequest(`/blog/${slug}`)
       .then(data => {
         setPost(data);

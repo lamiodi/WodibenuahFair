@@ -307,6 +307,19 @@ const Register = () => {
                     <option value="Other">Other</option>
                   </select>
                 </div>
+
+                <div className="md:col-span-2 group">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-2 group-focus-within:text-deep-black transition-colors">Booth Type *</label>
+                  <select 
+                    required name="boothType" value={formData.boothType} onChange={handleChange}
+                    className="w-full px-0 py-3 border-b border-gray-300 focus:border-deep-black bg-transparent outline-none transition-colors text-lg font-body cursor-pointer"
+                  >
+                    <option value="">SELECT A BOOTH TYPE</option>
+                    <option value="Royal Booth">Royal Booth - ₦380,000</option>
+                    <option value="Half Booth">Half Booth - ₦190,000</option>
+                    <option value="Food Slot">Food Slot - ₦300,000</option>
+                  </select>
+                </div>
               </div>
             </div>
 

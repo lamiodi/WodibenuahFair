@@ -24,7 +24,7 @@ const About = () => {
               {/* B with CEO Image 1 */}
               <span className="relative inline-block mx-[0.02em]">
                  <div className="absolute inset-0 z-0 flex items-center justify-center">
-                    <div className="ms-1 mt-[0.099em] w-[58%] h-[87%] overflow-hidden rounded-full border border-deep-black">
+                    <div className="ms-[0.04em] mt-[0.099em] w-[58%] h-[87%] overflow-hidden rounded-full border border-deep-black">
                      <img 
                        src="/images/ceoimage.png" 
                        alt="CEO"
@@ -38,7 +38,7 @@ const About = () => {
               {/* O with CEO Image 2 */}
               <span className="relative inline-block mx-[0.02em]">
                  <div className="absolute inset-0 z-0 flex items-center justify-center">
-                    <div className="ms-2 mt-[0.09em] w-[65%] h-[91%] overflow-hidden rounded-full border border-deep-black">
+                    <div className="ms-[0.04em] mt-[0.09em] w-[65%] h-[91%] overflow-hidden rounded-full border border-deep-black">
                      <img 
                        src="/images/ceoimage 2.png" 
                        alt="CEO"
@@ -55,7 +55,7 @@ const About = () => {
               {/* U with Image */}
               <span className="relative inline-block mx-[0.02em]">
                  <div className="absolute inset-0 z-0 flex items-center justify-center">
-                    <div className="ms-5 mt-[0.19em] w-[56%] h-[75%] overflow-hidden rounded-[18px] border border-deep-black">
+                    <div className="lg:ms-5 ms-[0.13em] mt-[0.19em] w-[56%] h-[75%] overflow-hidden rounded-[18px] border border-deep-black">
                      <img 
                        src="/images/lagos december 2026.jpeg" 
                        alt="Lagos Event"
@@ -96,7 +96,7 @@ const About = () => {
               Redefining The<br/>Exhibition Experience
             </h2>
             <p className="text-white text-sm md:text-lg font-medium max-w-2xl leading-relaxed backdrop-blur-sm bg-black/20 p-4 border-l-2 border-white">
-              Wodibenuah Fair is Africa's premier trade and lifestyle exhibition, curating the finest vendor experiences and celebrating the intersection of culture, luxury, and innovation.
+              Wodibenuah Fair is Africa&apos;s premier trade and lifestyle exhibition, curating the finest vendor experiences and celebrating the intersection of culture, luxury, and innovation.
             </p>
           </motion.div>
         </div>
@@ -140,7 +140,7 @@ const About = () => {
                 <h4 className="text-4xl md:text-6xl font-heading font-bold mb-2">500+</h4>
                 <p className="text-xs font-bold uppercase tracking-widest text-gray-500">Vendors Hosted</p>
               </div>
-              <div className="text-center border-l border-gray-200 col-span-2 md:col-span-1">
+              <div className="text-center md:border-l border-gray-200 col-span-2 md:col-span-1">
                 <h4 className="text-4xl md:text-6xl font-heading font-bold mb-2">10k+</h4>
                 <p className="text-xs font-bold uppercase tracking-widest text-gray-500">Happy Attendees</p>
               </div>
@@ -151,9 +151,9 @@ const About = () => {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="relative bg-white border border-deep-black p-8 md:p-12 mt-8"
+              className="relative bg-white border border-deep-black p-6 md:p-12 mt-8"
             >
-              <div className="absolute -top-6 -left-6 bg-deep-black text-white px-6 py-2 text-xs font-bold uppercase tracking-widest">
+              <div className="absolute -top-6 left-0 md:-left-6 bg-deep-black text-white px-6 py-2 text-xs font-bold uppercase tracking-widest">
                 The Visionary
               </div>
               
@@ -172,11 +172,11 @@ const About = () => {
                   <p className="text-sm font-bold uppercase tracking-wider text-gold mb-6">Wodibenuah Fair</p>
                   
                   <blockquote className="text-lg italic text-gray-600 mb-6 border-l-4 border-gold pl-4">
-                    "Our goal is to build a legacy of excellence, where every fair is a story told through the lens of creativity and community."
+                    &quot;Our goal is to build a legacy of excellence, where every fair is a story told through the lens of creativity and community.&quot;
                   </blockquote>
                   
                   <p className="text-sm text-gray-700 leading-relaxed mb-6">
-                    With a passion for bringing people together and a keen eye for quality, our founder has steered Wodibenuah Fair from a local gathering to a multi-city phenomenon. Her vision drives every aspect of the fair, ensuring that it remains a beacon of opportunity for entrepreneurs and a celebration of lifestyle for all.
+                    Odibenuah Winifred, a visionary entrepreneur from Delta State, Nigeria, has steered Wodibenuah Fair from a local gathering to a multi-city phenomenon. With a passion for bringing people together and a keen eye for quality, her vision drives every aspect of the fair, ensuring that it remains a beacon of opportunity for entrepreneurs and a celebration of lifestyle for all.
                   </p>
 
                   <img 
@@ -249,7 +249,7 @@ const About = () => {
             <div className="border-2 border-dashed border-deep-black p-6 bg-[#F5F5F0] text-center">
               <h3 className="text-xl font-heading font-bold uppercase mb-2">Join The Next Fair</h3>
               <p className="text-xs text-gray-600 mb-6 max-w-xs mx-auto">
-                Don't miss out on the next Wodibenuah Fair experience. Register as a vendor or get your tickets today.
+                Don&apos;t miss out on the next Wodibenuah Fair experience. Register as a vendor or get your tickets today.
               </p>
               <a 
                 href="/register" 

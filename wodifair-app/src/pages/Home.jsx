@@ -257,7 +257,7 @@ import { motion, AnimatePresence } from 'framer-motion';
       <section className="bg-cream border-b border-deep-black mt-0">
         <div className="border-t border-b border-deep-black py-6 md:py-16">
           <h2 className="text-5xl md:text-7xl lg:text-8xl font-heading font-normal text-center uppercase tracking-wide text-deep-black leading-none">
-            Event Highlights
+            Customer Highlights
           </h2>
         </div>
         
@@ -267,21 +267,21 @@ import { motion, AnimatePresence } from 'framer-motion';
           <div className="flex flex-col gap-8 justify-between">
             <div className="group cursor-pointer">
               <div className="aspect-[3/4] overflow-hidden mb-4 bg-gray-200 border border-deep-black">
-                <img src="/images/IMG_3756.JPG.jpeg" alt="Fashion" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                <img src="/images/IMG_3766.JPG.jpeg" alt="Vibrant Atmosphere" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
               </div>
-              <h3 className="font-heading font-bold uppercase text-xs tracking-[0.2em] mb-3 text-deep-black">FASHION</h3>
+              <h3 className="font-heading font-bold uppercase text-xs tracking-[0.2em] mb-3 text-deep-black">Vibrant Atmosphere</h3>
               <p className="text-xs text-gray-600 leading-relaxed">
-                Discover the latest trends from top designers and luxury brands.
+                Experience the electric energy of thousands of visitors exploring the best in lifestyle and luxury.
               </p>
             </div>
             
             <div className="group cursor-pointer">
               <div className="aspect-[4/3] overflow-hidden mb-4 bg-gray-200 border border-deep-black">
-                <img src="/images/IMG_3757.JPG.jpeg" alt="Beauty" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                <img src="/images/IMG_3757.JPG.jpeg" alt="Shared Moments" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
               </div>
-              <h3 className="font-heading font-bold uppercase text-xs tracking-[0.2em] mb-3 text-deep-black">BEAUTY</h3>
+              <h3 className="font-heading font-bold uppercase text-xs tracking-[0.2em] mb-3 text-deep-black">Shared Moments</h3>
               <p className="text-xs text-gray-600 leading-relaxed">
-                Experience premium beauty, wellness, and skincare products.
+                Connect with a community of enthusiasts and discover new passions together.
               </p>
             </div>
           </div>
@@ -290,7 +290,7 @@ import { motion, AnimatePresence } from 'framer-motion';
             <div className="h-full w-full bg-gray-200 overflow-hidden relative group min-h-[600px] lg:min-h-full border border-deep-black">
               <img 
                 src="/images/IMG_3763.JPG.jpeg" 
-                alt="Centerpiece" 
+                alt="Exhibition Centerpiece" 
                 className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
               />
             </div>
@@ -299,21 +299,21 @@ import { motion, AnimatePresence } from 'framer-motion';
           <div className="flex flex-col gap-8 justify-between">
             <div className="group cursor-pointer">
               <div className="aspect-[3/4] overflow-hidden mb-4 bg-gray-200 border border-deep-black">
-                <img src="/images/IMG_3764.JPG.jpeg" alt="Fine Art" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                <img src="/images/IMG_3764.JPG.jpeg" alt="Active Engagement" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
               </div>
-              <h3 className="font-heading font-bold uppercase text-xs tracking-[0.2em] mb-3 text-deep-black">FINE ART</h3>
+              <h3 className="font-heading font-bold uppercase text-xs tracking-[0.2em] mb-3 text-deep-black">Active Engagement</h3>
               <p className="text-xs text-gray-600 leading-relaxed">
-                Curated pieces from renowned artists and galleries.
+                Watch as visitors immerse themselves in interactive displays and live demonstrations.
               </p>
             </div>
             
             <div className="group cursor-pointer">
               <div className="aspect-[4/3] overflow-hidden mb-4 bg-gray-200 border border-deep-black">
-                <img src="/images/IMG_3767.JPG.jpeg" alt="Gourmet" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                <img src="/images/IMG_3767.JPG.jpeg" alt="Festive Celebration" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
               </div>
-              <h3 className="font-heading font-bold uppercase text-xs tracking-[0.2em] mb-3 text-deep-black">GOURMET</h3>
+              <h3 className="font-heading font-bold uppercase text-xs tracking-[0.2em] mb-3 text-deep-black">Festive Celebration</h3>
               <p className="text-xs text-gray-600 leading-relaxed">
-                Exquisite culinary delights and tastings from top chefs.
+                Join the celebration where culture, commerce, and community come together in style.
               </p>
             </div>
           </div>
@@ -328,10 +328,18 @@ import { motion, AnimatePresence } from 'framer-motion';
           - Right: Image Background (Full, then revealed by clip)
           - Split Text: "Fair" (White on Black, Black on Image)
           ============================================ */}
-      <section className="relative min-h-[700px] md:min-h-[900px] flex overflow-hidden bg-cream">
+      <section className="relative min-h-[auto] md:min-h-[900px] flex flex-col md:block overflow-hidden bg-cream">
         
+        <style>{`
+          @media (min-width: 768px) {
+            .clip-diagonal {
+              clip-path: polygon(0 0, 70% 0, 30% 100%, 0 100%);
+            }
+          }
+        `}</style>
+
         {/* Background Image Layer */}
-        <div className="absolute inset-0 z-0">
+        <div className="relative md:absolute inset-0 z-0 h-[400px] md:h-full">
           <img 
             src="/images/IMG_3765.JPG.jpeg" 
             alt="Wodifair Exhibition Crowd"
@@ -342,7 +350,7 @@ import { motion, AnimatePresence } from 'framer-motion';
         </div>
 
         {/* "COMMUNITY" Text - Background Layer (Black text on Image) */}
-        <div className="absolute inset-0 z-10 pointer-events-none flex flex-col justify-end pb-16 md:pb-24 pl-[5%]" aria-hidden="true">
+        <div className="hidden md:flex absolute inset-0 z-10 pointer-events-none flex-col justify-end pb-16 md:pb-24 pl-[5%]" aria-hidden="true">
            <span className="text-[14vw] leading-[0.8] font-heading font-bold text-deep-black tracking-tighter uppercase">
              COMMUNITY
            </span>
@@ -350,27 +358,29 @@ import { motion, AnimatePresence } from 'framer-motion';
 
         {/* Black Overlay Layer with Clip Path */}
         <div 
-          className="absolute inset-0 z-20 bg-deep-black flex flex-col justify-center"
-          style={{ clipPath: 'polygon(0 0, 70% 0, 30% 100%, 0 100%)' }}
+          className="relative md:absolute inset-0 z-20 bg-deep-black flex flex-col justify-center clip-diagonal"
         >
-          <div className="w-full h-full relative p-10 lg:p-20 flex flex-col justify-center">
+          <div className="w-full h-full relative p-8 md:p-10 lg:p-20 flex flex-col justify-center">
             
             {/* "EXHIBITION" Vertical Text */}
-            <div className="absolute left-0 top-0 bottom-0 flex items-center pl-2 md:pl-6">
+            <div className="absolute left-0 top-0 bottom-0 hidden md:flex items-center pl-2 md:pl-6">
               <span className="-rotate-180 text-6xl md:text-8xl lg:text-9xl font-heading font-bold tracking-wide whitespace-nowrap text-white" style={{ writingMode: 'vertical-rl' }}>
                 EXHIBITION
               </span>
             </div>
             
             {/* Content Block */}
-            <div className="pl-24 md:pl-32 lg:pl-40 max-w-lg lg:max-w-xl pt-0 md:pt-20">
+            <div className="px-2 md:pl-24 md:pt-20 lg:pl-40 max-w-lg lg:max-w-xl">
+               <h3 className="text-4xl font-heading font-bold text-white mb-6 md:hidden uppercase tracking-widest">
+                 Exhibition
+               </h3>
               <p className="text-sm md:text-base lg:text-lg font-body leading-relaxed text-white mb-10 opacity-90">
                 Blending into the vibrant atmosphere, the crowd forms a living stream of connection, weaving the fabric of a new narrative. Transcending its commercial origins, the exhibition now heralds the unstoppable rise of African luxury and community. (Wodibenuahfair, 2026)
               </p>
             </div>
 
             {/* "COMMUNITY" Text - Foreground Layer (White text on Black) */}
-            <div className="absolute inset-0 flex flex-col justify-end pb-16 md:pb-24 pl-[5%] pointer-events-none">
+            <div className="relative md:absolute inset-0 flex flex-col justify-end pb-8 md:pb-24 pl-[5%] pointer-events-none">
                <span className="text-[14vw] leading-[0.8] font-heading font-bold text-white tracking-tighter uppercase">
                  COMMUNITY
                </span>

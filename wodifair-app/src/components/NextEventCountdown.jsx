@@ -63,7 +63,7 @@ const NextEventCountdown = () => {
   if (!nextEvent) return null;
 
   return (
-    <section className="relative w-full h-[600px] md:h-[700px] overflow-hidden bg-deep-black border-b border-deep-black">
+    <section className="relative w-full min-h-[700px] h-auto py-16 md:py-0 overflow-hidden bg-deep-black border-b border-deep-black flex items-center">
       {/* Background Image with Parallax-like feel */}
       <motion.div 
         initial={{ scale: 1.1 }}
@@ -79,7 +79,7 @@ const NextEventCountdown = () => {
         <div className="absolute inset-0 bg-gradient-to-r from-deep-black via-transparent to-deep-black"></div>
       </motion.div>
 
-      <div className="container mx-auto px-6 h-full relative z-10 flex flex-col justify-center items-center text-center">
+      <div className="container mx-auto px-6 relative z-10 flex flex-col justify-center items-center text-center">
         
         {/* Top Label */}
         <motion.div 

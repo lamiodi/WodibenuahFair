@@ -75,7 +75,7 @@ const Contact = () => {
               {/* Second C with Image */}
               <span className="relative inline-block mx-[0.02em]">
                  <div className="absolute inset-0 z-0 flex items-center justify-center">
-                    <div className="ms-3 mt-[0.11em] w-[80%] h-[89%] overflow-hidden rounded-full">
+                    <div className="lg:ms-3  mt-[0.11em] w-[80%] h-[89%] overflow-hidden rounded-full">
                      <img 
                        src="/images/IMG_3766.JPG.jpeg" 
                        alt="Contact"
@@ -164,14 +164,14 @@ const Contact = () => {
 
               <div className="mt-16 pt-8 border-t border-gray-200">
                 <p className="text-sm text-gray-500 uppercase tracking-widest mb-4">Follow Us</p>
-                <div className="flex gap-4">
-                  <a href="https://www.instagram.com/wodibenuahfair?igsh=MXhia2tuMWRyaWl3dw==" target="_blank" rel="noopener noreferrer" className="text-xs font-bold uppercase tracking-wider text-deep-black hover:text-gray-600 transition-colors border border-deep-black px-4 py-2 hover:bg-deep-black hover:text-white">
+                <div className="flex flex-wrap gap-4">
+                  <a href="https://www.instagram.com/wodibenuahfair?igsh=MXhia2tuMWRyaWl3dw==" target="_blank" rel="noopener noreferrer" className="text-xs font-bold uppercase tracking-wider text-deep-black hover:text-gray-600 transition-colors border border-deep-black px-4 py-2 hover:bg-deep-black hover:text-white flex-1 md:flex-none text-center">
                     Instagram
                   </a>
-                  <a href="https://www.threads.com/@wodibenuahfair?igshid=NTc4MTIwNjQ2YQ==" target="_blank" rel="noopener noreferrer" className="text-xs font-bold uppercase tracking-wider text-deep-black hover:text-gray-600 transition-colors border border-deep-black px-4 py-2 hover:bg-deep-black hover:text-white">
+                  <a href="https://www.threads.com/@wodibenuahfair?igshid=NTc4MTIwNjQ2YQ==" target="_blank" rel="noopener noreferrer" className="text-xs font-bold uppercase tracking-wider text-deep-black hover:text-gray-600 transition-colors border border-deep-black px-4 py-2 hover:bg-deep-black hover:text-white flex-1 md:flex-none text-center">
                     Threads
                   </a>
-                  <a href="https://www.youtube.com/@WodibenuahFair" target="_blank" rel="noopener noreferrer" className="text-xs font-bold uppercase tracking-wider text-deep-black hover:text-gray-600 transition-colors border border-deep-black px-4 py-2 hover:bg-deep-black hover:text-white">
+                  <a href="https://www.youtube.com/@WodibenuahFair" target="_blank" rel="noopener noreferrer" className="text-xs font-bold uppercase tracking-wider text-deep-black hover:text-gray-600 transition-colors border border-deep-black px-4 py-2 hover:bg-deep-black hover:text-white flex-1 md:flex-none text-center">
                     YouTube
                   </a>
                 </div>

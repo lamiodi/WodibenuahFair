@@ -8,6 +8,7 @@ const Blog = () => {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [visibleCount, setVisibleCount] = useState(6);
 
   useEffect(() => {
     apiRequest('/blog')
@@ -48,7 +49,12 @@ const Blog = () => {
   }
 
   const featuredPost = posts.length > 0 ? posts[0] : null;
-  const gridPosts = posts.length > 0 ? posts.slice(1) : [];
+  const allGridPosts = posts.length > 0 ? posts.slice(1) : [];
+  const gridPosts = allGridPosts.slice(0, visibleCount);
+
+  const handleLoadMore = () => {
+    setVisibleCount(prev => prev + 6);
+  };
 
   return (
     <div className="min-h-screen bg-cream text-deep-black font-body flex flex-col">

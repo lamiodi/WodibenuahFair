@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import Navigation from '../components/Navigation';
 import Footer from '../components/Footer';
 import UpcomingEvents from '../components/UpcomingEvents';
@@ -8,18 +8,18 @@ import VenueMap from '../components/VenueMap';
 const EventInfo = () => {
   const events = [
     { 
-      category: "WODIFAIR",
-      title: "Abuja April 4th & 5th 2026", 
+      category: "WODIFAIR 2024",
+      title: "Lagos April 4th & 5th 2024", 
       video: "/video/IMG_7859.MP4"
     },
     { 
       category: "Wodibenuahfair",
-      title: "Port Harcourt August 2026", 
+      title: "Customer Highlights", 
       video: "/video/IMG_9437.MP4"
     },
     { 
       category: "Wodibenuahfair",
-      title: "Lagos December 2026", 
+      title: "Lagos Edition", 
       video: "https://www.youtube.com/embed/8XyJlVKUlAs?si=pWMK0JLNWNSXG9f2"
     }
   ];
@@ -52,7 +52,7 @@ const EventInfo = () => {
             {/* U with Image */}
             <span className="relative inline-block mx-[0.02em]">
                <div className="absolute inset-0 z-0 flex items-center justify-center">
-                  <div className="ms-5 mt-[0.1em] w-[65%] h-[75%] overflow-hidden rounded-t-none rounded-b-full translate-y-2">
+                  <div className="lg:ms-5 ms-[0.05em] mb-[0.1em] lg:mt-[0.1em] w-[60%] lg:w-[65%] h-[75%] overflow-hidden rounded-t-none rounded-b-full translate-y-2">
                    <img 
                      src="/images/IMG_3756.JPG.jpeg" 
                      alt="Event"
@@ -80,13 +80,15 @@ const EventInfo = () => {
           {/* 1. LEFT CONTENT */}
           <div className="flex-1 bg-cream p-8 md:p-16 flex flex-col justify-center border-b lg:border-b-0 lg:border-r border-deep-black">
             <div className="max-w-3xl pr-0 lg:pr-10">
-              <h2 className="text-6xl md:text-8xl font-heading font-medium uppercase leading-[0.9] mb-8 tracking-tight">
-                UPCOMING
-                <span className="inline-block align-middle ml-4 w-32 md:w-48 h-12 md:h-16 rounded-full overflow-hidden border border-deep-black">
-                  <img src="/images/IMG_3764.JPG.jpeg" className="w-full h-full object-cover" alt="" />
+              <h2 className="text-4xl sm:text-6xl md:text-8xl font-heading font-medium uppercase leading-[0.9] mb-8 tracking-tight">
+                <span className="whitespace-nowrap">
+                  UPCOMING
+                  <span className="inline-block align-middle ml-2 md:ml-4 w-16 sm:w-24 md:w-48 h-8 sm:h-10 md:h-16 rounded-full overflow-hidden border border-deep-black">
+                    <img src="/images/IMG_3764.JPG.jpeg" className="w-full h-full object-cover" alt="" />
+                  </span>
                 </span>
                 <br />
-                <span className="inline-block align-middle mr-4 w-32 md:w-48 h-12 md:h-16 rounded-full overflow-hidden border border-deep-black">
+                <span className="inline-block align-middle mr-2 md:mr-4 w-16 sm:w-24 md:w-48 h-8 sm:h-10 md:h-16 rounded-full overflow-hidden border border-deep-black">
                   <img src="/images/IMG_3765.JPG.jpeg" className="w-full h-full object-cover" alt="" />
                 </span>
                 EVENTS

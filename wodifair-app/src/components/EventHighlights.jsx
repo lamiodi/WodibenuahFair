@@ -22,9 +22,9 @@ const EventHighlights = () => {
     },
     {
       id: 3,
-      title: "Gourmet Dining",
-      badge: "Curated",
-      description: "Savor exquisite culinary delights from world-class chefs and premium food vendors.",
+      title: "Flashback on Previous Edition",
+      badge: "Memories",
+      description: "Relive the excitement and unforgettable moments from our past exhibitions.",
       mediaType: "youtube",
       src: "https://www.youtube.com/embed/ME9KMYeRYcM?si=RtX2jgDVa69yXYX4"
     }
