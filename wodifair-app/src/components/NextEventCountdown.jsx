@@ -15,8 +15,8 @@ const NextEventCountdown = () => {
           setNextEvent(data);
         } else {
             setNextEvent({
-                title: "Wodibenuah Fair 2026",
-                start_date: "2026-11-15T09:00:00",
+                title: "Wodibenuah Fair Abuja",
+                start_date: "2026-04-04T10:00:00",
                 location: "Abuja International Conference Center",
                 is_registration_open: true
             });
@@ -26,8 +26,8 @@ const NextEventCountdown = () => {
       .catch(err => {
         console.error('Error fetching next event:', err);
         setNextEvent({
-            title: "Wodibenuah Fair 2026",
-            start_date: "2026-11-15T09:00:00",
+            title: "Wodibenuah Fair Abuja",
+            start_date: "2026-04-04T10:00:00",
             location: "Abuja International Conference Center",
             is_registration_open: true
         });
