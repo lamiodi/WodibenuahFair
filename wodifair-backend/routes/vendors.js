@@ -10,12 +10,12 @@ const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 
 // Get All Vendors (Protected)
-router.get('/', authenticateToken, async (req, res) => {
+router.get('/', authenticateToken, async (req, res, next) => {
   try {
     const result = await pool.query('SELECT * FROM vendors ORDER BY created_at DESC');
     res.json(result.rows);
   } catch (error) {
-    res.status(500).json({ error: 'Database error' });
+    next(error);
   }
 });
 

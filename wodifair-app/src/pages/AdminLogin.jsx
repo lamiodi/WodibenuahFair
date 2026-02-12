@@ -1,26 +1,21 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { apiRequest } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 const AdminLogin = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     
     try {
-      const data = await apiRequest('/auth/login', {
-        method: 'POST',
-        body: { email, password }
-      });
-      
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
+      await login(email, password);
       toast.success('Login successful');
       navigate('/admin');
     } catch (err) {

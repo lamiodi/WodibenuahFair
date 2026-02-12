@@ -1,7 +1,10 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
+import ReactGA from 'react-ga4';
 import ScrollToTop from './components/ScrollToTop';
 import Header from './components/Header';
+import SEO from './components/SEO';
 import Home from './pages/Home';
 import EventInfo from './pages/EventInfo';
 import Vendors from './pages/Vendors';
@@ -17,9 +20,29 @@ import AdminDashboard from './pages/AdminDashboard';
 import AdminLogin from './pages/AdminLogin';
 import NotFound from './pages/NotFound';
 
+// Initialize GA4
+const GA_MEASUREMENT_ID = import.meta.env.VITE_GA_MEASUREMENT_ID;
+if (GA_MEASUREMENT_ID) {
+  ReactGA.initialize(GA_MEASUREMENT_ID);
+}
+
+const PageTracker = () => {
+  const location = useLocation();
+
+  useEffect(() => {
+    if (GA_MEASUREMENT_ID) {
+      ReactGA.send({ hitType: "pageview", page: location.pathname + location.search });
+    }
+  }, [location]);
+
+  return null;
+};
+
 function App() {
   return (
     <Router>
+      <PageTracker />
+      <SEO />
       <ScrollToTop />
       <Toaster position="top-center" reverseOrder={false} />
       <div className="min-h-screen bg-white font-body text-deep-black">

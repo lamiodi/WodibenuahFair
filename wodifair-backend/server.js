@@ -5,7 +5,7 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import hpp from 'hpp';
 import morgan from 'morgan';
-import { Resend } from 'resend';
+// import { Resend } from 'resend';
 import { initDb } from './db.js';
 
 // Import Routes
@@ -15,6 +15,9 @@ import eventRoutes from './routes/events.js';
 import blogRoutes from './routes/blog.js';
 import highlightRoutes from './routes/highlights.js';
 import contactRoutes from './routes/contact.js';
+
+import errorHandler from './middleware/errorHandler.js';
+import AppError from './utils/AppError.js';
 
 dotenv.config();
 
@@ -34,7 +37,7 @@ if (missingEnv.length > 0) {
 
 // Initialize Resend
 console.log('Initializing Resend...');
-const resend = new Resend(process.env.RESEND_API_KEY);
+// const resend = new Resend(process.env.RESEND_API_KEY);
 console.log('Resend initialized'); // Avoid logging the object to prevent secret leakage
 
 // Security Middleware
@@ -79,11 +82,13 @@ app.use('/api/contact', contactRoutes);
 // Deprecated/Legacy Route Handling (Redirect or Alias if needed)
 // Note: Frontend has been updated to use the structured routes above.
 
-// Global Error Handler
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ error: 'Something went wrong!' });
+// 404 Handler
+app.all('*', (req, res, next) => {
+  next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));
 });
+
+// Global Error Handler
+app.use(errorHandler);
 
 if (process.env.NODE_ENV !== 'test') {
   app.listen(PORT, () => {
