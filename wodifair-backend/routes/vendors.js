@@ -4,6 +4,7 @@ import { body } from 'express-validator';
 import pool from '../db.js';
 import { validate } from '../middleware/validate.js';
 import { authenticateToken } from '../middleware/auth.js';
+import { processSuccessfulPayment } from '../services/paymentService.js';
 
 const router = express.Router();
 const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
@@ -28,17 +29,21 @@ router.post('/register', validate([
   body('instagramHandle').trim().notEmpty().escape(),
   body('businessName').trim().notEmpty().escape(),
   body('sector').trim().notEmpty().escape(),
+  body('boothType').trim().notEmpty().escape(),
+  body('selectedLocation').trim().notEmpty().escape(),
   body('isPreviousVendor').isBoolean(),
   body('liveInAbuja').isBoolean(),
   body('categoryAccepted').isBoolean(),
   body('agreeToMarket').isBoolean(),
   body('agreeToWhatsapp').isBoolean(),
   body('agreeToTerms').isBoolean(),
-  body('eventId').optional().isInt()
-]), async (req, res) => {
+  body('eventId').optional().isInt(),
+  body('boothType').trim().notEmpty().escape(),
+  body('selectedLocation').trim().notEmpty().escape()
+]), async (req, res, next) => {
   const {
     email, fullName, phoneNumber, whatsappNumber, instagramHandle,
-    businessName, sector, isPreviousVendor, liveInAbuja,
+    businessName, sector, boothType, selectedLocation, isPreviousVendor, liveInAbuja,
     categoryAccepted, agreeToMarket, agreeToWhatsapp, agreeToTerms, eventId
   } = req.body;
 
@@ -46,15 +51,15 @@ router.post('/register', validate([
     const query = `
       INSERT INTO vendors (
         email, full_name, phone_number, whatsapp_number, instagram_handle,
-        business_name, sector, is_previous_vendor, live_in_abuja,
+        business_name, sector, booth_type, selected_location, is_previous_vendor, live_in_abuja,
         category_accepted, agree_to_market, agree_to_whatsapp, agree_to_terms, event_id
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
       RETURNING *;
     `;
     
     const values = [
       email, fullName, phoneNumber, whatsappNumber, instagramHandle,
-      businessName, sector, isPreviousVendor, liveInAbuja,
+      businessName, sector, boothType, selectedLocation, isPreviousVendor, liveInAbuja,
       categoryAccepted, agreeToMarket, agreeToWhatsapp, agreeToTerms, eventId
     ];
 
@@ -62,7 +67,7 @@ router.post('/register', validate([
     res.status(201).json({ message: 'Vendor registered successfully', vendor: result.rows[0] });
   } catch (error) {
     console.error('Error registering vendor:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
+    next(error);
   }
 });
 
@@ -83,53 +88,20 @@ router.post('/verify-payment', validate([
     const data = response.data;
 
     if (data.status && data.data.status === 'success') {
-      // Update vendor payment status
-      const updateQuery = `
-        UPDATE vendors 
-        SET payment_status = 'paid', 
-            payment_reference = $1, 
-            amount_paid = $2
-        WHERE id = $3
-        RETURNING *;
-      `;
-      
       // Amount is in kobo from Paystack, convert to Naira
       const amountPaid = data.data.amount / 100;
 
-      const updatedResult = await pool.query(updateQuery, [reference, amountPaid, vendorId]);
-      const vendor = updatedResult.rows[0];
-
-      // Send Receipt Email via Resend (REST API)
       try {
-        await axios.post('https://api.resend.com/emails', {
-          from: 'Wodibenuah Fair <onboarding@resend.dev>',
-          to: [vendor.email],
-          subject: 'Payment Receipt - Wodibenuah Fair 2026',
-          html: `
-            <div style="font-family: Arial, sans-serif; color: #333;">
-              <h1 style="color: #D4AF37;">Payment Confirmed</h1>
-              <p>Dear ${vendor.full_name},</p>
-              <p>Thank you for your payment of <strong>₦${amountPaid.toLocaleString()}</strong>.</p>
-              <p>Your vendor application for <strong>${vendor.business_name}</strong> has been successfully processed.</p>
-              <p><strong>Reference:</strong> ${reference}</p>
-              <br/>
-              <p>We will review your details and get back to you with further instructions.</p>
-              <p>Best regards,<br/>Wodibenuah Fair Team</p>
-            </div>
-          `
-        }, {
-          headers: {
-            'Authorization': `Bearer ${RESEND_API_KEY}`,
-            'Content-Type': 'application/json'
-          }
+        const result = await processSuccessfulPayment(reference, amountPaid, vendorId);
+        res.json({ 
+          status: 'success', 
+          message: 'Payment verified successfully',
+          vendor: result.vendor 
         });
-        console.log(`Receipt sent to ${vendor.email}`);
-      } catch (emailError) {
-        console.error('Error sending receipt email:', emailError.response ? emailError.response.data : emailError.message);
-        // Don't fail the request if email fails, just log it
+      } catch (err) {
+        console.error('Error processing payment via service:', err);
+        res.status(500).json({ status: 'error', message: 'Error processing payment record' });
       }
-      
-      res.json({ status: 'success', message: 'Payment verified successfully' });
     } else {
       res.status(400).json({ status: 'error', message: 'Payment verification failed' });
     }

@@ -44,7 +44,7 @@ export const apiRequest = async (endpoint, options = {}) => {
       localStorage.removeItem('token');
       // Optional: Redirect to login or dispatch event
       if (!window.location.pathname.includes('/admin/login')) {
-         // window.location.href = '/admin/login'; // Uncomment if auto-redirect is desired
+         window.location.href = '/admin/login'; 
       }
     }
 

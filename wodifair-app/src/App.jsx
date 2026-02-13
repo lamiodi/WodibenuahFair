@@ -4,6 +4,7 @@ import { Toaster } from 'react-hot-toast';
 import ReactGA from 'react-ga4';
 import ScrollToTop from './components/ScrollToTop';
 import Header from './components/Header';
+import WhatsAppChat from './components/WhatsAppChat';
 import SEO from './components/SEO';
 import Home from './pages/Home';
 import EventInfo from './pages/EventInfo';
@@ -18,6 +19,7 @@ import BlogPost from './pages/BlogPost';
 import FAQ from './pages/FAQ';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminLogin from './pages/AdminLogin';
+import ThankYou from './pages/ThankYou';
 import NotFound from './pages/NotFound';
 
 // Initialize GA4
@@ -45,6 +47,7 @@ function App() {
       <SEO />
       <ScrollToTop />
       <Toaster position="top-center" reverseOrder={false} />
+      <WhatsAppChat />
       <div className="min-h-screen bg-white font-body text-deep-black">
         <Header />
         <Routes>
@@ -61,6 +64,7 @@ function App() {
           <Route path="/faq" element={<FAQ />} />
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/admin/login" element={<AdminLogin />} />
+          <Route path="/thank-you" element={<ThankYou />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </div>

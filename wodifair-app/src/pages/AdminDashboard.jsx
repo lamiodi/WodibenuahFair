@@ -299,6 +299,76 @@ const AdminDashboard = () => {
     }
   };
 
+  const renderVendors = () => (
+    <div className="bg-white border border-gray-200 shadow-sm overflow-hidden">
+      <div className="p-6 border-b border-gray-100 flex justify-between items-center">
+        <h3 className="text-xl font-heading font-bold uppercase text-deep-black">Registered Vendors</h3>
+        <button className="text-sm text-gold hover:text-deep-black transition-colors font-bold uppercase tracking-wider">
+          Export CSV
+        </button>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full text-left border-collapse">
+          <thead>
+            <tr className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider font-bold border-b border-gray-100">
+              <th className="p-4">Vendor</th>
+              <th className="p-4">Contact</th>
+              <th className="p-4">Booth & Location</th>
+              <th className="p-4">Status</th>
+              <th className="p-4">Date</th>
+              <th className="p-4">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-100 text-sm">
+            {vendors.length === 0 ? (
+              <tr>
+                <td colSpan="6" className="p-8 text-center text-gray-400">No vendors found.</td>
+              </tr>
+            ) : (
+              vendors.map((vendor) => (
+                <tr key={vendor.id} className="hover:bg-gray-50 transition-colors">
+                  <td className="p-4">
+                    <div className="font-bold text-deep-black">{vendor.business_name}</div>
+                    <div className="text-gray-500 text-xs">{vendor.full_name}</div>
+                    <div className="text-gray-400 text-xs italic">{vendor.sector}</div>
+                  </td>
+                  <td className="p-4">
+                    <div className="text-gray-600">{vendor.email}</div>
+                    <div className="text-gray-500 text-xs">{vendor.phone_number}</div>
+                    <div className="text-blue-500 text-xs">{vendor.instagram_handle}</div>
+                  </td>
+                  <td className="p-4">
+                    <div className="font-medium text-deep-black">{vendor.booth_type}</div>
+                    <div className="text-gray-500 text-xs">{vendor.selected_location}</div>
+                  </td>
+                  <td className="p-4">
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize
+                      ${vendor.payment_status === 'paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
+                      {vendor.payment_status}
+                    </span>
+                    {vendor.payment_status === 'paid' && (
+                       <div className="text-xs text-gray-400 mt-1 font-mono">{vendor.amount_paid ? `₦${Number(vendor.amount_paid).toLocaleString()}` : ''}</div>
+                    )}
+                  </td>
+                  <td className="p-4 text-gray-500 text-xs">
+                    {new Date(vendor.created_at).toLocaleDateString()}
+                  </td>
+                  <td className="p-4">
+                    <button className="text-gray-400 hover:text-deep-black transition-colors">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                      </svg>
+                    </button>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+
   const renderContent = () => {
     if (loading) {
         return <div className="flex justify-center items-center h-64">Loading dashboard data...</div>;
@@ -471,49 +541,7 @@ const AdminDashboard = () => {
       case 'vendors':
         return (
           <div className="space-y-8">
-            <h2 className="text-3xl font-heading font-bold uppercase">Registered Vendors</h2>
-             <div className="bg-white border border-deep-black p-8 overflow-x-auto">
-                <table className="w-full text-left min-w-[800px]">
-                    <thead>
-                    <tr className="border-b border-deep-black">
-                        <th className="pb-4 font-heading font-bold uppercase">Business</th>
-                        <th className="pb-4 font-heading font-bold uppercase">Contact</th>
-                        <th className="pb-4 font-heading font-bold uppercase">Sector</th>
-                        <th className="pb-4 font-heading font-bold uppercase">Payment</th>
-                        <th className="pb-4 font-heading font-bold uppercase">Actions</th>
-                    </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-200">
-                    {vendors.length > 0 ? vendors.map(vendor => (
-                        <tr key={vendor.id} className="group hover:bg-gray-50">
-                            <td className="py-4">
-                                <div className="font-bold">{vendor.business_name}</div>
-                                <div className="text-xs text-gray-500">{vendor.full_name}</div>
-                            </td>
-                            <td className="py-4 text-sm">
-                                <div>{vendor.email}</div>
-                                <div>{vendor.phone_number}</div>
-                            </td>
-                            <td className="py-4">{vendor.sector}</td>
-                            <td className="py-4">
-                                <span className={`text-xs font-bold px-2 py-1 uppercase tracking-wider ${
-                                    vendor.payment_status === 'paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                                }`}>
-                                    {vendor.payment_status}
-                                </span>
-                            </td>
-                            <td className="py-4">
-                                <button onClick={() => toast('Feature coming soon')} className="text-sm font-bold uppercase tracking-wider text-gray-500 hover:text-deep-black">Details</button>
-                            </td>
-                        </tr>
-                    )) : (
-                        <tr>
-                            <td colSpan="5" className="py-8 text-center text-gray-500 italic">No vendors registered yet.</td>
-                        </tr>
-                    )}
-                    </tbody>
-                </table>
-            </div>
+            {renderVendors()}
           </div>
         );
       case 'register':
@@ -526,7 +554,7 @@ const AdminDashboard = () => {
                     <tr className="border-b border-deep-black">
                         <th className="pb-4 font-heading font-bold uppercase">Business</th>
                         <th className="pb-4 font-heading font-bold uppercase">Contact</th>
-                        <th className="pb-4 font-heading font-bold uppercase">Sector</th>
+                        <th className="pb-4 font-heading font-bold uppercase">Details</th>
                         <th className="pb-4 font-heading font-bold uppercase">Payment</th>
                         <th className="pb-4 font-heading font-bold uppercase">Actions</th>
                     </tr>
@@ -542,13 +570,20 @@ const AdminDashboard = () => {
                                 <div>{vendor.email}</div>
                                 <div>{vendor.phone_number}</div>
                             </td>
-                            <td className="py-4">{vendor.sector}</td>
+                            <td className="py-4 text-sm">
+                                <div className="font-bold">{vendor.booth_type || 'N/A'}</div>
+                                <div className="text-xs text-gray-500">{vendor.selected_location || 'N/A'}</div>
+                                <div className="text-xs text-gray-400">{vendor.sector}</div>
+                            </td>
                             <td className="py-4">
                                 <span className={`text-xs font-bold px-2 py-1 uppercase tracking-wider ${
                                     vendor.payment_status === 'paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
                                 }`}>
                                     {vendor.payment_status}
                                 </span>
+                                {vendor.amount_paid > 0 && (
+                                    <div className="text-xs mt-1 font-mono">₦{Number(vendor.amount_paid).toLocaleString()}</div>
+                                )}
                             </td>
                             <td className="py-4">
                                 <button onClick={() => toast('Feature coming soon')} className="text-sm font-bold uppercase tracking-wider text-gray-500 hover:text-deep-black">Details</button>

@@ -15,6 +15,7 @@ import eventRoutes from './routes/events.js';
 import blogRoutes from './routes/blog.js';
 import highlightRoutes from './routes/highlights.js';
 import contactRoutes from './routes/contact.js';
+import webhookRoutes from './routes/webhook.js';
 
 import errorHandler from './middleware/errorHandler.js';
 import AppError from './utils/AppError.js';
@@ -46,13 +47,18 @@ app.use(helmet()); // Secure HTTP headers
 // CORS Configuration
 const corsOptions = {
   origin: process.env.NODE_ENV === 'production' 
-    ? ['https://wodibenuahfair.com', 'https://admin.wodibenuahfair.com'] // Update with actual domains
+    ? [process.env.CLIENT_URL, process.env.ADMIN_URL].filter(Boolean)
     : '*', // Allow all in development
   optionsSuccessStatus: 200
 };
 app.use(cors(corsOptions));
 
-app.use(express.json({ limit: '10kb' })); // Body limit to prevent DoS
+app.use(express.json({
+  limit: '10kb',
+  verify: (req, res, buf) => {
+    req.rawBody = buf.toString();
+  }
+})); // Body limit to prevent DoS
 app.use(hpp()); // Prevent HTTP Parameter Pollution
 app.use(morgan('dev')); // Logging
 
@@ -72,6 +78,7 @@ app.get('/', (req, res) => {
   res.json({ message: 'Welcome to Wodibenuahfair API' });
 });
 
+app.use('/api/webhooks', webhookRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/vendors', vendorRoutes); // Includes /api/vendors and /api/vendors/public
 app.use('/api/events', eventRoutes);

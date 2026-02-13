@@ -6,7 +6,7 @@ const SEO = ({ title, description, keywords, image, url }) => {
   const defaultDescription = 'Wodifair is a premier luxury exhibition and trade fair connecting premium brands with elite customers in Abuja, Port Harcourt, and Lagos.';
   const defaultKeywords = 'trade fair, luxury exhibition, abuja events, lagos events, premium brands';
   const defaultImage = '/images/seo-default.jpg'; // We should probably ensure this exists or use a logo
-  const siteUrl = 'https://wodibenuahfair.com';
+  const siteUrl = import.meta.env.VITE_SITE_URL || 'https://wodibenuahfair.com';
 
   const fullTitle = title ? `${title} | Wodifair` : siteTitle;
   const metaDescription = description || defaultDescription;
