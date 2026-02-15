@@ -27,10 +27,9 @@ const Header = () => {
         </button>
       </div>
       
-      {/* Middle section - Logo Link */}
-      <Link to="/" className="flex-1 flex items-center px-6 text-xl font-heading font-bold uppercase tracking-wider text-deep-black hover:opacity-70 transition-opacity">
-          Wodifair
-      </Link>
+      {/* Middle section - Empty space (logo removed) */}
+      <div className="flex-1 border-r border-deep-black h-full flex items-center px-6">
+      </div>
       
       {/* Right section - Login and Subscribe buttons */}
       <div className="flex h-full">
