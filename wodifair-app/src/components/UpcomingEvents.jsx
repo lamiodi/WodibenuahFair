@@ -1,68 +1,48 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { apiRequest } from '../services/api';
 
 const UpcomingEvents = ({ title = "Upcoming Events" }) => {
   const [activeEventIndex, setActiveEventIndex] = useState(0);
-  const [events, setEvents] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
-  useEffect(() => {
-    const fetchEvents = async () => {
-      try {
-        const data = await apiRequest('/events');
-        
-        // Map API data to component structure
-        const mappedEvents = data.map(event => {
-          const startDate = new Date(event.start_date);
-          const dateStr = startDate.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }).toUpperCase();
-          
-          // Simple extraction for city (assuming "Venue, City" or just "City")
-          const locationParts = event.location.split(',');
-          const city = locationParts.length > 1 ? locationParts[locationParts.length - 1].trim() : event.location;
-          
-          return {
-            id: event.id,
-            date: dateStr,
-            title: event.title,
-            subtitle: "The Main Event", // Default or extract from description
-            category: "Exhibition", // Default
-            location: event.location,
-            city: city,
-            image: event.image_url || "/images/Wodi SM (17).png",
-            mapUrl: event.map_link || `https://maps.google.com/maps?q=${encodeURIComponent(event.location)}&t=&z=13&ie=UTF8&iwloc=&output=embed`,
-            directionsUrl: `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(event.location)}`
-          };
-        });
-
-        setEvents(mappedEvents);
-        setLoading(false);
-      } catch (err) {
-        console.error("Error loading events:", err);
-        setError("Could not load events.");
-        setLoading(false);
-      }
-    };
-
-    fetchEvents();
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-[400px] bg-cream border-b border-deep-black">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-deep-black"></div>
-      </div>
-    );
-  }
-
-  if (error || events.length === 0) {
-    return (
-      <div className="flex justify-center items-center h-[200px] bg-cream border-b border-deep-black">
-         <p className="text-gray-500 font-body uppercase tracking-widest">{error || "No upcoming events scheduled."}</p>
-      </div>
-    );
-  }
+  // Hardcoded events as per user request: Abuja, Port Harcourt, Lagos
+  const events = [
+    {
+      id: 1,
+      date: "APR 4-5, 2026",
+      title: "ABUJA",
+      subtitle: "The Main Event",
+      category: "Exhibition",
+      location: "International Conference Centre, Abuja",
+      city: "Abuja",
+      image: "/images/abuja may 9th 2026.jpeg",
+      mapUrl: "https://maps.google.com/maps?q=International+Conference+Centre+Abuja&t=&z=13&ie=UTF8&iwloc=&output=embed",
+      directionsUrl: "https://www.google.com/maps/dir/?api=1&destination=International+Conference+Centre+Abuja"
+    },
+    {
+      id: 2,
+      date: "AUGUST 2026",
+      title: "PORT HARCOURT",
+      subtitle: "Summer Edition",
+      category: "Exhibition",
+      location: "Venue TBD, Port Harcourt",
+      city: "Port Harcourt",
+      image: "/images/pport harcourt.jpg",
+      mapUrl: "https://maps.google.com/maps?q=Port+Harcourt&t=&z=12&ie=UTF8&iwloc=&output=embed",
+      directionsUrl: "https://www.google.com/maps/dir/?api=1&destination=Port+Harcourt"
+    },
+    {
+      id: 3,
+      date: "DECEMBER 2026",
+      title: "LAGOS",
+      subtitle: "Holiday Edition",
+      category: "Exhibition",
+      location: "Venue TBD, Lagos",
+      city: "Lagos",
+      image: "/images/Lagosdecember12thedition.png",
+      mapUrl: "https://maps.google.com/maps?q=Lagos&t=&z=11&ie=UTF8&iwloc=&output=embed",
+      directionsUrl: "https://www.google.com/maps/dir/?api=1&destination=Lagos"
+    }
+  ];
 
   return (
     <section className="bg-cream border-b border-deep-black overflow-hidden">
@@ -171,7 +151,7 @@ const UpcomingEvents = ({ title = "Upcoming Events" }) => {
                             <svg className="w-8 h-8 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
                         </div>
                         <h4 className="text-white font-heading text-lg uppercase tracking-widest mb-1">Venue Map</h4>
-                        <p className="text-gray-500 text-xs font-body">Interactive View Loading...</p>
+                        <p className="text-gray-500 text-xs font-body">View Location on Map</p>
                     </div>
 
                    <iframe 

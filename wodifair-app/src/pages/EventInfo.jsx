@@ -52,7 +52,7 @@ const EventInfo = () => {
             {/* U with Image */}
             <span className="relative inline-block mx-[0.02em]">
                <div className="absolute inset-0 z-0 flex items-center justify-center">
-                  <div className="lg:ms-5 ms-[0.05em] mb-[0.1em] lg:mt-[0.1em] w-[60%] lg:w-[65%] h-[75%] overflow-hidden rounded-t-none rounded-b-full translate-y-2">
+                  <div className="lg:ms-5 ms-[0.05em] mb-[0.1em] lg:mt-[0.1em] xl:mt-[0.2em] w-[60%] lg:w-[65%] h-[75%] overflow-hidden rounded-t-none rounded-b-full translate-y-2">
                    <img 
                      src="/images/IMG_3756.JPG.jpeg" 
                      alt="Event"
