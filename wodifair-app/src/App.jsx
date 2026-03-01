@@ -8,22 +8,32 @@ import WhatsAppChat from './components/WhatsAppChat';
 import SEO from './components/SEO';
 import Loading from './components/Loading';
 
+// Helper to add minimum delay for smoother transition
+const lazyWithDelay = (importFunc) => {
+  return lazy(() => {
+    return Promise.all([
+      importFunc(),
+      new Promise(resolve => setTimeout(resolve, 800)) // 800ms delay
+    ]).then(([moduleExports]) => moduleExports);
+  });
+};
+
 // Lazy load pages
-const Home = lazy(() => import('./pages/Home'));
-const EventInfo = lazy(() => import('./pages/EventInfo'));
-const Vendors = lazy(() => import('./pages/Vendors'));
-const Register = lazy(() => import('./pages/Register'));
-const Contact = lazy(() => import('./pages/Contact'));
-const Terms = lazy(() => import('./pages/Terms'));
-const Privacy = lazy(() => import('./pages/Privacy'));
-const About = lazy(() => import('./pages/About'));
-const Blog = lazy(() => import('./pages/Blog'));
-const BlogPost = lazy(() => import('./pages/BlogPost'));
-const FAQ = lazy(() => import('./pages/FAQ'));
-const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
-const AdminLogin = lazy(() => import('./pages/AdminLogin'));
-const ThankYou = lazy(() => import('./pages/ThankYou'));
-const NotFound = lazy(() => import('./pages/NotFound'));
+const Home = lazyWithDelay(() => import('./pages/Home'));
+const EventInfo = lazyWithDelay(() => import('./pages/EventInfo'));
+const Vendors = lazyWithDelay(() => import('./pages/Vendors'));
+const Register = lazyWithDelay(() => import('./pages/Register'));
+const Contact = lazyWithDelay(() => import('./pages/Contact'));
+const Terms = lazyWithDelay(() => import('./pages/Terms'));
+const Privacy = lazyWithDelay(() => import('./pages/Privacy'));
+const About = lazyWithDelay(() => import('./pages/About'));
+const Blog = lazyWithDelay(() => import('./pages/Blog'));
+const BlogPost = lazyWithDelay(() => import('./pages/BlogPost'));
+const FAQ = lazyWithDelay(() => import('./pages/FAQ'));
+const AdminDashboard = lazyWithDelay(() => import('./pages/AdminDashboard'));
+const AdminLogin = lazyWithDelay(() => import('./pages/AdminLogin'));
+const ThankYou = lazyWithDelay(() => import('./pages/ThankYou'));
+const NotFound = lazyWithDelay(() => import('./pages/NotFound'));
 
 // Initialize GA4
 const GA_MEASUREMENT_ID = import.meta.env.VITE_GA_MEASUREMENT_ID;

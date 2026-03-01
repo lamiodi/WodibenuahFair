@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 
 const Loading = () => {
   return (
-    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-cream">
+    <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-cream h-[100dvh]">
       <div className="relative w-32 h-32 md:w-40 md:h-40">
         {/* Central Logo Container */}
         <div className="absolute inset-0 flex items-center justify-center bg-white rounded-full border border-deep-black overflow-hidden shadow-xl">
@@ -30,7 +30,7 @@ const Loading = () => {
         className="mt-8 flex flex-col items-center"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5 }}
+        transition={{ delay: 0.2 }}
       >
         <h2 className="text-xl md:text-2xl font-heading font-bold tracking-[0.2em] text-deep-black uppercase">
           Wodifair
