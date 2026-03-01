@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Navigation from '../components/Navigation';
 import Footer from '../components/Footer';
-import { apiRequest } from '../services/api';
+import SEO from '../components/SEO';
+// import { apiRequest } from '../services/api';
+import blogPostsData from '../data/blogPosts'; // Import static data
 
 const BlogPost = () => {
   const { slug } = useParams();
@@ -11,6 +13,26 @@ const BlogPost = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    // Simulate API fetch
+    const fetchPost = () => {
+      try {
+        const foundPost = blogPostsData.find(p => p.slug === slug);
+        if (foundPost) {
+          setPost(foundPost);
+        } else {
+          setError("Post not found");
+        }
+        setLoading(false);
+      } catch (err) {
+        console.error(err);
+        setError("Failed to load blog post.");
+        setLoading(false);
+      }
+    };
+
+    fetchPost();
+
+    /*
     // setLoading(true); // Removed to prevent cascading render lint error
     apiRequest(`/blog/${slug}`)
       .then(data => {
@@ -22,14 +44,11 @@ const BlogPost = () => {
         setError(err.message);
         setLoading(false);
       });
+    */
   }, [slug]);
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-cream flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-deep-black"></div>
-      </div>
-    );
+    return <Loading />;
   }
 
   if (error || !post) {
@@ -46,6 +65,12 @@ const BlogPost = () => {
 
   return (
     <div className="min-h-screen bg-cream text-deep-black font-body flex flex-col">
+      <SEO 
+        title={post.title} 
+        description={post.excerpt} 
+        image={post.image_url} 
+        url={`/blog/${post.slug}`} 
+      />
       <Navigation activeItem="Blog" />
 
       <article>

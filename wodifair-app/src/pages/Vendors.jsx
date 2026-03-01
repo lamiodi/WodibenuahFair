@@ -1,40 +1,86 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Navigation from '../components/Navigation';
 import Footer from '../components/Footer';
-import { apiRequest } from '../services/api';
 
 const Vendors = () => {
-  const [vendors, setVendors] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('All');
 
-  // Hardcoded fallback data removed. We rely on the API now.
-  const fallbackVendors = [];
-
-  useEffect(() => {
-    const fetchVendors = async () => {
-      try {
-        const data = await apiRequest('/public/vendors');
-        // If API returns empty array (e.g., no paid vendors yet), use fallback for display purposes
-        if (data.length > 0) {
-          setVendors(data);
-        } else {
-          console.log("No paid vendors found, using fallback data.");
-          setVendors(fallbackVendors);
-        }
-      } catch (err) {
-        console.error("Error fetching vendors:", err);
-        // Fallback to hardcoded data on error
-        setVendors(fallbackVendors);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchVendors();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // Static Vendor Showcase Data (Placeholder for now, can be expanded)
+  const vendors = [
+    {
+      name: "Luxe Apparel",
+      category: "Fashion",
+      image: "/images/droneaerialphotos/DJI_0509.jpg", 
+      booth: "A-12"
+    },
+    {
+      name: "Urban Trends",
+      category: "Fashion",
+      image: "/images/droneaerialphotos/DJI_0510.jpg",
+      booth: "B-05"
+    },
+    {
+      name: "Glow Beauty",
+      category: "Beauty",
+      image: "/images/droneaerialphotos/DJI_0511.jpg",
+      booth: "C-08"
+    },
+    {
+      name: "Pure Wellness",
+      category: "Lifestyle",
+      image: "/images/droneaerialphotos/DJI_0512.jpg",
+      booth: "C-09"
+    },
+    {
+      name: "Artisan Home",
+      category: "Lifestyle",
+      image: "/images/droneaerialphotos/DJI_0513.jpg",
+      booth: "D-15"
+    },
+    {
+      name: "Taste of Africa",
+      category: "Lifestyle",
+      image: "/images/droneaerialphotos/DJI_0514.jpg",
+      booth: "E-02"
+    },
+    {
+      name: "Royal Fabrics",
+      category: "Fashion",
+      image: "/images/droneaerialphotos/DJI_0515.jpg",
+      booth: "A-14"
+    },
+    {
+      name: "Natural Essence",
+      category: "Beauty",
+      image: "/images/droneaerialphotos/DJI_0516.jpg",
+      booth: "C-11"
+    },
+    {
+      name: "Modern Living",
+      category: "Lifestyle",
+      image: "/images/droneaerialphotos/DJI_0517.jpg",
+      booth: "D-03"
+    },
+    {
+      name: "Heritage Crafts",
+      category: "Lifestyle",
+      image: "/images/droneaerialphotos/DJI_0518.jpg",
+      booth: "D-07"
+    },
+    {
+      name: "Elite Styles",
+      category: "Fashion",
+      image: "/images/droneaerialphotos/DJI_0519.jpg",
+      booth: "B-08"
+    },
+    {
+      name: "Zen Garden",
+      category: "Lifestyle",
+      image: "/images/droneaerialphotos/DJI_0520.jpg",
+      booth: "E-05"
+    }
+  ];
 
   const filteredVendors = filter === 'All' 
     ? vendors 
@@ -57,7 +103,7 @@ const Vendors = () => {
             {/* O with Image */}
             <span className="relative inline-block mx-[0.02em]">
                <div className="absolute inset-0 z-0 flex items-center justify-center">
-                  <div className="ms-3 mt-[0.1em] w-[85%] h-[81%] overflow-hidden rounded-full">
+                  <div className=" ms-2 lg:ms-3   mt-[0.1em] w-[85%] h-[81%] overflow-hidden rounded-full">
                    <img 
                      src="/images/IMG_3766.JPG.jpeg" 
                      alt="Vendor"
@@ -106,13 +152,13 @@ const Vendors = () => {
           {/* Right: Image */}
           <div className="lg:w-1/2 relative min-h-[400px]">
             <img 
-              src="/images/Gemini_Generated_Image_45z3p945z3p945z3.png" 
+              src="/images/carousel/IMG_0164.jpg" 
               alt="Vendor Showcase"
               className="w-full h-full object-cover"
             />
              {/* Decorative Label */}
              <div className="absolute bottom-0 left-0 bg-white border-t border-r border-deep-black px-6 py-3">
-              <span className="text-xs font-bold tracking-widest uppercase">Est. 2026</span>
+              <span className="text-xs font-bold tracking-widest uppercase">Wodi.™</span>
             </div>
           </div>
         </div>
@@ -155,12 +201,7 @@ const Vendors = () => {
           </div>
         </div>
 
-        {loading ? (
-          <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-deep-black"></div>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-16">
             {filteredVendors.length > 0 ? filteredVendors.map((vendor, index) => (
               <div key={index} className="group cursor-pointer">
                  {/* Image Container */}
@@ -168,7 +209,7 @@ const Vendors = () => {
                    <img 
                      src={vendor.image} 
                      alt={vendor.name}
-                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 grayscale group-hover:grayscale-0"
+                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                    />
                    
                    {/* Category Tag Overlay */}
@@ -197,7 +238,6 @@ const Vendors = () => {
               </div>
             )}
           </div>
-        )}
       </div>
 
       <Footer />

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Navigation from '../components/Navigation';
 import Footer from '../components/Footer';
 import UpcomingEvents from '../components/UpcomingEvents';
@@ -21,8 +21,28 @@ const EventInfo = () => {
       category: "Wodibenuahfair",
       title: "Lagos Edition", 
       video: "https://www.youtube.com/embed/8XyJlVKUlAs?si=pWMK0JLNWNSXG9f2"
+    },
+    { 
+      category: "Wodibenuahfair",
+      title: "Security Highlights", 
+      video: "/images/WhatsApp Video 2026-02-08 at 2.01.13 PM.mp4"
     }
   ];
+
+  const carouselImages = [
+    "/images/carousel/IMG_8966.jpg",
+    "/images/carousel/IMG_9357.jpg",
+    "/images/carousel/IMG_9363-2.jpg"
+  ];
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+  const nextImage = () => {
+    setCurrentImageIndex((prev) => (prev + 1) % carouselImages.length);
+  };
+
+  const prevImage = () => {
+    setCurrentImageIndex((prev) => (prev - 1 + carouselImages.length) % carouselImages.length);
+  };
 
   return (
     <div className="min-h-screen bg-cream text-deep-black font-body flex flex-col">
@@ -118,10 +138,16 @@ const EventInfo = () => {
             
             {/* Navigation Arrows */}
             <div className="flex flex-col border-t border-deep-black">
-              <button className="w-full aspect-square bg-cream flex items-center justify-center hover:bg-white transition-colors border-b border-deep-black">
+              <button 
+                onClick={prevImage}
+                className="w-full aspect-square bg-cream flex items-center justify-center hover:bg-white transition-colors border-b border-deep-black"
+              >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
               </button>
-              <button className="w-full aspect-square bg-cream flex items-center justify-center hover:bg-white transition-colors">
+              <button 
+                onClick={nextImage}
+                className="w-full aspect-square bg-cream flex items-center justify-center hover:bg-white transition-colors"
+              >
                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
               </button>
             </div>
@@ -130,9 +156,10 @@ const EventInfo = () => {
           {/* 3. RIGHT IMAGE */}
           <div className="lg:w-[35%] relative">
             <img 
-              src="/images/IMG_3766.JPG.jpeg" 
+              src={carouselImages[currentImageIndex]} 
               alt="Event Atmosphere"
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover transition-opacity duration-300"
+              key={currentImageIndex} // Key helps with transition if we add animation later, or just ensures re-render
             />
           </div>
 
@@ -143,7 +170,7 @@ const EventInfo = () => {
           EVENT GRID (3 Columns)
           ============================================ */}
       <div id="events-grid" className="w-full px-4 md:px-8 py-16 md:py-24">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {events.map((event, index) => (
             <div key={index} className="group cursor-pointer">
                <div className="border-b border-deep-black pb-4 mb-4">

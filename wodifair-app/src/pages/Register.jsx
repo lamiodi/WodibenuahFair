@@ -62,7 +62,7 @@ const Register = () => {
         }
       }
     }).catch(err => console.error(err));
-  }, [locationParam]);
+  }, [locationParam, eventIdParam]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;

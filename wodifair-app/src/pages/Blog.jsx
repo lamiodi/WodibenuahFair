@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Navigation from '../components/Navigation';
 import Footer from '../components/Footer';
-import { apiRequest } from '../services/api';
+import Loading from '../components/Loading';
+// import { apiRequest } from '../services/api'; // Commented out for now
+import blogPostsData from '../data/blogPosts'; // Import static data
 
 const Blog = () => {
   const [posts, setPosts] = useState([]);
@@ -11,6 +13,31 @@ const Blog = () => {
   const [visibleCount, setVisibleCount] = useState(6);
 
   useEffect(() => {
+    // Simulate API fetch
+    const fetchPosts = () => {
+      try {
+        const mappedPosts = blogPostsData.map(post => ({
+          id: post.id,
+          title: post.title,
+          slug: post.slug,
+          excerpt: post.excerpt,
+          date: new Date(post.published_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
+          category: post.category,
+          image: post.image // or post.image_url
+        }));
+        setPosts(mappedPosts);
+        setLoading(false);
+      } catch (err) {
+        console.error(err);
+        setError("Failed to load blog posts.");
+        setLoading(false);
+      }
+    };
+
+    fetchPosts();
+    
+    /* 
+    // Original API call
     apiRequest('/blog')
       .then(data => {
         const mappedPosts = data.map(post => ({
@@ -30,6 +57,7 @@ const Blog = () => {
         setError(err.message);
         setLoading(false);
       });
+    */
   }, []);
 
   if (loading) {
@@ -108,10 +136,10 @@ const Blog = () => {
               <p className="text-gray-600 mb-12 leading-relaxed text-lg line-clamp-4">
                 {featuredPost.excerpt}
               </p>
-              <button className="group flex items-center gap-4 text-xs font-bold uppercase tracking-[0.2em] hover:text-gold transition-colors">
+              <Link to={`/blog/${featuredPost.slug}`} className="group flex items-center gap-4 text-xs font-bold uppercase tracking-[0.2em] hover:text-gold transition-colors">
                 <span className="border-b border-deep-black pb-1 group-hover:border-gold transition-colors">Read Full Article</span>
                 <svg className="w-4 h-4 transform group-hover:translate-x-2 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
-              </button>
+              </Link>
             </div>
           </div>
         </div>
@@ -123,6 +151,7 @@ const Blog = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-16 max-w-[1920px] mx-auto">
             {gridPosts.map((post) => (
               <div key={post.id} className="group cursor-pointer flex flex-col h-full">
+              <Link to={`/blog/${post.slug}`} className="contents">
                 <div className="aspect-[16/9] overflow-hidden border border-deep-black mb-6 relative">
                   <img 
                     src={post.image} 
@@ -158,7 +187,8 @@ const Blog = () => {
                     </span>
                   </div>
                 </div>
-              </div>
+              </Link>
+            </div>
             ))}
           </div>
         ) : (

@@ -44,10 +44,10 @@ const ThankYou = () => {
             A confirmation email with your receipt and further instructions has been sent to your email address.
           </p>
           <p className="text-lg font-medium text-deep-black bg-gray-50 p-4 border-l-4 border-gold">
-             The event location in <strong>{location}</strong> will be communicated to you shortly via email.
+             The event location for <strong>{location}</strong> will be communicated to you shortly via email.
           </p>
           <p className="text-gray-600">
-            Please check your spam folder if you don't see it within a few minutes.
+            Please check your spam folder if you don&apos;t see it within a few minutes.
           </p>
         </div>
 

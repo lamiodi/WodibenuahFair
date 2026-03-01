@@ -1,38 +1,34 @@
-# Project Cleanup Report
+# Cleanup Report
 
-**Date:** 2026-02-11
-**Action:** Removal of non-production files and test artifacts
+This document details the cleanup process performed on the Wodifair Rebrand project.
 
-## 1. Summary
-A comprehensive cleanup was performed to prepare the project for production deployment. All test files, deprecated configuration, and temporary documentation have been removed. The frontend application build has been verified post-cleanup.
+## Date: 2026-03-02
 
-## 2. Removed Files Inventory
-The following files were identified as non-essential for production and have been deleted:
+## Summary
+A comprehensive scan of the codebase was conducted to identify unused assets, orphaned files, and obsolete scripts. Identified files were first backed up to a `_cleanup_backup` directory (temporarily) and then verified for deletion.
 
-### Test Artifacts
-- `wodifair-app/src/test/` (Directory containing frontend tests)
-- `wodifair-backend/server.test.js` (Backend integration tests)
+## Removed Files
 
-### Documentation & Reports
-- `readiness-report.md`
-- `deployment-checklist.md`
-- `design_audit_report.md`
-- `blueprint.md`
+### Frontend Assets (`wodifair-app/public/images/`)
+The following images were identified as unused in the current codebase (checked against imports and string references):
 
-### Utility Scripts
-- `wodifair-backend/reset_db.js`
-- `wodifair-backend/seed.js`
+1.  `IMG_3757.JPG.jpeg` - Replaced by `IMG_9962.jpg` in `Home.jsx`.
+2.  `cameroon malyko stadium buea.jpeg` - No references found.
+3.  `IMG_9544.jpg` - No references found.
+4.  `abuja may 9th edition.png` - No references found.
+5.  `WhatsApp Video 2026-02-08 at 2.01.02 PM.mp4` - Replaced by version ending in `.13`.
 
-## 3. Configuration Changes
-### Frontend (`wodifair-app/package.json` & `vite.config.js`)
-- Removed `vitest`, `jsdom`, `@testing-library/*` dependencies.
-- Removed `test` script.
-- Removed `test` configuration block from Vite config.
+### Backend Scripts (`backend/`)
+The following scripts appeared to be temporary test files for database connectivity:
 
-### Backend (`wodifair-backend/package.json`)
-- Removed `jest`, `supertest` dependencies.
-- Removed `test` script.
+1.  `test-db-direct-v2.js`
+2.  `test-db-direct.js`
+3.  `test-db.js`
 
-## 4. Verification
-- **Backup**: Created `backup_non_prod.tar` containing all deleted files before removal.
-- **Build Integrity**: `npm run build` in `wodifair-app` executed successfully (Exit Code: 0).
+## Verification
+-   **Static Analysis:** `grep` was used to confirm no string references existed for the removed assets.
+-   **Build Verification:** `npm run build` was executed successfully after removal, ensuring no build-time dependencies were broken.
+
+## Next Steps
+-   Monitor the application for any missing assets in runtime (though unlikely given the static check).
+-   Regularly audit the `public/images` folder as new assets are added.

@@ -7,21 +7,22 @@ import NextEventCountdown from '../components/NextEventCountdown';
 import ExhibitionHighlightVideo from '../components/ExhibitionHighlightVideo';
 import UpcomingEvents from '../components/UpcomingEvents';
 import SponsorshipCTA from '../components/SponsorshipCTA';
+import HomePopup from '../components/HomePopup';
 import { motion, AnimatePresence } from 'framer-motion';
 
   const slides = [
     {
-      image: "/images/abuja may 9th edition.png",
+      image: "/images/IMG_0072.jpg",
       title: "ABUJA",
       subtitle: "April 4th & 5th Edition"
     },
     {
-      image: "/images/pport harcourt.jpg",
+      image: "/images/IMG_0088.jpg",
       title: "PORT HARCOURT",
       subtitle: "August 2026 Edition"
     },
     {
-      image: "/images/Lagosdecember12thedition.png",
+      image: "/images/IMG_0162.jpg",
       title: "LAGOS",
       subtitle: "December 2026 Edition"
     }
@@ -39,6 +40,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 
   return (
     <div className="min-h-screen flex flex-col bg-cream text-deep-black font-body">
+      <HomePopup />
       
       {/* ============================================
           TITLE BANNER SECTION
@@ -111,24 +113,29 @@ import { motion, AnimatePresence } from 'framer-motion';
           HERO SECTION (Slideshow)
           ============================================ */}
       <div className="w-full px-2 md:px-8 py-4 md:py-8">
-        <div className="relative w-full h-[90vh] overflow-hidden border border-deep-black bg-black">
+        <div className="relative w-full h-[90vh] overflow-hidden border border-deep-black bg-black group">
           <AnimatePresence mode='wait'>
             <motion.img 
               key={currentSlide}
               src={slides[currentSlide].image} 
               alt="Hero"
-              className="absolute inset-0 w-full h-full object-cover opacity-80"
+              className="absolute inset-0 w-full h-full object-cover opacity-60" // Darkened opacity for better text contrast
               initial={{ opacity: 0, scale: 1.1 }}
-              animate={{ opacity: 0.8, scale: 1 }}
+              animate={{ opacity: 0.6, scale: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 1.5 }}
             />
           </AnimatePresence>
           
           <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-4 z-10">
+            {/* Value Proposition */}
+            <p className="text-white/90 text-sm md:text-base uppercase tracking-[0.4em] mb-4 font-bold drop-shadow-md">
+              Connecting Premium Brands with Elite Customers
+            </p>
+
             <h2 className="text-[6vw] md:text-[4vw] font-heading font-normal text-white uppercase tracking-wide leading-tight mb-4 drop-shadow-lg">
               WODIBENUAH FAIR<br />
-              <span className="font-bold">
+              <span className="font-bold text-gold">
                 <AnimatePresence mode='wait'>
                   <motion.span
                     key={currentSlide}
@@ -161,11 +168,28 @@ import { motion, AnimatePresence } from 'framer-motion';
               <div className="w-8 md:w-16 h-[1px] bg-white"></div>
             </div>
 
-            <ExploreButton 
-              variant="light"
-              className="px-8 border-none"
-              text="Explore Now"
-            />
+            {/* Call to Action Buttons */}
+            <div className="flex flex-col md:flex-row gap-6 mt-8">
+              <div className="relative group/btn">
+                <Link to="/register" className="bg-white text-deep-black px-10 py-4 text-sm font-bold uppercase tracking-[0.2em] hover:bg-gold hover:text-white transition-all duration-300 inline-block min-w-[200px]">
+                  Vendor Registration
+                </Link>
+                {/* Contextual Tooltip */}
+                <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-deep-black text-white text-[10px] uppercase tracking-wider py-1 px-3 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300 whitespace-nowrap arrow-bottom">
+                  Book Your Booth
+                </div>
+              </div>
+
+              <div className="relative group/btn">
+                <Link to="/vendors" className="border-2 border-white text-white px-10 py-4 text-sm font-bold uppercase tracking-[0.2em] hover:bg-white hover:text-deep-black transition-all duration-300 inline-block min-w-[200px]">
+                  Explore Vendors
+                </Link>
+                 {/* Contextual Tooltip */}
+                 <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-deep-black text-white text-[10px] uppercase tracking-wider py-1 px-3 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300 whitespace-nowrap arrow-bottom">
+                  View Exhibitors
+                </div>
+              </div>
+            </div>
           </div>
           
           {/* Slide Indicators */}
@@ -175,11 +199,10 @@ import { motion, AnimatePresence } from 'framer-motion';
                 key={index}
                 onClick={() => setCurrentSlide(index)}
                 className={`w-2 h-2 rounded-full transition-all duration-300 ${index === currentSlide ? 'bg-white w-8' : 'bg-white/40 hover:bg-white/70'}`}
+                aria-label={`Go to slide ${index + 1}`}
               />
             ))}
           </div>
-
-          {/* Decorative Corner Element - Removed */}
         </div>
       </div>
 
@@ -193,7 +216,7 @@ import { motion, AnimatePresence } from 'framer-motion';
               Select Your Location
             </h2>
             <p className="mt-4 text-gray-600 font-body text-lg uppercase tracking-widest">
-              Choose a city to register and pay
+              Choose a city to book your booth
             </p>
           </div>
 
@@ -206,7 +229,7 @@ import { motion, AnimatePresence } from 'framer-motion';
                 to="/register?location=Abuja" 
                 className="mt-auto inline-block px-8 py-3 border border-current text-xs font-bold uppercase tracking-[0.2em] hover:bg-white hover:text-deep-black transition-colors"
               >
-                Register Now
+                Vendor Registration
               </Link>
             </div>
 
@@ -218,7 +241,7 @@ import { motion, AnimatePresence } from 'framer-motion';
                 to="/register?location=Port Harcourt" 
                 className="mt-auto inline-block px-8 py-3 border border-current text-xs font-bold uppercase tracking-[0.2em] hover:bg-white hover:text-deep-black transition-colors"
               >
-                Register Now
+                Vendor Registration
               </Link>
             </div>
 
@@ -230,7 +253,7 @@ import { motion, AnimatePresence } from 'framer-motion';
                 to="/register?location=Lagos" 
                 className="mt-auto inline-block px-8 py-3 border border-current text-xs font-bold uppercase tracking-[0.2em] hover:bg-white hover:text-deep-black transition-colors"
               >
-                Register Now
+                Vendor Registration
               </Link>
             </div>
           </div>
@@ -277,7 +300,7 @@ import { motion, AnimatePresence } from 'framer-motion';
             
             <div className="group cursor-pointer">
               <div className="aspect-[4/3] overflow-hidden mb-4 bg-gray-200 border border-deep-black">
-                <img src="/images/IMG_3757.JPG.jpeg" alt="Shared Moments" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                <img src="/images/hi/IMG_9962.jpg" alt="Shared Moments" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
               </div>
               <h3 className="font-heading font-bold uppercase text-xs tracking-[0.2em] mb-3 text-deep-black">Shared Moments</h3>
               <p className="text-xs text-gray-600 leading-relaxed">
@@ -289,7 +312,7 @@ import { motion, AnimatePresence } from 'framer-motion';
           <div className="lg:col-span-2 h-full">
             <div className="h-full w-full bg-gray-200 overflow-hidden relative group min-h-[600px] lg:min-h-full border border-deep-black">
               <img 
-                src="/images/IMG_3763.JPG.jpeg" 
+                src="/images/hi/IMG_8810-2.jpg" 
                 alt="Exhibition Centerpiece" 
                 className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
               />
@@ -299,7 +322,7 @@ import { motion, AnimatePresence } from 'framer-motion';
           <div className="flex flex-col gap-8 justify-between">
             <div className="group cursor-pointer">
               <div className="aspect-[3/4] overflow-hidden mb-4 bg-gray-200 border border-deep-black">
-                <img src="/images/IMG_3764.JPG.jpeg" alt="Active Engagement" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                <img src="/images/hi/IMG_0538.jpg" alt="Active Engagement" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
               </div>
               <h3 className="font-heading font-bold uppercase text-xs tracking-[0.2em] mb-3 text-deep-black">Active Engagement</h3>
               <p className="text-xs text-gray-600 leading-relaxed">
@@ -341,7 +364,7 @@ import { motion, AnimatePresence } from 'framer-motion';
         {/* Background Image Layer */}
         <div className="relative md:absolute inset-0 z-0 h-[400px] md:h-full">
           <img 
-            src="/images/IMG_3765.JPG.jpeg" 
+            src="/images/IMG_8532-2.jpg" 
             alt="Wodifair Exhibition Crowd"
             className="w-full h-full object-cover"
           />

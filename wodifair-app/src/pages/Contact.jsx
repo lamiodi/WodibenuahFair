@@ -108,9 +108,10 @@ const Contact = () => {
              {/* Background Image */}
              <div className="absolute inset-0 z-0">
                <img 
-                 src="/images/pport harcourt.jpg" 
-                 alt="Background" 
+                 src="/images/IMG_8375-2.jpg" 
+                 alt="Wodifair Exhibition Crowd - Connecting Brands and Customers" 
                  className="w-full h-full object-cover opacity-80"
+                 loading="lazy"
                />
                <div className="absolute inset-0 bg-deep-black/20"></div>
              </div>
