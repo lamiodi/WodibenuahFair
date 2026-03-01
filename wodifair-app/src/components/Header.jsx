@@ -1,29 +1,50 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 
 const Header = () => {
-  const { isAuthenticated, logout, user } = useAuth();
+  const { isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen);
+  };
 
   const handleLogout = () => {
     logout();
     toast.success('Logged out successfully');
     navigate('/');
+    setIsMenuOpen(false);
   };
+
+  const navItems = [
+    { label: 'Home', path: '/' },
+    { label: 'About', path: '/about' },
+    { label: 'Event Info', path: '/event-info' },
+    { label: 'Vendors', path: '/vendors' },
+    { label: 'Blog', path: '/blog' },
+    { label: 'Register', path: '/register' },
+    { label: 'Contact', path: '/contact' },
+  ];
 
   return (
     // Header container with bottom border
-    <header className="flex items-center justify-between border-b border-deep-black bg-cream h-[70px]">
+    <header className="relative z-50 flex items-center justify-between border-b border-deep-black bg-cream h-[70px]">
       
       {/* Left section - Hamburger menu */}
       <div className="h-full px-6 border-r border-deep-black flex items-center justify-center">
         {/* Hamburger icon using three horizontal lines */}
-        <button className="flex flex-col gap-1.5 p-2 hover:opacity-70 transition-opacity">
-          <span className="w-6 h-0.5 bg-deep-black"></span>
-          <span className="w-6 h-0.5 bg-deep-black"></span>
-          <span className="w-6 h-0.5 bg-deep-black"></span>
+        <button 
+          onClick={toggleMenu}
+          className="flex flex-col gap-1.5 p-2 hover:opacity-70 transition-opacity"
+          aria-label={isMenuOpen ? "Close menu" : "Open menu"}
+          aria-expanded={isMenuOpen}
+        >
+          <span className={`w-6 h-0.5 bg-deep-black transition-transform duration-300 ${isMenuOpen ? 'rotate-45 translate-y-2' : ''}`}></span>
+          <span className={`w-6 h-0.5 bg-deep-black transition-opacity duration-300 ${isMenuOpen ? 'opacity-0' : ''}`}></span>
+          <span className={`w-6 h-0.5 bg-deep-black transition-transform duration-300 ${isMenuOpen ? '-rotate-45 -translate-y-2' : ''}`}></span>
         </button>
       </div>
       
@@ -56,6 +77,7 @@ const Header = () => {
                 fill="none" 
                 stroke="currentColor" 
                 viewBox="0 0 24 24"
+                aria-hidden="true"
             >
                 <path 
                 strokeLinecap="round" 
@@ -76,6 +98,7 @@ const Header = () => {
             fill="none" 
             stroke="currentColor" 
             viewBox="0 0 24 24"
+            aria-hidden="true"
           >
             <path 
               strokeLinecap="round" 
@@ -86,6 +109,22 @@ const Header = () => {
           </svg>
         </Link>
       </div>
+
+      {/* Mobile Menu Overlay */}
+      {isMenuOpen && (
+        <div className="absolute top-[70px] left-0 w-full bg-cream border-b border-deep-black shadow-lg flex flex-col animate-in fade-in slide-in-from-top-5 duration-200">
+          {navItems.map((item) => (
+            <Link
+              key={item.path}
+              to={item.path}
+              onClick={() => setIsMenuOpen(false)}
+              className="p-4 border-b border-deep-black/10 hover:bg-black/5 text-deep-black font-medium transition-colors text-center uppercase tracking-widest"
+            >
+              {item.label}
+            </Link>
+          ))}
+        </div>
+      )}
     </header>
   );
 };

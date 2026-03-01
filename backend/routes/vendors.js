@@ -8,7 +8,6 @@ import { processSuccessfulPayment } from '../services/paymentService.js';
 
 const router = express.Router();
 const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
-const RESEND_API_KEY = process.env.RESEND_API_KEY;
 
 // Get All Vendors (Protected)
 router.get('/', authenticateToken, async (req, res, next) => {

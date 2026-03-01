@@ -26,7 +26,7 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Validate Environment Variables
-const requiredEnv = ['DATABASE_URL', 'JWT_SECRET', 'PAYSTACK_SECRET_KEY', 'RESEND_API_KEY', 'ADMIN_SECRET'];
+const requiredEnv = ['DATABASE_URL', 'JWT_SECRET', 'PAYSTACK_SECRET_KEY', 'ADMIN_SECRET'];
 const missingEnv = requiredEnv.filter(key => !process.env[key]);
 
 if (missingEnv.length > 0) {
@@ -35,11 +35,6 @@ if (missingEnv.length > 0) {
     process.exit(1);
   }
 }
-
-// Initialize Resend
-console.log('Initializing Resend...');
-// const resend = new Resend(process.env.RESEND_API_KEY);
-console.log('Resend initialized'); // Avoid logging the object to prevent secret leakage
 
 // Security Middleware
 app.use(helmet()); // Secure HTTP headers

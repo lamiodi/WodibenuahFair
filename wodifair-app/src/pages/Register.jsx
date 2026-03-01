@@ -9,6 +9,7 @@ import { apiRequest } from '../services/api';
 const Register = () => {
   const [searchParams] = useSearchParams();
   const locationParam = searchParams.get('location');
+  const eventIdParam = searchParams.get('eventId');
   const navigate = useNavigate();
   
   const [formData, setFormData] = useState({
@@ -42,7 +43,12 @@ const Register = () => {
         setEvents(eventsList);
 
         // Pre-select based on URL param
-        if (locationParam) {
+        if (eventIdParam) {
+           const matchedEvent = eventsList.find(e => e.id.toString() === eventIdParam);
+           if (matchedEvent) {
+             setFormData(prev => ({ ...prev, eventId: matchedEvent.id }));
+           }
+        } else if (locationParam) {
           const matchedEvent = eventsList.find(e => 
             e.location.toLowerCase().includes(locationParam.toLowerCase()) || 
             e.title.toLowerCase().includes(locationParam.toLowerCase())
@@ -68,12 +74,12 @@ const Register = () => {
 
   const handlePayment = (vendorId) => {
     const boothPrices = {
-      'Shared Booth': 8000000,
-      'Full Booth': 15000000,
-      'Half Booth': 19000000,
-      'Food Slot': 30000000
+      'Royal Booth': 380000,
+      'Half Booth': 190000,
+      'Food Slot': 300000
     };
-    const amountToCharge = boothPrices[formData.boothType] || 500000;
+    // Paystack expects amount in kobo
+    const amountToCharge = (boothPrices[formData.boothType] || 190000) * 100;
 
     const paystack = new PaystackPop();
     paystack.newTransaction({

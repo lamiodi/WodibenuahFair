@@ -27,8 +27,7 @@ export const processSuccessfulPayment = async (reference, amountPaid, vendorIdOr
 
     // Validate Payment Amount
     const boothPrices = {
-      'Shared Booth': 80000,
-      'Full Booth': 150000,
+      'Royal Booth': 380000,
       'Half Booth': 190000,
       'Food Slot': 300000
     };

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const UpcomingEvents = ({ title = "Upcoming Events" }) => {
@@ -142,6 +143,16 @@ const UpcomingEvents = ({ title = "Upcoming Events" }) => {
                  <p className="text-gray-300 text-lg md:text-xl font-body italic mb-8 max-w-md">
                    {events[activeEventIndex].location} &bull; {events[activeEventIndex].subtitle}
                  </p>
+
+                 <div className="flex flex-wrap gap-4 mb-8">
+                    <Link 
+                      to={`/register?location=${events[activeEventIndex].city}`}
+                      className="bg-gold text-deep-black text-sm font-bold px-6 py-3 uppercase tracking-widest hover:bg-white transition-colors flex items-center gap-2"
+                    >
+                      <span>Book a Booth</span>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                    </Link>
+                 </div>
 
                  {/* Embedded Map Container */}
                  <div className="relative w-full h-48 md:h-64 border border-white/20 bg-deep-black/50 backdrop-blur-sm overflow-hidden group">
