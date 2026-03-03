@@ -35,7 +35,6 @@ const Register = () => {
   const [events, setEvents] = useState([]);
   const [boothPrices, setBoothPrices] = useState({
     'Royal Booth': 380000,
-    'Half Booth': 190000,
     'Food Slot': 300000
   });
 
@@ -415,10 +414,11 @@ const Register = () => {
                     className="w-full px-0 py-3 border-b border-gray-300 focus:border-deep-black bg-transparent outline-none transition-colors text-lg font-body cursor-pointer"
                   >
                     <option value="">SELECT A BOOTH TYPE</option>
-                    <option value="Shared Booth">Shared Booth - ₦80,000</option>
-                    <option value="Full Booth">Full Booth - ₦150,000</option>
-                    <option value="Half Booth">Half Booth - ₦190,000</option>
-                    <option value="Food Slot">Food Slot - ₦300,000</option>
+                    {Object.entries(boothPrices).map(([type, price]) => (
+                      <option key={type} value={type}>
+                        {type} - ₦{price.toLocaleString()}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>
