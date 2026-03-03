@@ -12,7 +12,9 @@ const __dirname = path.dirname(__filename);
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false }
+  ssl: process.env.NODE_ENV === 'production' 
+    ? { rejectUnauthorized: false } // Required for Render/Heroku
+    : false
 });
 
 export const initDb = async () => {

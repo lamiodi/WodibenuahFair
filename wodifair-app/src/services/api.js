@@ -51,13 +51,16 @@ export const apiRequest = async (endpoint, options = {}) => {
     const data = await response.json();
 
     if (!response.ok) {
-      throw new Error(data.error || data.message || 'API Request Failed');
+      // Prioritize structured error message from backend
+      const errorMessage = data.message || data.error || 'An unexpected error occurred';
+      throw new Error(errorMessage);
     }
 
     return data;
   } catch (error) {
     console.error(`API Error (${endpoint}):`, error);
-    throw error;
+    // Re-throw with clean message for UI
+    throw new Error(error.message || 'Network request failed');
   }
 };
 
