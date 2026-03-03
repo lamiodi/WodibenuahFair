@@ -83,11 +83,6 @@ const Register = () => {
   };
 
   const handlePayment = (vendorId) => {
-    const boothPrices = {
-      'Royal Booth': 380000,
-      'Half Booth': 190000,
-      'Food Slot': 300000
-    };
     // Paystack expects amount in kobo
     const amountToCharge = (boothPrices[formData.boothType] || 190000) * 100;
 

@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import Navigation from '../components/Navigation';
 import Footer from '../components/Footer';
 import SEO from '../components/SEO';
+import Loading from '../components/Loading';
 // import { apiRequest } from '../services/api';
 import blogPostsData from '../data/blogPosts'; // Import static data
 
