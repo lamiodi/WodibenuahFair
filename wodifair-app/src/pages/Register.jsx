@@ -33,8 +33,18 @@ const Register = () => {
 
   const [status, setStatus] = useState('idle'); // idle, submitting, success, error
   const [events, setEvents] = useState([]);
+  const [boothPrices, setBoothPrices] = useState({
+    'Royal Booth': 380000,
+    'Half Booth': 190000,
+    'Food Slot': 300000
+  });
 
   useEffect(() => {
+    // Fetch prices
+    apiRequest('/vendors/prices').then(prices => {
+      if (prices) setBoothPrices(prices);
+    }).catch(err => console.error('Failed to load prices', err));
+
     // Fetch all events instead of just next
     apiRequest('/events').then(data => {
       if (data) {
@@ -94,7 +104,7 @@ const Register = () => {
         ]
       },
       onSuccess: (transaction) => {
-        toast.loading('Verifying payment...', { id: 'payment-toast' });
+        setStatus('verifying');
         // Verify payment on backend
         apiRequest('/vendors/verify-payment', {
           method: 'POST',
@@ -152,6 +162,18 @@ const Register = () => {
       setStatus('error');
     }
   };
+
+  if (status === 'verifying') {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-deep-black/90 backdrop-blur-md">
+        <div className="text-center text-white">
+          <div className="w-16 h-16 border-4 border-gold border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
+          <h2 className="text-3xl font-heading font-bold uppercase tracking-widest mb-2">Verifying Payment</h2>
+          <p className="text-gray-400 text-sm tracking-wider uppercase">Please do not close this window</p>
+        </div>
+      </div>
+    );
+  }
 
   if (status === 'success') {
     return (

@@ -24,9 +24,14 @@ services:
       - key: ADMIN_SECRET
         sync: false
       - key: CLIENT_URL
-        sync: false
+        value: https://wodibenuahfair.org
+        sync: true
       - key: ADMIN_URL
-        sync: false
+        value: https://wodibenuahfair.org
+        sync: true
+      - key: EMAIL_FROM
+        value: info@wodibenuahfair.org
+        sync: true
 
   - type: static_site
     name: wodifair-app

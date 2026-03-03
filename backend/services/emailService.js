@@ -23,8 +23,9 @@ export const resend = (apiKey && !apiKey.includes('PLACEHOLDER'))
 
 export const sendEmail = async ({ to, subject, html, text }) => {
   try {
+    const fromEmail = process.env.EMAIL_FROM || 'Wodibenuah Fair <onboarding@resend.dev>';
     const data = await resend.emails.send({
-      from: 'Wodibenuah Fair <onboarding@resend.dev>', // Update this with your verified domain in production
+      from: fromEmail,
       to,
       subject,
       html,

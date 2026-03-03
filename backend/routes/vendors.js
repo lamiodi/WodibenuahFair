@@ -5,9 +5,15 @@ import pool from '../db.js';
 import { validate } from '../middleware/validate.js';
 import { authenticateToken } from '../middleware/auth.js';
 import { processSuccessfulPayment } from '../services/paymentService.js';
+import { BOOTH_PRICES } from '../config/pricing.js';
 
 const router = express.Router();
 const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
+
+// Get Booth Prices (Public)
+router.get('/prices', (req, res) => {
+  res.json(BOOTH_PRICES);
+});
 
 // Get All Vendors (Protected)
 router.get('/', authenticateToken, async (req, res, next) => {
@@ -47,6 +53,36 @@ router.post('/register', validate([
   } = req.body;
 
   try {
+    // Check for existing registration
+    const existingVendor = await pool.query('SELECT * FROM vendors WHERE email = $1', [email]);
+    if (existingVendor.rows.length > 0) {
+      const vendor = existingVendor.rows[0];
+      if (vendor.payment_status === 'paid') {
+        return res.status(409).json({ error: 'This email is already registered and paid.' });
+      } else {
+        // If pending, we can update their details or just return the existing ID to let them pay
+        // Updating details is safer in case they changed booth type
+        const updateQuery = `
+          UPDATE vendors SET
+            full_name = $2, phone_number = $3, whatsapp_number = $4, instagram_handle = $5,
+            business_name = $6, sector = $7, booth_type = $8, selected_location = $9, 
+            is_previous_vendor = $10, live_in_abuja = $11, category_accepted = $12, 
+            agree_to_market = $13, agree_to_whatsapp = $14, agree_to_terms = $15, event_id = $16,
+            updated_at = NOW()
+          WHERE email = $1
+          RETURNING *;
+        `;
+        const updateValues = [
+          email, fullName, phoneNumber, whatsappNumber, instagramHandle,
+          businessName, sector, boothType, selectedLocation, isPreviousVendor, liveInAbuja,
+          categoryAccepted, agreeToMarket, agreeToWhatsapp, agreeToTerms, eventId
+        ];
+        
+        const updatedResult = await pool.query(updateQuery, updateValues);
+        return res.status(200).json({ message: 'Registration updated', vendor: updatedResult.rows[0] });
+      }
+    }
+
     const query = `
       INSERT INTO vendors (
         email, full_name, phone_number, whatsapp_number, instagram_handle,

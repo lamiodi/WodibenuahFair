@@ -55,6 +55,50 @@ const AdminDashboard = () => {
     isFeatured: false
   });
 
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const filteredVendors = vendors.filter(vendor => 
+    vendor.business_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    vendor.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    vendor.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    vendor.payment_reference?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const handleExportCSV = () => {
+    if (vendors.length === 0) {
+      toast.error('No data to export');
+      return;
+    }
+
+    const headers = ['Business Name', 'Contact Name', 'Email', 'Phone', 'Instagram', 'Booth Type', 'Location', 'Sector', 'Payment Status', 'Amount Paid', 'Reference', 'Date'];
+    const csvContent = [
+      headers.join(','),
+      ...vendors.map(v => [
+        `"${v.business_name}"`,
+        `"${v.full_name}"`,
+        `"${v.email}"`,
+        `"${v.phone_number}"`,
+        `"${v.instagram_handle}"`,
+        `"${v.booth_type}"`,
+        `"${v.selected_location}"`,
+        `"${v.sector}"`,
+        v.payment_status,
+        v.amount_paid || 0,
+        v.payment_reference || '',
+        new Date(v.created_at).toLocaleDateString()
+      ].join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `vendors_export_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
@@ -301,11 +345,23 @@ const AdminDashboard = () => {
 
   const renderVendors = () => (
     <div className="bg-white border border-gray-200 shadow-sm overflow-hidden">
-      <div className="p-6 border-b border-gray-100 flex justify-between items-center">
+      <div className="p-6 border-b border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4">
         <h3 className="text-xl font-heading font-bold uppercase text-deep-black">Registered Vendors</h3>
-        <button className="text-sm text-gold hover:text-deep-black transition-colors font-bold uppercase tracking-wider">
-          Export CSV
-        </button>
+        <div className="flex gap-4 w-full md:w-auto">
+          <input 
+            type="text" 
+            placeholder="Search vendors..." 
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="px-4 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-gold w-full md:w-64"
+          />
+          <button 
+            onClick={handleExportCSV}
+            className="text-sm bg-deep-black text-white px-4 py-2 hover:bg-gold hover:text-deep-black transition-colors font-bold uppercase tracking-wider whitespace-nowrap"
+          >
+            Export CSV
+          </button>
+        </div>
       </div>
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
@@ -320,12 +376,12 @@ const AdminDashboard = () => {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100 text-sm">
-            {vendors.length === 0 ? (
+            {filteredVendors.length === 0 ? (
               <tr>
                 <td colSpan="6" className="p-8 text-center text-gray-400">No vendors found.</td>
               </tr>
             ) : (
-              vendors.map((vendor) => (
+              filteredVendors.map((vendor) => (
                 <tr key={vendor.id} className="hover:bg-gray-50 transition-colors">
                   <td className="p-4">
                     <div className="font-bold text-deep-black">{vendor.business_name}</div>
