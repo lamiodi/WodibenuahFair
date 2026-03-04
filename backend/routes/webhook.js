@@ -39,6 +39,8 @@ router.post('/paystack', async (req, res) => {
         if (event.event === 'charge.success') {
             const { reference, amount, metadata, customer } = event.data;
             const email = customer.email;
+            // Paystack metadata is sometimes nested or flat depending on how it was sent.
+            // Our frontend sends it as { vendorId: ... } inside metadata object.
             const vendorId = metadata ? metadata.vendorId : null;
             
             // Amount comes in kobo, convert to Naira
@@ -47,7 +49,20 @@ router.post('/paystack', async (req, res) => {
             console.log(`Webhook received for ${email}, reference: ${reference}`);
 
             // Process Payment
-            await processSuccessfulPayment(reference, amountPaid, vendorId || email, !vendorId);
+            // Note: If vendorId is missing, we fallback to email lookup.
+            // We pass isEmail = true if we are using email.
+            // If vendorId is present, we use it (isEmail = false).
+            const identifier = vendorId || email;
+            const isEmailLookup = !vendorId;
+
+            try {
+                await processSuccessfulPayment(reference, amountPaid, identifier, isEmailLookup);
+                console.log(`Payment processed successfully via webhook for ${email}`);
+            } catch (err) {
+                console.error(`Failed to process payment via webhook for ${email}:`, err);
+                // We still return 200 to Paystack to acknowledge receipt, 
+                // but we might want to log this to an error tracking service.
+            }
         }
 
         res.sendStatus(200);
