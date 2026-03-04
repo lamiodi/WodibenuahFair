@@ -5,6 +5,7 @@ import pool from '../db.js';
 import { validate } from '../middleware/validate.js';
 import { authenticateToken } from '../middleware/auth.js';
 import { processSuccessfulPayment } from '../services/paymentService.js';
+import { sendProfessionalEmail } from '../services/emailTemplates.js';
 import { BOOTH_PRICES } from '../config/pricing.js';
 
 const router = express.Router();
@@ -79,6 +80,9 @@ router.post('/register', validate([
         ];
         
         const updatedResult = await pool.query(updateQuery, updateValues);
+        
+        // Email removed as per request - feedback is shown on frontend instead
+        
         return res.status(200).json({ message: 'Registration updated', vendor: updatedResult.rows[0] });
       }
     }
@@ -99,6 +103,9 @@ router.post('/register', validate([
     ];
 
     const result = await pool.query(query, values);
+
+    // Email removed as per request - feedback is shown on frontend instead
+
     res.status(201).json({ message: 'Vendor registered successfully', vendor: result.rows[0] });
   } catch (error) {
     console.error('Error registering vendor:', error);
