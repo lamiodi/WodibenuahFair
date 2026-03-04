@@ -149,15 +149,15 @@ const Contact = () => {
 
                   <div className="group">
                     <span className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">Call Us</span>
-                    <a href="tel:+2348001234567" className="text-xl md:text-2xl font-body text-deep-black border-b border-transparent group-hover:border-deep-black transition-all inline-block">
-                      +234 800 123 4567
+                    <a href="tel:+2349150834327" className="text-xl md:text-2xl font-body text-deep-black border-b border-transparent group-hover:border-deep-black transition-all inline-block">
+                      +234 915 083 4327
                     </a>
                   </div>
 
                   <div className="group">
                     <span className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">WhatsApp</span>
-                    <a href="https://wa.me/2348001234567" className="text-xl md:text-2xl font-body text-deep-black border-b border-transparent group-hover:border-deep-black transition-all inline-block">
-                      +234 800 123 4567
+                    <a href="https://wa.me/2349150834327" className="text-xl md:text-2xl font-body text-deep-black border-b border-transparent group-hover:border-deep-black transition-all inline-block">
+                      +234 915 083 4327
                     </a>
                   </div>
                 </div>

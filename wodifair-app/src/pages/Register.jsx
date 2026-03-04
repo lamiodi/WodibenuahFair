@@ -35,45 +35,66 @@ const Register = () => {
   const [status, setStatus] = useState('idle'); // idle, submitting, success, error
   const [errorMessage, setErrorMessage] = useState('');
   const [events, setEvents] = useState([]);
-  const [boothPrices, setBoothPrices] = useState({
-    'Royal Booth': 380000,
-    'Food Slot': 300000
+  
+  // Store all pricing configurations
+  const [allPrices, setAllPrices] = useState({
+    'Default': {
+      'Royal Booth': 380000,
+      'Food Slot': 300000,
+      'Half Booth': 190000
+    },
+    'Port Harcourt': {
+      'Royal Booth': 350000,
+      'Food Slot': 250000,
+      'Single Booth': 175000
+    }
   });
 
+  // Current active prices based on location
+  const [boothPrices, setBoothPrices] = useState(allPrices['Default']);
+
   useEffect(() => {
-    // Fetch prices
-    apiRequest('/vendors/prices').then(prices => {
-      if (prices) setBoothPrices(prices);
+    // Fetch prices configuration
+    apiRequest('/vendors/prices').then(data => {
+      if (data) {
+        setAllPrices(data);
+        // Initial update based on current selection
+        updateBoothPrices(formData.selectedLocation, data);
+      }
     }).catch(err => console.error('Failed to load prices', err));
 
-    // Fetch all events instead of just next
+    // Fetch all events
     apiRequest('/events').then(data => {
       if (data) {
-        // Handle both array and object response (just in case)
         const eventsList = Array.isArray(data) ? data : [data];
         setEvents(eventsList);
 
-        // Pre-select based on URL param
         if (eventIdParam) {
            const matchedEvent = eventsList.find(e => e.id.toString() === eventIdParam);
            if (matchedEvent) {
              setFormData(prev => ({ ...prev, eventId: matchedEvent.id }));
            }
         } else if (locationParam) {
-          const matchedEvent = eventsList.find(e => 
-            e.location.toLowerCase().includes(locationParam.toLowerCase()) || 
-            e.title.toLowerCase().includes(locationParam.toLowerCase())
-          );
-          if (matchedEvent) {
-            setFormData(prev => ({ ...prev, eventId: matchedEvent.id }));
-          }
-        } else if (eventsList.length > 0) {
-           // Default to first one if not specified
-           setFormData(prev => ({ ...prev, eventId: eventsList[0].id }));
+          // Auto-select location from URL param if valid
+          const loc = locationParam.charAt(0).toUpperCase() + locationParam.slice(1);
+          setFormData(prev => ({ ...prev, selectedLocation: loc }));
         }
       }
     }).catch(err => console.error(err));
   }, [locationParam, eventIdParam]);
+
+  // Update booth prices when location changes
+  const updateBoothPrices = (location, prices = allPrices) => {
+    if (location === 'Port Harcourt' && prices['Port Harcourt']) {
+      setBoothPrices(prices['Port Harcourt']);
+    } else {
+      setBoothPrices(prices['Default'] || prices);
+    }
+  };
+
+  useEffect(() => {
+    updateBoothPrices(formData.selectedLocation);
+  }, [formData.selectedLocation, allPrices]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -316,23 +337,18 @@ const Register = () => {
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {/* Event Location Selector Removed as per request */}
-                {/* 
                 <div className="md:col-span-2 group">
-                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-2 group-focus-within:text-deep-black transition-colors">Select Event Location *</label>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-2 group-focus-within:text-deep-black transition-colors">Select Location *</label>
                   <select 
-                    required name="eventId" value={formData.eventId} onChange={handleChange}
+                    required name="selectedLocation" value={formData.selectedLocation} onChange={handleChange}
                     className="w-full px-0 py-3 border-b border-gray-300 focus:border-deep-black bg-transparent outline-none transition-colors text-lg font-body cursor-pointer"
                   >
-                    <option value="">SELECT AN EVENT</option>
-                    {events.map(event => (
-                      <option key={event.id} value={event.id}>
-                        {event.title} - {event.location} ({new Date(event.start_date).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })})
-                      </option>
-                    ))}
+                    <option value="">SELECT LOCATION</option>
+                    <option value="Abuja">Abuja</option>
+                    <option value="Lagos">Lagos</option>
+                    <option value="Port Harcourt">Port Harcourt</option>
                   </select>
-                </div> 
-                */}
+                </div>
 
                 {/* Replaced with simple location selector if needed, or rely on selectedLocation state if it exists */}
                 {/* Assuming user still wants to choose "Abuja" or "Lagos" broadly? 
@@ -477,7 +493,7 @@ const Register = () => {
               <div className="space-y-6">
                 {[
                   { name: 'isPreviousVendor', label: 'I am a previous vendor' },
-                  { name: 'liveInAbuja', label: 'I live in Abuja / am available to exhibit in Abuja *' },
+                  { name: 'liveInAbuja', label: `I live in ${formData.selectedLocation || 'Abuja'} / am available to exhibit in ${formData.selectedLocation || 'Abuja'} *` },
                   { name: 'categoryAccepted', label: 'I confirm my business category is accepted by the exhibition *' },
                   { name: 'agreeToMarket', label: 'I agree to ACTIVELY Market my business and contribute to the Fair *' },
                   { name: 'agreeToWhatsapp', label: 'I agree to JOIN & REMAIN ACTIVE in the assigned WhatsApp group *' }

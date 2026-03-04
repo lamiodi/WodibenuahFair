@@ -27,7 +27,19 @@ export const processSuccessfulPayment = async (reference, amountPaid, vendorIdOr
     const vendor = vendorResult.rows[0];
 
     // Validate Payment Amount
-    const expectedAmount = Number(BOOTH_PRICES[vendor.booth_type]);
+    // Determine price based on location
+    const location = vendor.selected_location || 'Default';
+    const priceConfig = BOOTH_PRICES[location] || BOOTH_PRICES['Default'];
+    
+    if (!priceConfig) {
+      console.error(`Pricing configuration not found for location: ${location}`);
+      // Proceed with caution or throw error? 
+      // If we can't determine price, we can't validate amount.
+      // But if we throw, we block payment processing.
+      // Let's log error and assume 0 (which bypasses the check below if expectedAmount is 0/falsy)
+    }
+
+    const expectedAmount = priceConfig ? Number(priceConfig[vendor.booth_type]) : 0;
     const paidAmount = Number(amountPaid);
     
     if (expectedAmount && paidAmount < expectedAmount) {

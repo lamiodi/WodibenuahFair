@@ -29,7 +29,9 @@ const sendAbandonedCartEmails = async () => {
 
     for (const vendor of vendors) {
       // Send Email
-      const price = BOOTH_PRICES[vendor.booth_type] || 0;
+      const location = vendor.selected_location || 'Default';
+      const priceConfig = BOOTH_PRICES[location] || BOOTH_PRICES['Default'] || {};
+      const price = priceConfig[vendor.booth_type] || 0;
       
       try {
         const content = `
