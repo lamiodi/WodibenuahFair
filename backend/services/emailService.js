@@ -23,17 +23,24 @@ export const resend = (apiKey && !apiKey.includes('PLACEHOLDER'))
 
 export const sendEmail = async ({ to, subject, html, text }) => {
   try {
-    const fromEmail = process.env.EMAIL_FROM || 'Wodibenuah Fair <onboarding@resend.dev>';
-    const data = await resend.emails.send({
+    const fromEmail = process.env.EMAIL_FROM || 'Wodibenuah Fair <hello@wodibenuahfair.org>';
+    
+    const { data, error } = await resend.emails.send({
       from: fromEmail,
       to,
       subject,
       html,
       text
     });
+
+    if (error) {
+      console.error('Resend API Error:', error);
+      return { success: false, error };
+    }
+
     return { success: true, data };
   } catch (error) {
-    console.error('Error sending email:', error);
+    console.error('Unexpected error sending email:', error);
     return { success: false, error };
   }
 };
