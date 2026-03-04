@@ -224,7 +224,7 @@ import { motion, AnimatePresence } from 'framer-motion';
             {/* Abuja */}
             <div className="group border border-deep-black p-8 hover:bg-deep-black hover:text-white transition-all duration-300 flex flex-col items-center text-center">
               <h3 className="text-3xl font-heading font-bold uppercase mb-2">Abuja</h3>
-              <p className="text-sm font-bold tracking-[0.2em] uppercase mb-8 opacity-70">April 4th & 5th, 2026</p>
+              <p className="text-sm font-bold tracking-[0.2em] uppercase mb-8 opacity-70">May 9th & 10th, 2026</p>
               <Link 
                 to="/register?location=Abuja" 
                 className="mt-auto inline-block px-8 py-3 border border-current text-xs font-bold uppercase tracking-[0.2em] hover:bg-white hover:text-deep-black transition-colors"

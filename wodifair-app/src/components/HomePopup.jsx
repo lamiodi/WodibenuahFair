@@ -101,10 +101,13 @@ const HomePopup = () => {
                 </button>
               </div>
 
-              <div className="mt-6 pt-6 border-t border-gray-300 text-center">
-                <p className="text-[10px] text-gray-500 uppercase tracking-widest">
-                  April 4th & 5th, 2026 • Abuja
-                </p>
+              {/* Bottom Info */}
+              <div className="mt-8 pt-8 border-t border-gray-200 text-xs text-gray-400 flex items-center justify-between">
+                <span>May 9th & 10th, 2026 • Abuja</span>
+                <span className="flex items-center gap-1">
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                  Registration Closes Soon
+                </span>
               </div>
             </div>
           </motion.div>
