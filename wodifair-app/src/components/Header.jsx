@@ -34,7 +34,7 @@ const Header = () => {
     <header className="relative z-50 flex items-center justify-between border-b border-deep-black bg-cream h-[70px]">
       
       {/* Left section - Hamburger menu */}
-      <div className="h-full px-6 border-r border-deep-black flex items-center justify-center">
+      <div className="h-full px-4 md:px-6 border-r border-deep-black flex items-center justify-center">
         {/* Hamburger icon using three horizontal lines */}
         <button 
           onClick={toggleMenu}
@@ -49,7 +49,7 @@ const Header = () => {
       </div>
       
       {/* Middle section - Empty space (logo removed) */}
-      <div className="flex-1 border-r border-deep-black h-full flex items-center px-6">
+      <div className="flex-1 border-r border-deep-black h-full flex items-center px-4 md:px-6">
       </div>
       
       {/* Right section - Login and Subscribe buttons */}
@@ -69,8 +69,8 @@ const Header = () => {
           </>
         ) : (
             /* Login button with user icon */
-            <Link to="/admin/login" className="h-full px-6 flex items-center gap-2 hover:bg-gray-100 transition-colors border-r border-deep-black">
-            <span className="text-sm font-medium text-deep-black">Admin</span>
+            <Link to="/admin/login" className="h-full px-4 md:px-6 flex items-center gap-2 hover:bg-gray-100 transition-colors border-r border-deep-black">
+            <span className="text-xs md:text-sm font-medium text-deep-black hidden md:inline">Admin</span>
             {/* User icon SVG */}
             <svg 
                 className="w-4 h-4 text-deep-black" 
@@ -90,8 +90,8 @@ const Header = () => {
         )}
         
         {/* Register button with arrow - dark background */}
-        <Link to="/register" className="h-full px-8 flex items-center gap-3 bg-deep-black text-white hover:bg-gray-800 transition-colors">
-          <span className="text-sm font-medium tracking-wide">Register</span>
+        <Link to="/register" className="h-full px-4 md:px-8 flex items-center gap-2 md:gap-3 bg-deep-black text-white hover:bg-gray-800 transition-colors">
+          <span className="text-xs md:text-sm font-medium tracking-wide uppercase">Register</span>
           {/* Arrow icon pointing to top-right */}
           <svg 
             className="w-3 h-3" 
