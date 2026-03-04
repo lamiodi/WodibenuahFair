@@ -32,6 +32,9 @@ services:
       - key: EMAIL_FROM
         value: hello@wodibenuahfair.org
         sync: true
+      - key: ADMIN_EMAIL
+        value: Wodibenuah@yahoo.com
+        sync: true
 
   - type: static_site
     name: wodifair-app

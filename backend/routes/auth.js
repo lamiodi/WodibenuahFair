@@ -17,8 +17,13 @@ router.post('/register', validate([
 ]), async (req, res) => {
   const { email, password, adminSecret } = req.body;
   
-  if (adminSecret !== ADMIN_SECRET) {
+  if (adminSecret !== process.env.ADMIN_SECRET) {
     return res.status(403).json({ error: 'Unauthorized: Invalid admin secret' });
+  }
+
+  // Enforce the use of the specific admin email if configured
+  if (process.env.ADMIN_EMAIL && email.toLowerCase() !== process.env.ADMIN_EMAIL.toLowerCase()) {
+    return res.status(403).json({ error: 'Unauthorized: This email is not allowed for admin registration' });
   }
 
   try {
