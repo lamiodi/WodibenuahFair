@@ -85,7 +85,7 @@ const HomePopup = () => {
             {/* Text Section (Right) */}
             <div className="w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-center bg-cream relative">
               <div className="mb-2">
-                <span className="text-xs font-bold text-gray-500 uppercase tracking-[0.2em]">Abuja Edition</span>
+                <span className="text-xs font-bold text-gray-500 uppercase tracking-[0.2em]">BMO EVENT CENTER, Wuse 2</span>
               </div>
               
               <h2 className="text-4xl md:text-5xl font-heading font-medium text-deep-black uppercase leading-none mb-6">

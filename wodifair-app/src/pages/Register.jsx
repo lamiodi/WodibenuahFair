@@ -439,6 +439,7 @@ const Register = () => {
                     <option value="Fashion & Apparel">Fashion & Apparel</option>
                     <option value="Beauty, Cosmetics & Skincare">Beauty, Cosmetics & Skincare</option>
                     <option value="Food & Beverages">Food & Beverages</option>
+                    <option value="Drinks">Drinks</option>
                     <option value="Art, Crafts & Lifestyle">Art, Crafts & Lifestyle</option>
                     <option value="Home & Interior Decor">Home & Interior Decor</option>
                     <option value="Health & Wellness">Health & Wellness</option>
