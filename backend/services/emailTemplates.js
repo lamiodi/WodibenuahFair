@@ -66,7 +66,7 @@ const emailTemplate = (title, content, actionLink = null, actionText = null) => 
 
 export const sendProfessionalEmail = async ({ to, subject, title, content, actionLink, actionText }) => {
   const html = emailTemplate(title, content, actionLink, actionText);
-  const fromEmail = process.env.EMAIL_FROM || 'Wodibenuah Fair <onboarding@resend.dev>';
+  const fromEmail = process.env.EMAIL_FROM || 'Wodibenuah Fair <hello@wodibenuahfair.org>';
   
   try {
     const data = await resend.emails.send({
@@ -84,7 +84,7 @@ export const sendProfessionalEmail = async ({ to, subject, title, content, actio
 
 export const sendWithAttachments = async ({ to, subject, title, content, attachments }) => {
   const html = emailTemplate(title, content);
-  const fromEmail = process.env.EMAIL_FROM || 'Wodibenuah Fair <onboarding@resend.dev>';
+  const fromEmail = process.env.EMAIL_FROM || 'Wodibenuah Fair <hello@wodibenuahfair.org>';
   
   try {
     const data = await resend.emails.send({

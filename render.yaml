@@ -30,7 +30,7 @@ services:
         value: https://wodibenuahfair.org
         sync: true
       - key: EMAIL_FROM
-        value: info@wodibenuahfair.org
+        value: hello@wodibenuahfair.org
         sync: true
 
   - type: static_site
