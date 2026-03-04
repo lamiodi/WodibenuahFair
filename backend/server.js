@@ -40,11 +40,28 @@ if (missingEnv.length > 0) {
 app.use(helmet()); // Secure HTTP headers
 
 // CORS Configuration
+const allowedOrigins = [
+  process.env.CLIENT_URL,
+  process.env.ADMIN_URL,
+  'https://www.wodibenuahfair.org',
+  'https://wodibenuahfair.org'
+].filter(Boolean);
+
 const corsOptions = {
   origin: process.env.NODE_ENV === 'production' 
-    ? [process.env.CLIENT_URL, process.env.ADMIN_URL].filter(Boolean)
+    ? (origin, callback) => {
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+        if (allowedOrigins.indexOf(origin) !== -1) {
+          callback(null, true);
+        } else {
+          console.log('Blocked by CORS:', origin);
+          callback(new Error('Not allowed by CORS'));
+        }
+      }
     : '*', // Allow all in development
-  optionsSuccessStatus: 200
+  optionsSuccessStatus: 200,
+  credentials: true
 };
 app.use(cors(corsOptions));
 
