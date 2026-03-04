@@ -81,7 +81,7 @@ const HomePopup = () => {
               </h2>
               
               <p className="text-gray-600 text-sm leading-relaxed mb-8">
-                Join over 200+ premium vendors at the Abuja edition this April. Secure your prime booth location before they sell out.
+                Join over 200+ premium vendors at the Abuja edition this May. Secure your prime booth location before they sell out.
               </p>
 
               <div className="flex flex-col gap-3">

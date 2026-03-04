@@ -14,7 +14,7 @@ import { motion, AnimatePresence } from 'framer-motion';
     {
       image: "/images/IMG_0072.jpg",
       title: "ABUJA",
-      subtitle: "April 4th & 5th Edition"
+      subtitle: "May 9th & 10th Edition"
     },
     {
       image: "/images/IMG_0088.jpg",
