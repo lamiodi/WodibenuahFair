@@ -32,6 +32,7 @@ const Register = () => {
   });
 
   const [status, setStatus] = useState('idle'); // idle, submitting, success, error
+  const [errorMessage, setErrorMessage] = useState('');
   const [events, setEvents] = useState([]);
   const [boothPrices, setBoothPrices] = useState({
     'Royal Booth': 380000,
@@ -111,21 +112,27 @@ const Register = () => {
           if (data.status === 'success') {
             toast.success('Payment successful!', { id: 'payment-toast' });
             setStatus('success');
+            setErrorMessage('');
             // Redirect to Thank You page with reference and location
             navigate(`/thank-you?reference=${transaction.reference}&location=${encodeURIComponent(formData.selectedLocation || 'your location')}`);
           } else {
-            toast.error('Payment verification failed.', { id: 'payment-toast' });
+            const msg = data.message || 'Payment verification failed.';
+            toast.error(msg, { id: 'payment-toast' });
+            setErrorMessage(msg);
             setStatus('error');
           }
         })
         .catch(err => {
           console.error(err);
-          toast.error('Error verifying payment.', { id: 'payment-toast' });
+          const msg = err.message || 'Error verifying payment.';
+          toast.error(msg, { id: 'payment-toast' });
+          setErrorMessage(msg);
           setStatus('error');
         });
       },
       onCancel: () => {
         setStatus('error');
+        setErrorMessage('Transaction cancelled by user.');
         toast.error('Transaction cancelled');
       }
     });
@@ -134,6 +141,7 @@ const Register = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setStatus('submitting');
+    setErrorMessage('');
     toast.loading('Registering vendor...', { id: 'register-toast' });
     
     try {
@@ -147,12 +155,16 @@ const Register = () => {
         // Trigger Paystack Payment
         handlePayment(data.vendor.id);
       } else {
-        toast.error(data.error || 'Registration failed. Please try again.', { id: 'register-toast' });
+        const msg = data.error || 'Registration failed. Please try again.';
+        toast.error(msg, { id: 'register-toast' });
+        setErrorMessage(msg);
         setStatus('error');
       }
     } catch (err) {
       console.error(err);
-      toast.error(err.message || 'Network error. Please try again.', { id: 'register-toast' });
+      const msg = err.message || 'Network error. Please try again.';
+      toast.error(msg, { id: 'register-toast' });
+      setErrorMessage(msg);
       setStatus('error');
     }
   };
@@ -484,8 +496,9 @@ const Register = () => {
               </div>
               
               {status === 'error' && (
-                <div className="text-red-600 text-center font-bold mt-6 text-sm uppercase tracking-widest">
-                  Transaction failed. Please try again.
+                <div className="bg-red-50 border border-red-200 text-red-600 text-center p-4 mt-6 rounded-none">
+                  <p className="font-bold uppercase tracking-widest text-sm mb-1">Transaction Failed</p>
+                  <p className="text-sm">{errorMessage || 'An unexpected error occurred. Please try again.'}</p>
                 </div>
               )}
             </div>
