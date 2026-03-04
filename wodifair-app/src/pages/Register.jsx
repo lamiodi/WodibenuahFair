@@ -385,25 +385,16 @@ const Register = () => {
                     className="w-full px-0 py-3 border-b border-gray-300 focus:border-deep-black bg-transparent outline-none transition-colors text-lg font-body cursor-pointer"
                   >
                     <option value="">SELECT A SECTOR</option>
-                    <option value="Fashion">Fashion</option>
-                    <option value="Beauty">Beauty</option>
-                    <option value="Food & Drink">Food & Drink</option>
-                    <option value="Art & Lifestyle">Art & Lifestyle</option>
-                    <option value="Services">Services</option>
+                    <option value="Fashion & Apparel">Fashion & Apparel</option>
+                    <option value="Beauty, Cosmetics & Skincare">Beauty, Cosmetics & Skincare</option>
+                    <option value="Food & Beverages">Food & Beverages</option>
+                    <option value="Art, Crafts & Lifestyle">Art, Crafts & Lifestyle</option>
+                    <option value="Home & Interior Decor">Home & Interior Decor</option>
+                    <option value="Health & Wellness">Health & Wellness</option>
+                    <option value="Kids & Maternity">Kids & Maternity</option>
+                    <option value="Tech & Gadgets">Tech & Gadgets</option>
+                    <option value="Services & Consultancy">Services & Consultancy</option>
                     <option value="Other">Other</option>
-                  </select>
-                </div>
-
-                <div className="md:col-span-2 group">
-                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-2 group-focus-within:text-deep-black transition-colors">Select Location *</label>
-                  <select 
-                    required name="selectedLocation" value={formData.selectedLocation} onChange={handleChange}
-                    className="w-full px-0 py-3 border-b border-gray-300 focus:border-deep-black bg-transparent outline-none transition-colors text-lg font-body cursor-pointer"
-                  >
-                    <option value="">SELECT LOCATION</option>
-                    <option value="Abuja">Abuja</option>
-                    <option value="Lagos">Lagos</option>
-                    <option value="Port Harcourt">Port Harcourt</option>
                   </select>
                 </div>
 

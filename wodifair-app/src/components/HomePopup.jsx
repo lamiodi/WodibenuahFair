@@ -21,6 +21,18 @@ const HomePopup = () => {
     }
   }, []);
 
+  useEffect(() => {
+    // Prevent body scroll when popup is open
+    if (isVisible) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isVisible]);
+
   const handleClose = () => {
     setIsVisible(false);
     // Set flag in local storage
@@ -43,10 +55,10 @@ const HomePopup = () => {
           {/* Popup Content */}
           <motion.div 
             className="relative bg-white w-full max-w-4xl overflow-hidden shadow-2xl flex flex-col md:flex-row border border-deep-black"
-            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            transition={{ type: "spring", duration: 0.6 }}
+            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
           >
             {/* Close Button */}
             <button 

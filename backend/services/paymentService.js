@@ -27,11 +27,12 @@ export const processSuccessfulPayment = async (reference, amountPaid, vendorIdOr
     const vendor = vendorResult.rows[0];
 
     // Validate Payment Amount
-    const expectedAmount = BOOTH_PRICES[vendor.booth_type];
+    const expectedAmount = Number(BOOTH_PRICES[vendor.booth_type]);
+    const paidAmount = Number(amountPaid);
     
-    if (expectedAmount && amountPaid < expectedAmount) {
-       console.warn(`Insufficient payment attempt for ${vendor.email}. Expected: ${expectedAmount}, Paid: ${amountPaid}`);
-       throw new Error(`Insufficient payment. Expected ₦${expectedAmount}, but received ₦${amountPaid}.`);
+    if (expectedAmount && paidAmount < expectedAmount) {
+       console.warn(`Insufficient payment attempt for ${vendor.email}. Expected: ${expectedAmount}, Paid: ${paidAmount}`);
+       throw new Error(`Insufficient payment. Expected ₦${expectedAmount.toLocaleString()}, but received ₦${paidAmount.toLocaleString()}.`);
     }
 
     // Check if already paid

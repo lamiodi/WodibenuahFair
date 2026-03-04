@@ -73,6 +73,11 @@ app.get('/', (req, res) => {
   res.json({ message: 'Welcome to Wodibenuahfair API' });
 });
 
+// Lightweight Health Check for UptimeRobot
+app.get('/health', (req, res) => {
+  res.status(200).send('OK');
+});
+
 app.use('/api/webhooks', webhookRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/vendors', vendorRoutes); // Includes /api/vendors and /api/vendors/public
