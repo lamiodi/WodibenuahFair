@@ -101,7 +101,7 @@ export const processSuccessfulPayment = async (reference, amountPaid, vendorIdOr
       
       // Send Notification to Admin
       try {
-        const adminEmail = 'Wodibenuah@yahoo.com';
+        const adminEmail = 'tygaodibenuah@gmail.com';
         const adminContent = `
           <p style="font-size: 16px; line-height: 1.6; margin-bottom: 20px; color: #555555;">A new vendor has completed their registration and payment.</p>
           
