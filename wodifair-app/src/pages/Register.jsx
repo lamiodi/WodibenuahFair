@@ -11,6 +11,7 @@ const Register = () => {
   const locationParam = searchParams.get('location');
   const eventIdParam = searchParams.get('eventId');
   const navigate = useNavigate();
+  const errorRef = React.useRef(null);
   
   const [formData, setFormData] = useState({
     eventId: '',
@@ -120,6 +121,7 @@ const Register = () => {
             toast.error(msg, { id: 'payment-toast' });
             setErrorMessage(msg);
             setStatus('error');
+            if (errorRef.current) errorRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
           }
         })
         .catch(err => {
@@ -128,12 +130,14 @@ const Register = () => {
           toast.error(msg, { id: 'payment-toast' });
           setErrorMessage(msg);
           setStatus('error');
+          if (errorRef.current) errorRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
         });
       },
       onCancel: () => {
         setStatus('error');
-        setErrorMessage('Transaction cancelled by user.');
+        setErrorMessage('Transaction cancelled. Please try again when you are ready.');
         toast.error('Transaction cancelled');
+        if (errorRef.current) errorRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
     });
   };
@@ -159,13 +163,21 @@ const Register = () => {
         toast.error(msg, { id: 'register-toast' });
         setErrorMessage(msg);
         setStatus('error');
+        if (errorRef.current) errorRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
     } catch (err) {
       console.error(err);
-      const msg = err.message || 'Network error. Please try again.';
+      let msg = err.message || 'Network error. Please check your connection and try again.';
+      
+      // Enhance error messages
+      if (msg.includes('already registered')) {
+        msg = 'This email is already registered. Please check your email for previous confirmation or contact support.';
+      }
+      
       toast.error(msg, { id: 'register-toast' });
       setErrorMessage(msg);
       setStatus('error');
+      if (errorRef.current) errorRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
   };
 
@@ -269,6 +281,33 @@ const Register = () => {
           {/* Form Section */}
           <form onSubmit={handleSubmit} className="p-8 md:p-16 space-y-12">
             
+            {/* Error Message Display */}
+            {status === 'error' && (
+              <div ref={errorRef} className="bg-red-50 border-l-4 border-red-500 p-6 mb-8 animate-pulse">
+                <div className="flex">
+                  <div className="flex-shrink-0">
+                    <svg className="h-6 w-6 text-red-500" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div className="ml-4">
+                    <h3 className="text-lg leading-6 font-medium text-red-800 uppercase tracking-wider">
+                      Submission Error
+                    </h3>
+                    <div className="mt-2 text-sm text-red-700">
+                      <p className="font-bold">{errorMessage}</p>
+                      <p className="mt-2">Please correct the issue and try again.</p>
+                      {errorMessage.toLowerCase().includes('already registered') && (
+                         <div className="mt-3">
+                           <a href="/contact" className="text-red-900 underline font-bold hover:text-red-700">Contact Support</a> if you need assistance.
+                         </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Section 1: Personal Info */}
             <div>
               <div className="flex items-center gap-4 mb-8">
@@ -494,13 +533,6 @@ const Register = () => {
                   )}
                 </button>
               </div>
-              
-              {status === 'error' && (
-                <div className="bg-red-50 border border-red-200 text-red-600 text-center p-4 mt-6 rounded-none">
-                  <p className="font-bold uppercase tracking-widest text-sm mb-1">Transaction Failed</p>
-                  <p className="text-sm">{errorMessage || 'An unexpected error occurred. Please try again.'}</p>
-                </div>
-              )}
             </div>
 
           </form>
