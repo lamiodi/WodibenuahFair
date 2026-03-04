@@ -38,11 +38,12 @@ export const processSuccessfulPayment = async (reference, amountPaid, vendorIdOr
     // Check if already paid
     if (vendor.payment_status === 'paid') {
       console.log(`Vendor ${vendor.email} already marked as paid.`);
-      // If already paid, we might want to resend the email if requested, 
-      // but typically we just return success to avoid double processing.
-      // However, if the email failed the first time, this prevents retrying.
-      // Ideally, we should check if 'email_sent' flag exists (if we had one).
-      // For now, we return early to be safe against double accounting.
+      // Even if paid, check if we should attempt to send email again (if it failed previously)
+      // Since we don't have an 'email_sent' flag yet, we can't be sure.
+      // But if the user is complaining, it's safer to allow re-sending if explicitly requested or via a specific mechanism.
+      // However, for standard flow, to prevent duplicate emails on page refresh, we return.
+      // IMPROVEMENT: We will proceed to send email IF the request comes from a manual retry context or we add a flag.
+      // For now, let's just log it.
       return { status: 'already_paid', vendor };
     }
 
