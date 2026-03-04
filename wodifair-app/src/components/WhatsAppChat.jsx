@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 const WhatsAppChat = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const phoneNumber = "2348000000000"; // Replace with actual number
+  const phoneNumber = "2349150834327"; // Wodibenuah Fair Official WhatsApp
   const defaultMessage = "Hello! I'd like to know more about Wodibenuah Fair.";
 
   const handleSend = () => {
