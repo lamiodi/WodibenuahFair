@@ -17,7 +17,7 @@ const NextEventCountdown = () => {
             setNextEvent({
                 title: "Wodibenuah Fair Abuja",
                 start_date: "2026-05-09T10:00:00",
-                location: "Abuja International Conference Center",
+                location: "BMO Event Center, Abuja",
                 is_registration_open: true
             });
         }
@@ -28,7 +28,7 @@ const NextEventCountdown = () => {
         setNextEvent({
             title: "Wodibenuah Fair Abuja",
             start_date: "2026-05-09T10:00:00",
-            location: "Abuja International Conference Center",
+            location: "BMO Event Center, Abuja",
             is_registration_open: true
         });
         setLoading(false);

@@ -235,8 +235,8 @@ const EventInfo = () => {
             </p>
             <div className="space-y-6 border-t border-gray-800 pt-8">
                <div>
-                 <h4 className="text-sm font-bold uppercase tracking-wider mb-2">Address</h4>
-                 <p className="text-gray-400 text-sm">International Conference Centre, Abuja</p>
+                 <h4 className="text-sm font-bold uppercase tracking-wider mb-2">Location</h4>
+                 <p className="text-gray-400 text-sm">BMO Event Center, Abuja</p>
                </div>
                <div>
                  <h4 className="text-sm font-bold uppercase tracking-wider mb-2">Hours</h4>

@@ -89,7 +89,7 @@ const Privacy = () => {
 
           <div className="mt-16 pt-8 border-t border-deep-black">
             <p className="font-bold">Contact Us</p>
-            <p>If you have any questions about this Privacy Policy, please contact us at info@wodibenuahfair.com.</p>
+            <p>If you have any questions about this Privacy Policy, please contact us at <a href="mailto:Wodibenuah@yahoo.com" className="underline">Wodibenuah@yahoo.com</a>.</p>
           </div>
 
         </div>

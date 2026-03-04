@@ -13,11 +13,11 @@ const UpcomingEvents = ({ title = "Upcoming Events" }) => {
       title: "ABUJA",
       subtitle: "The Main Event",
       category: "Exhibition",
-      location: "International Conference Centre, Abuja",
+      location: "Venue TBD, Abuja",
       city: "Abuja",
       image: "/images/abuja may 9th 2026.jpeg",
-      mapUrl: "https://maps.google.com/maps?q=International+Conference+Centre+Abuja&t=&z=13&ie=UTF8&iwloc=&output=embed",
-      directionsUrl: "https://www.google.com/maps/dir/?api=1&destination=International+Conference+Centre+Abuja"
+      mapUrl: "https://maps.google.com/maps?q=Abuja&t=&z=13&ie=UTF8&iwloc=&output=embed",
+      directionsUrl: "https://www.google.com/maps/dir/?api=1&destination=Abuja"
     },
     {
       id: 2,

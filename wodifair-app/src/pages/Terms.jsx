@@ -56,7 +56,7 @@ const Terms = () => {
             <p className="mb-4">Wodibenuah Fair reserves the right to make exceptions in exceptional circumstances. Such exceptions will be evaluated on a case-by-case basis and are at the sole discretion of Wodibenuah Fair management.</p>
 
             <h3 className="text-xl font-bold mt-6 mb-2 uppercase tracking-wide">5. Contact Information</h3>
-            <p className="mb-4">For any inquiries regarding this policy, please contact our support team at [info@wodibenuahfair.com].</p>
+            <p className="mb-4">For any inquiries regarding this policy, please contact our support team at Wodibenuah@yahoo.com.</p>
             
             <p className="italic mt-4">We appreciate your understanding and cooperation in adhering to this policy. Wodibenuah Fair reserves the right to amend this policy as needed, and any changes will be communicated to vendors through official channels.</p>
           </section>
