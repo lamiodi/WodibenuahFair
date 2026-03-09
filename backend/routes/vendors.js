@@ -43,7 +43,7 @@ router.post('/register', validate([
   body('agreeToMarket').isBoolean(),
   body('agreeToWhatsapp').isBoolean(),
   body('agreeToTerms').isBoolean(),
-  body('eventId').optional().isInt(),
+  body('eventId').optional({ checkFalsy: true }).isInt(),
   body('boothType').trim().notEmpty().escape(),
   body('selectedLocation').trim().notEmpty().escape()
 ]), async (req, res, next) => {
@@ -78,11 +78,11 @@ router.post('/register', validate([
           businessName, sector, boothType, selectedLocation, isPreviousVendor, liveInAbuja,
           categoryAccepted, agreeToMarket, agreeToWhatsapp, agreeToTerms, eventId
         ];
-        
+
         const updatedResult = await pool.query(updateQuery, updateValues);
-        
+
         // Email removed as per request - feedback is shown on frontend instead
-        
+
         return res.status(200).json({ message: 'Registration updated', vendor: updatedResult.rows[0] });
       }
     }
@@ -95,7 +95,7 @@ router.post('/register', validate([
       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
       RETURNING *;
     `;
-    
+
     const values = [
       email, fullName, phoneNumber, whatsappNumber, instagramHandle,
       businessName, sector, boothType, selectedLocation, isPreviousVendor, liveInAbuja,
@@ -135,10 +135,10 @@ router.post('/verify-payment', validate([
 
       try {
         const result = await processSuccessfulPayment(reference, amountPaid, vendorId);
-        res.json({ 
-          status: 'success', 
+        res.json({
+          status: 'success',
           message: 'Payment verified successfully',
-          vendor: result.vendor 
+          vendor: result.vendor
         });
       } catch (err) {
         console.error('Error processing payment via service:', err);
@@ -163,7 +163,7 @@ router.get('/public', async (req, res) => {
       WHERE payment_status = 'paid' 
       ORDER BY business_name ASC
     `);
-    
+
     // Transform to match frontend structure (add placeholders for missing images/details)
     const vendors = result.rows.map(v => ({
       name: v.business_name,
@@ -171,7 +171,7 @@ router.get('/public', async (req, res) => {
       image: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=2070&auto=format&fit=crop", // Default placeholder
       booth: "TBD" // Placeholder
     }));
-    
+
     res.json(vendors);
   } catch (error) {
     console.error('Error fetching public vendors:', error);

@@ -52,7 +52,21 @@ export const apiRequest = async (endpoint, options = {}) => {
 
     if (!response.ok) {
       // Prioritize structured error message from backend
-      const errorMessage = data.message || data.error || 'An unexpected error occurred';
+      let errorMessage = data.message || data.error;
+      
+      // Handle express-validator returning an array of errors
+      if (data.errors && Array.isArray(data.errors)) {
+        errorMessage = data.errors.map(err => {
+          // Format validation error nicely: "field_name: Invalid value"
+          const field = err.path || err.param || 'Field';
+          return `${field.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}: ${err.msg}`;
+        }).join('. ');
+      }
+      
+      if (!errorMessage) {
+        errorMessage = 'An unexpected error occurred';
+      }
+      
       throw new Error(errorMessage);
     }
 
