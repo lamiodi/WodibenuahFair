@@ -47,11 +47,14 @@ router.post('/register', validate([
   body('boothType').trim().notEmpty().escape(),
   body('selectedLocation').trim().notEmpty().escape()
 ]), async (req, res, next) => {
-  const {
+  let {
     email, fullName, phoneNumber, whatsappNumber, instagramHandle,
     businessName, sector, boothType, selectedLocation, isPreviousVendor, liveInAbuja,
     categoryAccepted, agreeToMarket, agreeToWhatsapp, agreeToTerms, eventId
   } = req.body;
+
+  // Ensure eventId is null if it's an empty string (to avoid Postgres integer type errors)
+  eventId = eventId || null;
 
   try {
     // Check for existing registration

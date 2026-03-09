@@ -10,11 +10,11 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
  */
 export const apiRequest = async (endpoint, options = {}) => {
   const token = localStorage.getItem('token');
-  
+
   // Ensure endpoint starts with /api if not already included
   // The backend routes are defined as /api/..., so we construct the full URL carefully.
   // If the endpoint passed is '/vendors', we want 'http://localhost:5000/api/vendors'.
-  
+
   const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
   const path = cleanEndpoint.startsWith('/api') ? cleanEndpoint : `/api${cleanEndpoint}`;
   const url = `${API_BASE_URL}${path}`;
@@ -38,13 +38,13 @@ export const apiRequest = async (endpoint, options = {}) => {
 
   try {
     const response = await fetch(url, config);
-    
+
     // Handle 401 Unauthorized (Session expired)
     if (response.status === 401) {
       localStorage.removeItem('token');
       // Optional: Redirect to login or dispatch event
       if (!window.location.pathname.includes('/admin/login')) {
-         window.location.href = '/admin/login'; 
+        window.location.href = '/admin/login';
       }
     }
 
@@ -53,20 +53,20 @@ export const apiRequest = async (endpoint, options = {}) => {
     if (!response.ok) {
       // Prioritize structured error message from backend
       let errorMessage = data.message || data.error;
-      
+
       // Handle express-validator returning an array of errors
       if (data.errors && Array.isArray(data.errors)) {
         errorMessage = data.errors.map(err => {
           // Format validation error nicely: "field_name: Invalid value"
           const field = err.path || err.param || 'Field';
           return `${field.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}: ${err.msg}`;
-        }).join('. ');
+        }).join('\n');
       }
-      
+
       if (!errorMessage) {
         errorMessage = 'An unexpected error occurred';
       }
-      
+
       throw new Error(errorMessage);
     }
 
