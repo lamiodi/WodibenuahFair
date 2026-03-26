@@ -33,6 +33,7 @@ const FAQ = lazyWithDelay(() => import('./pages/FAQ'));
 const AdminDashboard = lazyWithDelay(() => import('./pages/AdminDashboard'));
 const AdminLogin = lazyWithDelay(() => import('./pages/AdminLogin'));
 const ThankYou = lazyWithDelay(() => import('./pages/ThankYou'));
+const CompletePayment = lazyWithDelay(() => import('./pages/CompletePayment'));
 const NotFound = lazyWithDelay(() => import('./pages/NotFound'));
 
 // Initialize GA4
@@ -79,6 +80,7 @@ function App() {
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/thank-you" element={<ThankYou />} />
+            <Route path="/complete-payment" element={<CompletePayment />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>

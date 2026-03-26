@@ -11,16 +11,56 @@ import { BOOTH_PRICES } from '../config/pricing.js';
 const router = express.Router();
 const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
 
+// Public: Lookup Vendor for Payment
+router.post('/lookup', validate([
+  body('email').isEmail().normalizeEmail()
+]), async (req, res, next) => {
+  const { email } = req.body;
+  try {
+    const result = await pool.query(
+      'SELECT id, email, full_name, business_name, booth_type, selected_location, payment_status, amount_paid FROM vendors WHERE email = $1',
+      [email]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'No registration found with this email.' });
+    }
+    res.json({ vendor: result.rows[0] });
+  } catch (error) {
+    next(error);
+  }
+});
+
 // Get Booth Prices (Public)
 router.get('/prices', (req, res) => {
   res.json(BOOTH_PRICES);
 });
 
-// Get All Vendors (Protected)
+// Get All Vendors (Protected) with Pagination
 router.get('/', authenticateToken, async (req, res, next) => {
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 20;
+  const offset = (page - 1) * limit;
+
   try {
-    const result = await pool.query('SELECT * FROM vendors ORDER BY created_at DESC');
-    res.json(result.rows);
+    // Get total count for pagination info
+    const countResult = await pool.query('SELECT COUNT(*) FROM vendors');
+    const totalCount = parseInt(countResult.rows[0].count);
+
+    // Get paginated data
+    const result = await pool.query(
+      'SELECT * FROM vendors ORDER BY created_at DESC LIMIT $1 OFFSET $2',
+      [limit, offset]
+    );
+
+    res.json({
+      vendors: result.rows,
+      pagination: {
+        total: totalCount,
+        page,
+        limit,
+        totalPages: Math.ceil(totalCount / limit)
+      }
+    });
   } catch (error) {
     next(error);
   }

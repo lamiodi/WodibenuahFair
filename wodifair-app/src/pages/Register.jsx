@@ -272,6 +272,12 @@ const Register = () => {
 
       {/* Main Content */}
       <div className="flex-grow w-full px-2 md:px-8 py-8 md:py-16">
+        <div className="max-w-5xl mx-auto mb-8 bg-gold/10 border border-gold p-4 text-center">
+          <p className="text-sm md:text-base font-bold text-deep-black uppercase tracking-wider">
+            Already registered but haven't paid? <a href="/complete-payment" className="underline hover:text-gold transition-colors">Click here to complete your payment</a>
+          </p>
+        </div>
+
         <div className="max-w-5xl mx-auto border border-deep-black bg-white relative">
 
           {/* Header Section inside Box */}
@@ -341,19 +347,6 @@ const Register = () => {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="md:col-span-2 group">
-                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-2 group-focus-within:text-deep-black transition-colors">Select Location *</label>
-                  <select
-                    required name="selectedLocation" value={formData.selectedLocation} onChange={handleChange}
-                    className="w-full px-0 py-3 border-b border-gray-300 focus:border-deep-black bg-transparent outline-none transition-colors text-lg font-body cursor-pointer"
-                  >
-                    <option value="">SELECT LOCATION</option>
-                    <option value="Abuja">Abuja</option>
-                    <option value="Lagos">Lagos</option>
-                    <option value="Port Harcourt">Port Harcourt</option>
-                  </select>
-                </div>
-
                 {/* Replaced with simple location selector if needed, or rely on selectedLocation state if it exists */}
                 {/* Assuming user still wants to choose "Abuja" or "Lagos" broadly? 
                     The previous prompt asked for "a location selector that is like abuja or lagos".

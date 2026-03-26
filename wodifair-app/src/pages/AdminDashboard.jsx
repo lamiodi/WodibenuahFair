@@ -8,7 +8,7 @@ import { apiRequest } from '../services/api';
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const navigate = useNavigate();
-  
+
   const [stats, setStats] = useState({ vendors: 0, blogs: 0, events: 0, highlights: 0 });
   const [vendors, setVendors] = useState([]);
   const [blogs, setBlogs] = useState([]);
@@ -18,7 +18,16 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [showEventModal, setShowEventModal] = useState(false);
   const [currentEvent, setCurrentEvent] = useState(null);
-  
+
+  // Pagination State
+  const [vendorPage, setVendorPage] = useState(1);
+  const [vendorTotalPages, setVendorTotalPages] = useState(1);
+  const vendorLimit = 20;
+
+  // Vendor Details Modal State
+  const [showVendorModal, setShowVendorModal] = useState(false);
+  const [currentVendor, setCurrentVendor] = useState(null);
+
   // Blog Modal State
   const [showBlogModal, setShowBlogModal] = useState(false);
   const [currentBlog, setCurrentBlog] = useState(null);
@@ -57,46 +66,57 @@ const AdminDashboard = () => {
 
   const [searchTerm, setSearchTerm] = useState('');
 
-  const filteredVendors = vendors.filter(vendor => 
-    vendor.business_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    vendor.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    vendor.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  const filteredVendors = vendors.filter(vendor =>
+    vendor.business_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    vendor.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    vendor.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     vendor.payment_reference?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleExportCSV = () => {
-    if (vendors.length === 0) {
-      toast.error('No data to export');
-      return;
+  const handleExportCSV = async () => {
+    try {
+      toast.loading('Preparing export...', { id: 'export-toast' });
+      // Fetch all vendors for export (no limit)
+      const data = await apiRequest('/vendors?limit=10000');
+      const allVendors = data.vendors || [];
+
+      if (allVendors.length === 0) {
+        toast.error('No data to export', { id: 'export-toast' });
+        return;
+      }
+
+      const headers = ['Business Name', 'Contact Name', 'Email', 'Phone', 'Instagram', 'Booth Type', 'Location', 'Sector', 'Payment Status', 'Amount Paid', 'Reference', 'Date'];
+      const csvContent = [
+        headers.join(','),
+        ...allVendors.map(v => [
+          `"${v.business_name}"`,
+          `"${v.full_name}"`,
+          `"${v.email}"`,
+          `"${v.phone_number}"`,
+          `"${v.instagram_handle}"`,
+          `"${v.booth_type}"`,
+          `"${v.selected_location}"`,
+          `"${v.sector}"`,
+          v.payment_status,
+          v.amount_paid || 0,
+          v.payment_reference || '',
+          new Date(v.created_at).toLocaleDateString()
+        ].join(','))
+      ].join('\n');
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', `vendors_export_full_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      toast.success('Export completed!', { id: 'export-toast' });
+    } catch (error) {
+      console.error('Export error:', error);
+      toast.error('Failed to export data', { id: 'export-toast' });
     }
-
-    const headers = ['Business Name', 'Contact Name', 'Email', 'Phone', 'Instagram', 'Booth Type', 'Location', 'Sector', 'Payment Status', 'Amount Paid', 'Reference', 'Date'];
-    const csvContent = [
-      headers.join(','),
-      ...vendors.map(v => [
-        `"${v.business_name}"`,
-        `"${v.full_name}"`,
-        `"${v.email}"`,
-        `"${v.phone_number}"`,
-        `"${v.instagram_handle}"`,
-        `"${v.booth_type}"`,
-        `"${v.selected_location}"`,
-        `"${v.sector}"`,
-        v.payment_status,
-        v.amount_paid || 0,
-        v.payment_reference || '',
-        new Date(v.created_at).toLocaleDateString()
-      ].join(','))
-    ].join('\n');
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.setAttribute('href', url);
-    link.setAttribute('download', `vendors_export_${new Date().toISOString().split('T')[0]}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
   };
 
   useEffect(() => {
@@ -107,28 +127,49 @@ const AdminDashboard = () => {
     }
 
     const fetchData = async () => {
+      setLoading(true);
       try {
-        const [vendorsData, blogsData, eventsData, highlightsData, messagesData] = await Promise.all([
-          apiRequest('/vendors'),
+        const results = await Promise.allSettled([
+          apiRequest(`/vendors?page=${vendorPage}&limit=${vendorLimit}`),
           apiRequest('/blog/all'),
-          apiRequest('/admin/events'),
+          apiRequest('/events/admin'),
           apiRequest('/highlights'),
           apiRequest('/contact')
         ]);
 
-        setVendors(Array.isArray(vendorsData) ? vendorsData : []);
+        // Helper to extract value if fulfilled, fallback to default
+        const getValue = (result, defaultValue = []) =>
+          result.status === 'fulfilled' ? (result.value || defaultValue) : defaultValue;
+
+        const vendorsData = results[0].status === 'fulfilled' ? results[0].value : { vendors: [], pagination: { total: 0, totalPages: 1 } };
+        const blogsData = getValue(results[1]);
+        const eventsData = getValue(results[2]);
+        const highlightsData = getValue(results[3]);
+        const messagesData = getValue(results[4]);
+
+        setVendors(vendorsData.vendors || []);
+        if (vendorsData.pagination) {
+          setVendorTotalPages(vendorsData.pagination.totalPages);
+        }
+
         setBlogs(Array.isArray(blogsData) ? blogsData : []);
         setEvents(Array.isArray(eventsData) ? eventsData : []);
         setHighlights(Array.isArray(highlightsData) ? highlightsData : []);
         setMessages(Array.isArray(messagesData) ? messagesData : []);
-        
+
         setStats({
-          vendors: Array.isArray(vendorsData) ? vendorsData.length : 0,
+          vendors: vendorsData.pagination?.total || 0,
           blogs: Array.isArray(blogsData) ? blogsData.length : 0,
           events: Array.isArray(eventsData) ? eventsData.length : 0,
           highlights: Array.isArray(highlightsData) ? highlightsData.length : 0,
           messages: Array.isArray(messagesData) ? messagesData.length : 0
         });
+
+        // Show warnings if some datasets failed to load
+        const failures = results.map((r, i) => r.status === 'rejected' ? ['Vendors', 'Blogs', 'Events', 'Highlights', 'Messages'][i] : null).filter(Boolean);
+        if (failures.length > 0) {
+          toast.error(`Some data failed to load: ${failures.join(', ')}`, { icon: '⚠️' });
+        }
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
         toast.error('Failed to load dashboard data');
@@ -138,13 +179,18 @@ const AdminDashboard = () => {
     };
 
     fetchData();
-  }, [navigate]);
+  }, [navigate, vendorPage]);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     toast.success('Logged out successfully');
     navigate('/admin/login');
+  };
+
+  const openVendorModal = (vendor) => {
+    setCurrentVendor(vendor);
+    setShowVendorModal(true);
   };
 
   const openEventModal = (event = null) => {
@@ -232,7 +278,7 @@ const AdminDashboard = () => {
   const handleSaveEvent = async (e) => {
     e.preventDefault();
     const method = currentEvent ? 'PUT' : 'POST';
-    const endpoint = currentEvent 
+    const endpoint = currentEvent
       ? `/events/${currentEvent.id}`
       : `/events`;
 
@@ -243,7 +289,7 @@ const AdminDashboard = () => {
       });
 
       toast.success(`Event ${currentEvent ? 'updated' : 'created'} successfully`);
-      
+
       if (currentEvent) {
         setEvents(events.map(e => e.id === savedEvent.id ? savedEvent : e));
       } else {
@@ -260,7 +306,7 @@ const AdminDashboard = () => {
   const handleSaveBlog = async (e) => {
     e.preventDefault();
     const method = currentBlog ? 'PUT' : 'POST';
-    const endpoint = currentBlog 
+    const endpoint = currentBlog
       ? `/blog/${currentBlog.id}`
       : `/blog`;
 
@@ -271,7 +317,7 @@ const AdminDashboard = () => {
       });
 
       toast.success(`Blog post ${currentBlog ? 'updated' : 'created'} successfully`);
-      
+
       if (currentBlog) {
         setBlogs(blogs.map(b => b.id === savedPost.id ? savedPost : b));
       } else {
@@ -288,7 +334,7 @@ const AdminDashboard = () => {
   const handleSaveHighlight = async (e) => {
     e.preventDefault();
     const method = currentHighlight ? 'PUT' : 'POST';
-    const endpoint = currentHighlight 
+    const endpoint = currentHighlight
       ? `/highlights/${currentHighlight.id}`
       : `/highlights`;
 
@@ -299,7 +345,7 @@ const AdminDashboard = () => {
       });
 
       toast.success(`Highlight ${currentHighlight ? 'updated' : 'created'} successfully`);
-      
+
       if (currentHighlight) {
         setHighlights(highlights.map(h => h.id === savedHighlight.id ? savedHighlight : h));
       } else {
@@ -314,32 +360,32 @@ const AdminDashboard = () => {
   };
 
   const handleDelete = async (type, id) => {
-    if(!window.confirm('Are you sure you want to delete this item?')) return;
-    
+    if (!window.confirm('Are you sure you want to delete this item?')) return;
+
     // Adjust endpoint for highlights
     const endpoint = type === 'highlights' ? `/highlights/${id}` : `/${type}/${id}`;
-    
+
     try {
-        await apiRequest(endpoint, {
-            method: 'DELETE'
-        });
-        
-        toast.success('Item deleted successfully');
-        if (type === 'blog') {
-            setBlogs(blogs.filter(b => b.id !== id));
-            setStats(prev => ({ ...prev, blogs: prev.blogs - 1 }));
-        }
-        if (type === 'events') {
-            setEvents(events.filter(e => e.id !== id));
-            setStats(prev => ({ ...prev, events: prev.events - 1 }));
-        }
-        if (type === 'highlights') {
-            setHighlights(highlights.filter(h => h.id !== id));
-            setStats(prev => ({ ...prev, highlights: prev.highlights - 1 }));
-        }
-    } catch(err) {
-        console.error(err);
-        toast.error(err.message || 'Error deleting item');
+      await apiRequest(endpoint, {
+        method: 'DELETE'
+      });
+
+      toast.success('Item deleted successfully');
+      if (type === 'blog') {
+        setBlogs(blogs.filter(b => b.id !== id));
+        setStats(prev => ({ ...prev, blogs: prev.blogs - 1 }));
+      }
+      if (type === 'events') {
+        setEvents(events.filter(e => e.id !== id));
+        setStats(prev => ({ ...prev, events: prev.events - 1 }));
+      }
+      if (type === 'highlights') {
+        setHighlights(highlights.filter(h => h.id !== id));
+        setStats(prev => ({ ...prev, highlights: prev.highlights - 1 }));
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error(err.message || 'Error deleting item');
     }
   };
 
@@ -348,14 +394,14 @@ const AdminDashboard = () => {
       <div className="p-6 border-b border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4">
         <h3 className="text-xl font-heading font-bold uppercase text-deep-black">Registered Vendors</h3>
         <div className="flex gap-4 w-full md:w-auto">
-          <input 
-            type="text" 
-            placeholder="Search vendors..." 
+          <input
+            type="text"
+            placeholder="Search vendors..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="px-4 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-gold w-full md:w-64"
           />
-          <button 
+          <button
             onClick={handleExportCSV}
             className="text-sm bg-deep-black text-white px-4 py-2 hover:bg-gold hover:text-deep-black transition-colors font-bold uppercase tracking-wider whitespace-nowrap"
           >
@@ -403,14 +449,14 @@ const AdminDashboard = () => {
                       {vendor.payment_status}
                     </span>
                     {vendor.payment_status === 'paid' && (
-                       <div className="text-xs text-gray-400 mt-1 font-mono">{vendor.amount_paid ? `₦${Number(vendor.amount_paid).toLocaleString()}` : ''}</div>
+                      <div className="text-xs text-gray-400 mt-1 font-mono">{vendor.amount_paid ? `₦${Number(vendor.amount_paid).toLocaleString()}` : ''}</div>
                     )}
                   </td>
                   <td className="p-4 text-gray-500 text-xs">
                     {new Date(vendor.created_at).toLocaleDateString()}
                   </td>
                   <td className="p-4">
-                    <button className="text-gray-400 hover:text-deep-black transition-colors">
+                    <button onClick={() => openVendorModal(vendor)} className="text-gray-400 hover:text-deep-black transition-colors">
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
                       </svg>
@@ -422,12 +468,37 @@ const AdminDashboard = () => {
           </tbody>
         </table>
       </div>
+
+      {/* Pagination Controls */}
+      {vendorTotalPages > 1 && (
+        <div className="p-4 border-t border-gray-100 flex items-center justify-between bg-gray-50">
+          <p className="text-xs text-gray-500">
+            Page <span className="font-bold">{vendorPage}</span> of <span className="font-bold">{vendorTotalPages}</span>
+          </p>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setVendorPage(prev => Math.max(1, prev - 1))}
+              disabled={vendorPage === 1}
+              className="px-3 py-1 border border-gray-300 rounded text-xs font-bold uppercase transition-colors hover:bg-white disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              Previous
+            </button>
+            <button
+              onClick={() => setVendorPage(prev => Math.min(vendorTotalPages, prev + 1))}
+              disabled={vendorPage === vendorTotalPages}
+              className="px-3 py-1 border border-gray-300 rounded text-xs font-bold uppercase transition-colors hover:bg-white disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 
   const renderContent = () => {
     if (loading) {
-        return <div className="flex justify-center items-center h-64">Loading dashboard data...</div>;
+      return <div className="flex justify-center items-center h-64">Loading dashboard data...</div>;
     }
 
     switch (activeTab) {
@@ -477,23 +548,23 @@ const AdminDashboard = () => {
                 <tbody className="divide-y divide-gray-200">
                   {blogs.length > 0 ? blogs.map(post => (
                     <tr key={post.id} className="group hover:bg-gray-50">
-                        <td className="py-4 font-medium">{post.title}</td>
-                        <td className="py-4 text-gray-600">
-                            {new Date(post.published_at).toLocaleDateString()}
-                        </td>
-                        <td className="py-4">
-                            <span className="bg-gray-100 text-xs font-bold px-2 py-1 uppercase tracking-wider">
-                                {post.category || 'Uncategorized'}
-                            </span>
-                        </td>
-                        <td className="py-4">
+                      <td className="py-4 font-medium">{post.title}</td>
+                      <td className="py-4 text-gray-600">
+                        {new Date(post.published_at).toLocaleDateString()}
+                      </td>
+                      <td className="py-4">
+                        <span className="bg-gray-100 text-xs font-bold px-2 py-1 uppercase tracking-wider">
+                          {post.category || 'Uncategorized'}
+                        </span>
+                      </td>
+                      <td className="py-4">
                         <button onClick={() => openBlogModal(post)} className="text-sm font-bold uppercase tracking-wider text-gray-500 hover:text-deep-black mr-4">Edit</button>
                         <button onClick={() => handleDelete('blog', post.id)} className="text-sm font-bold uppercase tracking-wider text-red-500 hover:text-red-700">Delete</button>
-                        </td>
+                      </td>
                     </tr>
                   )) : (
                     <tr>
-                        <td colSpan="4" className="py-8 text-center text-gray-500 italic">No blog posts found.</td>
+                      <td colSpan="4" className="py-8 text-center text-gray-500 italic">No blog posts found.</td>
                     </tr>
                   )}
                 </tbody>
@@ -523,21 +594,21 @@ const AdminDashboard = () => {
                 <tbody className="divide-y divide-gray-200">
                   {highlights.length > 0 ? highlights.map(highlight => (
                     <tr key={highlight.id} className="group hover:bg-gray-50">
-                        <td className="py-4 font-medium">{highlight.title}</td>
-                        <td className="py-4">
-                            <span className="bg-gold text-deep-black text-[10px] font-bold px-2 py-1 uppercase tracking-wider">
-                                {highlight.badge}
-                            </span>
-                        </td>
-                        <td className="py-4 font-medium">{highlight.display_order}</td>
-                        <td className="py-4">
+                      <td className="py-4 font-medium">{highlight.title}</td>
+                      <td className="py-4">
+                        <span className="bg-gold text-deep-black text-[10px] font-bold px-2 py-1 uppercase tracking-wider">
+                          {highlight.badge}
+                        </span>
+                      </td>
+                      <td className="py-4 font-medium">{highlight.display_order}</td>
+                      <td className="py-4">
                         <button onClick={() => openHighlightModal(highlight)} className="text-sm font-bold uppercase tracking-wider text-gray-500 hover:text-deep-black mr-4">Edit</button>
                         <button onClick={() => handleDelete('highlights', highlight.id)} className="text-sm font-bold uppercase tracking-wider text-red-500 hover:text-red-700">Delete</button>
-                        </td>
+                      </td>
                     </tr>
                   )) : (
                     <tr>
-                        <td colSpan="4" className="py-8 text-center text-gray-500 italic">No highlights found.</td>
+                      <td colSpan="4" className="py-8 text-center text-gray-500 italic">No highlights found.</td>
                     </tr>
                   )}
                 </tbody>
@@ -555,42 +626,42 @@ const AdminDashboard = () => {
               </button>
             </div>
             <div className="bg-white border border-deep-black p-8 overflow-x-auto">
-                <table className="w-full text-left min-w-[600px]">
-                    <thead>
-                    <tr className="border-b border-deep-black">
-                        <th className="pb-4 font-heading font-bold uppercase">Event</th>
-                        <th className="pb-4 font-heading font-bold uppercase">Date</th>
-                        <th className="pb-4 font-heading font-bold uppercase">Status</th>
-                        <th className="pb-4 font-heading font-bold uppercase">Actions</th>
+              <table className="w-full text-left min-w-[600px]">
+                <thead>
+                  <tr className="border-b border-deep-black">
+                    <th className="pb-4 font-heading font-bold uppercase">Event</th>
+                    <th className="pb-4 font-heading font-bold uppercase">Date</th>
+                    <th className="pb-4 font-heading font-bold uppercase">Status</th>
+                    <th className="pb-4 font-heading font-bold uppercase">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {events.length > 0 ? events.map(event => (
+                    <tr key={event.id} className="group hover:bg-gray-50">
+                      <td className="py-4 font-medium">
+                        {event.title}
+                        {event.is_featured && <span className="ml-2 bg-gold text-deep-black text-[10px] px-2 py-0.5 rounded-full font-bold uppercase">Next</span>}
+                      </td>
+                      <td className="py-4 text-gray-600">
+                        {new Date(event.start_date).toLocaleDateString()}
+                      </td>
+                      <td className="py-4">
+                        <span className={`text-[10px] font-bold uppercase px-2 py-1 rounded ${event.is_registration_open ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                          {event.is_registration_open ? 'Reg Open' : 'Reg Closed'}
+                        </span>
+                      </td>
+                      <td className="py-4">
+                        <button onClick={() => openEventModal(event)} className="text-sm font-bold uppercase tracking-wider text-gray-500 hover:text-deep-black mr-4">Edit</button>
+                        <button onClick={() => handleDelete('events', event.id)} className="text-sm font-bold uppercase tracking-wider text-red-500 hover:text-red-700">Delete</button>
+                      </td>
                     </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-200">
-                    {events.length > 0 ? events.map(event => (
-                        <tr key={event.id} className="group hover:bg-gray-50">
-                            <td className="py-4 font-medium">
-                              {event.title}
-                              {event.is_featured && <span className="ml-2 bg-gold text-deep-black text-[10px] px-2 py-0.5 rounded-full font-bold uppercase">Next</span>}
-                            </td>
-                            <td className="py-4 text-gray-600">
-                                {new Date(event.start_date).toLocaleDateString()}
-                            </td>
-                            <td className="py-4">
-                              <span className={`text-[10px] font-bold uppercase px-2 py-1 rounded ${event.is_registration_open ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                                {event.is_registration_open ? 'Reg Open' : 'Reg Closed'}
-                              </span>
-                            </td>
-                            <td className="py-4">
-                            <button onClick={() => openEventModal(event)} className="text-sm font-bold uppercase tracking-wider text-gray-500 hover:text-deep-black mr-4">Edit</button>
-                            <button onClick={() => handleDelete('events', event.id)} className="text-sm font-bold uppercase tracking-wider text-red-500 hover:text-red-700">Delete</button>
-                            </td>
-                        </tr>
-                    )) : (
-                        <tr>
-                            <td colSpan="4" className="py-8 text-center text-gray-500 italic">No events found.</td>
-                        </tr>
-                    )}
-                    </tbody>
-                </table>
+                  )) : (
+                    <tr>
+                      <td colSpan="4" className="py-8 text-center text-gray-500 italic">No events found.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
             </div>
           </div>
         );
@@ -604,54 +675,78 @@ const AdminDashboard = () => {
         return (
           <div className="space-y-8">
             <h2 className="text-3xl font-heading font-bold uppercase">Registrations</h2>
-             <div className="bg-white border border-deep-black p-8 overflow-x-auto">
-                <table className="w-full text-left min-w-[800px]">
-                    <thead>
-                    <tr className="border-b border-deep-black">
-                        <th className="pb-4 font-heading font-bold uppercase">Business</th>
-                        <th className="pb-4 font-heading font-bold uppercase">Contact</th>
-                        <th className="pb-4 font-heading font-bold uppercase">Details</th>
-                        <th className="pb-4 font-heading font-bold uppercase">Payment</th>
-                        <th className="pb-4 font-heading font-bold uppercase">Actions</th>
+            <div className="bg-white border border-deep-black p-8 overflow-x-auto">
+              <table className="w-full text-left min-w-[800px]">
+                <thead>
+                  <tr className="border-b border-deep-black">
+                    <th className="pb-4 font-heading font-bold uppercase">Business</th>
+                    <th className="pb-4 font-heading font-bold uppercase">Contact</th>
+                    <th className="pb-4 font-heading font-bold uppercase">Details</th>
+                    <th className="pb-4 font-heading font-bold uppercase">Payment</th>
+                    <th className="pb-4 font-heading font-bold uppercase">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {vendors.length > 0 ? vendors.map(vendor => (
+                    <tr key={vendor.id} className="group hover:bg-gray-50">
+                      <td className="py-4">
+                        <div className="font-bold">{vendor.business_name}</div>
+                        <div className="text-xs text-gray-500">{vendor.full_name}</div>
+                      </td>
+                      <td className="py-4 text-sm">
+                        <div>{vendor.email}</div>
+                        <div>{vendor.phone_number}</div>
+                      </td>
+                      <td className="py-4 text-sm">
+                        <div className="font-bold">{vendor.booth_type || 'N/A'}</div>
+                        <div className="text-xs text-gray-500">{vendor.selected_location || 'N/A'}</div>
+                        <div className="text-xs text-gray-400">{vendor.sector}</div>
+                      </td>
+                      <td className="py-4">
+                        <span className={`text-xs font-bold px-2 py-1 uppercase tracking-wider ${vendor.payment_status === 'paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                          }`}>
+                          {vendor.payment_status}
+                        </span>
+                        {vendor.amount_paid > 0 && (
+                          <div className="text-xs mt-1 font-mono">₦{Number(vendor.amount_paid).toLocaleString()}</div>
+                        )}
+                      </td>
+                      <td className="py-4">
+                        <button onClick={() => openVendorModal(vendor)} className="text-sm font-bold uppercase tracking-wider text-gray-500 hover:text-deep-black">Details</button>
+                      </td>
                     </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-200">
-                    {vendors.length > 0 ? vendors.map(vendor => (
-                        <tr key={vendor.id} className="group hover:bg-gray-50">
-                            <td className="py-4">
-                                <div className="font-bold">{vendor.business_name}</div>
-                                <div className="text-xs text-gray-500">{vendor.full_name}</div>
-                            </td>
-                            <td className="py-4 text-sm">
-                                <div>{vendor.email}</div>
-                                <div>{vendor.phone_number}</div>
-                            </td>
-                            <td className="py-4 text-sm">
-                                <div className="font-bold">{vendor.booth_type || 'N/A'}</div>
-                                <div className="text-xs text-gray-500">{vendor.selected_location || 'N/A'}</div>
-                                <div className="text-xs text-gray-400">{vendor.sector}</div>
-                            </td>
-                            <td className="py-4">
-                                <span className={`text-xs font-bold px-2 py-1 uppercase tracking-wider ${
-                                    vendor.payment_status === 'paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                                }`}>
-                                    {vendor.payment_status}
-                                </span>
-                                {vendor.amount_paid > 0 && (
-                                    <div className="text-xs mt-1 font-mono">₦{Number(vendor.amount_paid).toLocaleString()}</div>
-                                )}
-                            </td>
-                            <td className="py-4">
-                                <button onClick={() => toast('Feature coming soon')} className="text-sm font-bold uppercase tracking-wider text-gray-500 hover:text-deep-black">Details</button>
-                            </td>
-                        </tr>
-                    )) : (
-                        <tr>
-                            <td colSpan="5" className="py-8 text-center text-gray-500 italic">No registrations found.</td>
-                        </tr>
-                    )}
-                    </tbody>
-                </table>
+                  )) : (
+                    <tr>
+                      <td colSpan="5" className="py-8 text-center text-gray-500 italic">No registrations found.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+
+              {/* Pagination Controls */}
+              {vendorTotalPages > 1 && (
+                <div className="mt-8 pt-8 border-t border-deep-black flex items-center justify-between">
+                  <p className="text-xs font-bold uppercase tracking-widest">
+                    Page <span className="text-gold">{vendorPage}</span> / {vendorTotalPages}
+                  </p>
+                  <div className="flex gap-4">
+                    <button
+                      onClick={() => setVendorPage(prev => Math.max(1, prev - 1))}
+                      disabled={vendorPage === 1}
+                      className="px-6 py-2 border border-deep-black text-xs font-bold uppercase tracking-widest transition-all hover:bg-deep-black hover:text-white disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-deep-black"
+                    >
+                      Prev
+                    </button>
+                    <button
+                      onClick={() => setVendorPage(prev => Math.min(vendorTotalPages, prev + 1))}
+                      disabled={vendorPage === vendorTotalPages}
+                      className="px-6 py-2 border border-deep-black text-xs font-bold uppercase tracking-widest transition-all hover:bg-deep-black hover:text-white disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-deep-black"
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         );
@@ -695,15 +790,15 @@ const AdminDashboard = () => {
         );
       default:
         return (
-            <div className="bg-white border border-deep-black p-8 text-center max-w-2xl mx-auto">
-              <h2 className="text-3xl font-heading font-bold uppercase mb-6">Coming Soon</h2>
-              <p className="text-gray-600 mb-8">
-                We are working on this feature. Please check back later.
-              </p>
-              <button onClick={() => setActiveTab('dashboard')} className="text-sm font-bold uppercase tracking-wider text-gold hover:text-deep-black">
-                Back to Dashboard
-              </button>
-            </div>
+          <div className="bg-white border border-deep-black p-8 text-center max-w-2xl mx-auto">
+            <h2 className="text-3xl font-heading font-bold uppercase mb-6">Coming Soon</h2>
+            <p className="text-gray-600 mb-8">
+              We are working on this feature. Please check back later.
+            </p>
+            <button onClick={() => setActiveTab('dashboard')} className="text-sm font-bold uppercase tracking-wider text-gold hover:text-deep-black">
+              Back to Dashboard
+            </button>
+          </div>
         );
     }
   };
@@ -716,7 +811,7 @@ const AdminDashboard = () => {
           <h1 className="text-2xl md:text-3xl font-heading font-bold tracking-tighter uppercase">
             Admin Dashboard
           </h1>
-          <button 
+          <button
             onClick={handleLogout}
             className="text-xs font-bold uppercase tracking-widest border border-white px-4 py-2 hover:bg-white hover:text-deep-black transition-colors"
           >
@@ -731,43 +826,43 @@ const AdminDashboard = () => {
         {/* Sidebar */}
         <div className="w-full md:w-64 bg-white border-b md:border-b-0 md:border-r border-deep-black">
           <div className="flex flex-col">
-            <button 
+            <button
               onClick={() => setActiveTab('dashboard')}
               className={`text-left px-8 py-6 text-sm font-bold uppercase tracking-wider border-b border-gray-100 hover:bg-gray-50 transition-colors ${activeTab === 'dashboard' ? 'bg-deep-black text-white hover:bg-deep-black' : ''}`}
             >
               Home
             </button>
-            <button 
+            <button
               onClick={() => setActiveTab('events')}
               className={`text-left px-8 py-6 text-sm font-bold uppercase tracking-wider border-b border-gray-100 hover:bg-gray-50 transition-colors ${activeTab === 'events' ? 'bg-deep-black text-white hover:bg-deep-black' : ''}`}
             >
               Event Info
             </button>
-            <button 
+            <button
               onClick={() => setActiveTab('vendors')}
               className={`text-left px-8 py-6 text-sm font-bold uppercase tracking-wider border-b border-gray-100 hover:bg-gray-50 transition-colors ${activeTab === 'vendors' ? 'bg-deep-black text-white hover:bg-deep-black' : ''}`}
             >
               Vendors
             </button>
-            <button 
+            <button
               onClick={() => setActiveTab('blog')}
               className={`text-left px-8 py-6 text-sm font-bold uppercase tracking-wider border-b border-gray-100 hover:bg-gray-50 transition-colors ${activeTab === 'blog' ? 'bg-deep-black text-white hover:bg-deep-black' : ''}`}
             >
               Blog
             </button>
-            <button 
+            <button
               onClick={() => setActiveTab('register')}
               className={`text-left px-8 py-6 text-sm font-bold uppercase tracking-wider border-b border-gray-100 hover:bg-gray-50 transition-colors ${activeTab === 'register' ? 'bg-deep-black text-white hover:bg-deep-black' : ''}`}
             >
               Register
             </button>
-            <button 
+            <button
               onClick={() => setActiveTab('messages')}
               className={`text-left px-8 py-6 text-sm font-bold uppercase tracking-wider border-b border-gray-100 hover:bg-gray-50 transition-colors ${activeTab === 'messages' ? 'bg-deep-black text-white hover:bg-deep-black' : ''}`}
             >
               Contact
             </button>
-            <button 
+            <button
               onClick={() => setActiveTab('highlights')}
               className={`text-left px-8 py-6 text-sm font-bold uppercase tracking-wider border-b border-gray-100 hover:bg-gray-50 transition-colors ${activeTab === 'highlights' ? 'bg-deep-black text-white hover:bg-deep-black' : ''}`}
             >
@@ -788,35 +883,35 @@ const AdminDashboard = () => {
       {showBlogModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4" onClick={() => setShowBlogModal(false)}>
           <div className="bg-white w-full max-w-2xl max-h-[90vh] overflow-y-auto p-8 border border-white/20 shadow-2xl relative" onClick={e => e.stopPropagation()}>
-            <button 
+            <button
               onClick={() => setShowBlogModal(false)}
               className="absolute top-4 right-4 text-gray-500 hover:text-deep-black"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
             </button>
-            
+
             <h2 className="text-2xl font-heading font-bold uppercase mb-6">
               {currentBlog ? 'Edit Post' : 'Add New Post'}
             </h2>
-            
+
             <form onSubmit={handleSaveBlog} className="space-y-6">
               <div>
                 <label className="block text-sm font-bold uppercase tracking-wider mb-2">Title</label>
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   value={blogForm.title}
-                  onChange={e => setBlogForm({...blogForm, title: e.target.value})}
+                  onChange={e => setBlogForm({ ...blogForm, title: e.target.value })}
                   className="w-full px-4 py-3 border border-deep-black focus:outline-none focus:ring-2 focus:ring-gold"
                   required
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-bold uppercase tracking-wider mb-2">Slug</label>
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   value={blogForm.slug}
-                  onChange={e => setBlogForm({...blogForm, slug: e.target.value})}
+                  onChange={e => setBlogForm({ ...blogForm, slug: e.target.value })}
                   className="w-full px-4 py-3 border border-deep-black focus:outline-none focus:ring-2 focus:ring-gold"
                   required
                 />
@@ -824,20 +919,20 @@ const AdminDashboard = () => {
 
               <div>
                 <label className="block text-sm font-bold uppercase tracking-wider mb-2">Category</label>
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   value={blogForm.category}
-                  onChange={e => setBlogForm({...blogForm, category: e.target.value})}
+                  onChange={e => setBlogForm({ ...blogForm, category: e.target.value })}
                   className="w-full px-4 py-3 border border-deep-black focus:outline-none focus:ring-2 focus:ring-gold"
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-bold uppercase tracking-wider mb-2">Image URL</label>
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   value={blogForm.imageUrl}
-                  onChange={e => setBlogForm({...blogForm, imageUrl: e.target.value})}
+                  onChange={e => setBlogForm({ ...blogForm, imageUrl: e.target.value })}
                   className="w-full px-4 py-3 border border-deep-black focus:outline-none focus:ring-2 focus:ring-gold"
                   placeholder="https://..."
                 />
@@ -845,29 +940,29 @@ const AdminDashboard = () => {
 
               <div>
                 <label className="block text-sm font-bold uppercase tracking-wider mb-2">Excerpt</label>
-                <textarea 
+                <textarea
                   value={blogForm.excerpt}
-                  onChange={e => setBlogForm({...blogForm, excerpt: e.target.value})}
+                  onChange={e => setBlogForm({ ...blogForm, excerpt: e.target.value })}
                   className="w-full px-4 py-3 border border-deep-black focus:outline-none focus:ring-2 focus:ring-gold h-20"
                 ></textarea>
               </div>
 
               <div>
                 <label className="block text-sm font-bold uppercase tracking-wider mb-2">Content</label>
-                <textarea 
+                <textarea
                   value={blogForm.content}
-                  onChange={e => setBlogForm({...blogForm, content: e.target.value})}
+                  onChange={e => setBlogForm({ ...blogForm, content: e.target.value })}
                   className="w-full px-4 py-3 border border-deep-black focus:outline-none focus:ring-2 focus:ring-gold h-48"
                   required
                 ></textarea>
               </div>
 
               <div className="flex items-center gap-3 bg-gray-50 p-6 border border-gray-200">
-                <input 
-                  type="checkbox" 
+                <input
+                  type="checkbox"
                   id="isPublished"
                   checked={blogForm.isPublished}
-                  onChange={e => setBlogForm({...blogForm, isPublished: e.target.checked})}
+                  onChange={e => setBlogForm({ ...blogForm, isPublished: e.target.checked })}
                   className="w-5 h-5 text-gold border-deep-black focus:ring-gold"
                 />
                 <label htmlFor="isPublished" className="text-sm font-bold uppercase tracking-wider cursor-pointer">
@@ -876,14 +971,14 @@ const AdminDashboard = () => {
               </div>
 
               <div className="flex justify-end pt-4">
-                <button 
+                <button
                   type="button"
                   onClick={() => setShowBlogModal(false)}
                   className="mr-4 px-6 py-3 text-sm font-bold uppercase tracking-wider text-gray-500 hover:text-deep-black"
                 >
                   Cancel
                 </button>
-                <button 
+                <button
                   type="submit"
                   className="bg-deep-black text-white px-8 py-3 text-sm font-bold uppercase tracking-wider hover:bg-gold hover:text-deep-black transition-colors"
                 >
@@ -899,24 +994,24 @@ const AdminDashboard = () => {
       {showHighlightModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4" onClick={() => setShowHighlightModal(false)}>
           <div className="bg-white w-full max-w-xl max-h-[90vh] overflow-y-auto p-8 border border-white/20 shadow-2xl relative" onClick={e => e.stopPropagation()}>
-            <button 
+            <button
               onClick={() => setShowHighlightModal(false)}
               className="absolute top-4 right-4 text-gray-500 hover:text-deep-black"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
             </button>
-            
+
             <h2 className="text-2xl font-heading font-bold uppercase mb-6">
               {currentHighlight ? 'Edit Highlight' : 'Add Highlight'}
             </h2>
-            
+
             <form onSubmit={handleSaveHighlight} className="space-y-6">
               <div>
                 <label className="block text-sm font-bold uppercase tracking-wider mb-2">Title</label>
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   value={highlightForm.title}
-                  onChange={e => setHighlightForm({...highlightForm, title: e.target.value})}
+                  onChange={e => setHighlightForm({ ...highlightForm, title: e.target.value })}
                   className="w-full px-4 py-3 border border-deep-black focus:outline-none focus:ring-2 focus:ring-gold"
                   required
                 />
@@ -924,9 +1019,9 @@ const AdminDashboard = () => {
 
               <div>
                 <label className="block text-sm font-bold uppercase tracking-wider mb-2">Description</label>
-                <textarea 
+                <textarea
                   value={highlightForm.description}
-                  onChange={e => setHighlightForm({...highlightForm, description: e.target.value})}
+                  onChange={e => setHighlightForm({ ...highlightForm, description: e.target.value })}
                   className="w-full px-4 py-3 border border-deep-black focus:outline-none focus:ring-2 focus:ring-gold h-32"
                   required
                 ></textarea>
@@ -934,10 +1029,10 @@ const AdminDashboard = () => {
 
               <div>
                 <label className="block text-sm font-bold uppercase tracking-wider mb-2">Image URL</label>
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   value={highlightForm.imageUrl}
-                  onChange={e => setHighlightForm({...highlightForm, imageUrl: e.target.value})}
+                  onChange={e => setHighlightForm({ ...highlightForm, imageUrl: e.target.value })}
                   className="w-full px-4 py-3 border border-deep-black focus:outline-none focus:ring-2 focus:ring-gold"
                   placeholder="https://..."
                   required
@@ -947,34 +1042,34 @@ const AdminDashboard = () => {
               <div className="grid grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-bold uppercase tracking-wider mb-2">Badge Text</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     value={highlightForm.badge}
-                    onChange={e => setHighlightForm({...highlightForm, badge: e.target.value})}
+                    onChange={e => setHighlightForm({ ...highlightForm, badge: e.target.value })}
                     className="w-full px-4 py-3 border border-deep-black focus:outline-none focus:ring-2 focus:ring-gold"
                     placeholder="e.g. Premium"
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-bold uppercase tracking-wider mb-2">Display Order</label>
-                  <input 
-                    type="number" 
+                  <input
+                    type="number"
                     value={highlightForm.displayOrder}
-                    onChange={e => setHighlightForm({...highlightForm, displayOrder: parseInt(e.target.value) || 0})}
+                    onChange={e => setHighlightForm({ ...highlightForm, displayOrder: parseInt(e.target.value) || 0 })}
                     className="w-full px-4 py-3 border border-deep-black focus:outline-none focus:ring-2 focus:ring-gold"
                   />
                 </div>
               </div>
 
               <div className="flex justify-end pt-4">
-                <button 
+                <button
                   type="button"
                   onClick={() => setShowHighlightModal(false)}
                   className="mr-4 px-6 py-3 text-sm font-bold uppercase tracking-wider text-gray-500 hover:text-deep-black"
                 >
                   Cancel
                 </button>
-                <button 
+                <button
                   type="submit"
                   className="bg-deep-black text-white px-8 py-3 text-sm font-bold uppercase tracking-wider hover:bg-gold hover:text-deep-black transition-colors"
                 >
@@ -990,103 +1085,103 @@ const AdminDashboard = () => {
       {showEventModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4" onClick={() => setShowEventModal(false)}>
           <div className="bg-white w-full max-w-2xl max-h-[90vh] overflow-y-auto p-8 border border-white/20 shadow-2xl relative" onClick={e => e.stopPropagation()}>
-            <button 
+            <button
               onClick={() => setShowEventModal(false)}
               className="absolute top-4 right-4 text-gray-500 hover:text-deep-black"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
             </button>
-            
+
             <h2 className="text-2xl font-heading font-bold uppercase mb-6">
               {currentEvent ? 'Edit Event' : 'Add New Event'}
             </h2>
-            
+
             <form onSubmit={handleSaveEvent} className="space-y-6">
               <div>
                 <label className="block text-sm font-bold uppercase tracking-wider mb-2">Title</label>
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   value={eventForm.title}
-                  onChange={e => setEventForm({...eventForm, title: e.target.value})}
+                  onChange={e => setEventForm({ ...eventForm, title: e.target.value })}
                   className="w-full px-4 py-3 border border-deep-black focus:outline-none focus:ring-2 focus:ring-gold"
                   required
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-bold uppercase tracking-wider mb-2">Location</label>
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   value={eventForm.location}
-                  onChange={e => setEventForm({...eventForm, location: e.target.value})}
+                  onChange={e => setEventForm({ ...eventForm, location: e.target.value })}
                   className="w-full px-4 py-3 border border-deep-black focus:outline-none focus:ring-2 focus:ring-gold"
                   required
                 />
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-bold uppercase tracking-wider mb-2">Start Date</label>
-                  <input 
-                    type="datetime-local" 
+                  <input
+                    type="datetime-local"
                     value={eventForm.startDate}
-                    onChange={e => setEventForm({...eventForm, startDate: e.target.value})}
+                    onChange={e => setEventForm({ ...eventForm, startDate: e.target.value })}
                     className="w-full px-4 py-3 border border-deep-black focus:outline-none focus:ring-2 focus:ring-gold"
                     required
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-bold uppercase tracking-wider mb-2">End Date (Optional)</label>
-                  <input 
-                    type="datetime-local" 
+                  <input
+                    type="datetime-local"
                     value={eventForm.endDate}
-                    onChange={e => setEventForm({...eventForm, endDate: e.target.value})}
+                    onChange={e => setEventForm({ ...eventForm, endDate: e.target.value })}
                     className="w-full px-4 py-3 border border-deep-black focus:outline-none focus:ring-2 focus:ring-gold"
                   />
                 </div>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-bold uppercase tracking-wider mb-2">Description</label>
-                <textarea 
+                <textarea
                   value={eventForm.description}
-                  onChange={e => setEventForm({...eventForm, description: e.target.value})}
+                  onChange={e => setEventForm({ ...eventForm, description: e.target.value })}
                   className="w-full px-4 py-3 border border-deep-black focus:outline-none focus:ring-2 focus:ring-gold h-32"
                   required
                 ></textarea>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-bold uppercase tracking-wider mb-2">Image URL (Optional)</label>
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   value={eventForm.imageUrl}
-                  onChange={e => setEventForm({...eventForm, imageUrl: e.target.value})}
+                  onChange={e => setEventForm({ ...eventForm, imageUrl: e.target.value })}
                   className="w-full px-4 py-3 border border-deep-black focus:outline-none focus:ring-2 focus:ring-gold"
                   placeholder="https://..."
                 />
               </div>
-              
+
               <div className="flex flex-col gap-4 bg-gray-50 p-6 border border-gray-200">
                 <div className="flex items-center gap-3">
-                  <input 
-                    type="checkbox" 
+                  <input
+                    type="checkbox"
                     id="isRegistrationOpen"
                     checked={eventForm.isRegistrationOpen}
-                    onChange={e => setEventForm({...eventForm, isRegistrationOpen: e.target.checked})}
+                    onChange={e => setEventForm({ ...eventForm, isRegistrationOpen: e.target.checked })}
                     className="w-5 h-5 text-gold border-deep-black focus:ring-gold"
                   />
                   <label htmlFor="isRegistrationOpen" className="text-sm font-bold uppercase tracking-wider cursor-pointer">
                     Registration Open
                   </label>
                 </div>
-                
+
                 <div className="flex items-center gap-3">
-                  <input 
-                    type="checkbox" 
+                  <input
+                    type="checkbox"
                     id="isFeatured"
                     checked={eventForm.isFeatured}
-                    onChange={e => setEventForm({...eventForm, isFeatured: e.target.checked})}
+                    onChange={e => setEventForm({ ...eventForm, isFeatured: e.target.checked })}
                     className="w-5 h-5 text-gold border-deep-black focus:ring-gold"
                   />
                   <label htmlFor="isFeatured" className="text-sm font-bold uppercase tracking-wider cursor-pointer flex flex-col">
@@ -1095,16 +1190,16 @@ const AdminDashboard = () => {
                   </label>
                 </div>
               </div>
-              
+
               <div className="flex justify-end pt-4">
-                <button 
+                <button
                   type="button"
                   onClick={() => setShowEventModal(false)}
                   className="mr-4 px-6 py-3 text-sm font-bold uppercase tracking-wider text-gray-500 hover:text-deep-black"
                 >
                   Cancel
                 </button>
-                <button 
+                <button
                   type="submit"
                   className="bg-deep-black text-white px-8 py-3 text-sm font-bold uppercase tracking-wider hover:bg-gold hover:text-deep-black transition-colors"
                 >
@@ -1112,6 +1207,104 @@ const AdminDashboard = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Vendor Details Modal */}
+      {showVendorModal && currentVendor && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4" onClick={() => setShowVendorModal(false)}>
+          <div className="bg-white w-full max-w-2xl max-h-[90vh] overflow-y-auto p-8 border border-white/20 shadow-2xl relative" onClick={e => e.stopPropagation()}>
+            <button
+              onClick={() => setShowVendorModal(false)}
+              className="absolute top-4 right-4 text-gray-500 hover:text-deep-black"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+
+            <h2 className="text-2xl font-heading font-bold uppercase mb-6 border-b border-gray-200 pb-4">
+              Vendor Details
+            </h2>
+
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-wider text-gray-500">Business Name</p>
+                  <p className="font-medium text-lg text-deep-black">{currentVendor.business_name || 'N/A'}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-wider text-gray-500">Contact Person</p>
+                  <p className="font-medium text-lg text-deep-black">{currentVendor.full_name || 'N/A'}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-wider text-gray-500">Email Address</p>
+                  <p className="font-medium text-deep-black">{currentVendor.email || 'N/A'}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-wider text-gray-500">Phone & WhatsApp</p>
+                  <p className="font-medium text-deep-black">{currentVendor.phone_number || 'N/A'} {currentVendor.whatsapp_number ? ` / ${currentVendor.whatsapp_number}` : ''}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-wider text-gray-500">Instagram</p>
+                  <p className="font-medium text-deep-black">{currentVendor.instagram_handle || 'N/A'}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-wider text-gray-500">Sector</p>
+                  <p className="font-medium text-deep-black">{currentVendor.sector || 'N/A'}</p>
+                </div>
+              </div>
+
+              <div className="border-t border-gray-200 pt-6 grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-wider text-gray-500">Selected Location</p>
+                  <p className="font-medium text-deep-black">{currentVendor.selected_location || 'N/A'}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-wider text-gray-500">Booth Type</p>
+                  <p className="font-medium text-deep-black">{currentVendor.booth_type || 'N/A'}</p>
+                </div>
+              </div>
+
+              <div className="border-t border-gray-200 pt-6 grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-wider text-gray-500">Payment Status</p>
+                  <span className={`inline-flex items-center px-2.5 py-0.5 mt-1 rounded-full text-xs font-medium capitalize
+                    ${currentVendor.payment_status === 'paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
+                    {currentVendor.payment_status || 'Pending'}
+                  </span>
+                </div>
+                {currentVendor.payment_status === 'paid' && (
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-wider text-gray-500">Amount Paid</p>
+                    <p className="font-medium font-mono text-deep-black">₦{currentVendor.amount_paid ? Number(currentVendor.amount_paid).toLocaleString() : 0}</p>
+                  </div>
+                )}
+                {currentVendor.payment_reference && (
+                  <div className="col-span-2">
+                    <p className="text-xs font-bold uppercase tracking-wider text-gray-500">Payment Reference</p>
+                    <p className="font-medium font-mono text-gray-600 text-sm break-all">{currentVendor.payment_reference}</p>
+                  </div>
+                )}
+              </div>
+
+              <div className="border-t border-gray-200 pt-6 flex flex-wrap gap-4 text-xs">
+                <div className={`px-2 py-1 rounded ${currentVendor.is_previous_vendor ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-500'}`}>
+                  Previous Vendor: {currentVendor.is_previous_vendor ? 'Yes' : 'No'}
+                </div>
+                <div className={`px-2 py-1 rounded ${currentVendor.live_in_abuja ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-500'}`}>
+                  Local Resident: {currentVendor.live_in_abuja ? 'Yes' : 'No'}
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-8 flex justify-end">
+              <button
+                onClick={() => setShowVendorModal(false)}
+                className="bg-deep-black text-white px-8 py-3 text-sm font-bold uppercase tracking-wider hover:bg-gold hover:text-deep-black transition-colors"
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}

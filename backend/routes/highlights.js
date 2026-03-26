@@ -39,19 +39,32 @@ router.post('/', authenticateToken, validate([
 
 // Admin: Update Highlight
 router.put('/:id', authenticateToken, async (req, res) => {
-    const { id } = req.params;
-    const { title, description, imageUrl, badge, displayOrder } = req.body;
-    try {
-      const result = await pool.query(
-        'UPDATE highlights SET title = $1, description = $2, image_url = $3, badge = $4, display_order = $5 WHERE id = $6 RETURNING *',
-        [title, description, imageUrl, badge, displayOrder, id]
-      );
-      if (result.rows.length === 0) return res.status(404).json({ error: 'Highlight not found' });
-      res.json(result.rows[0]);
-    } catch (error) {
-      console.error('Error updating highlight:', error);
-      res.status(500).json({ error: 'Database error' });
-    }
+  const { id } = req.params;
+  const { title, description, imageUrl, badge, displayOrder } = req.body;
+  try {
+    const result = await pool.query(
+      'UPDATE highlights SET title = $1, description = $2, image_url = $3, badge = $4, display_order = $5 WHERE id = $6 RETURNING *',
+      [title, description, imageUrl, badge, displayOrder, id]
+    );
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Highlight not found' });
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error updating highlight:', error);
+    res.status(500).json({ error: 'Database error' });
+  }
+});
+
+// Admin: Delete Highlight
+router.delete('/:id', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await pool.query('DELETE FROM highlights WHERE id = $1 RETURNING *', [id]);
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Highlight not found' });
+    res.json({ message: 'Highlight deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting highlight:', error);
+    res.status(500).json({ error: 'Database error' });
+  }
 });
 
 export default router;
