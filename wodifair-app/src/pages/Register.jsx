@@ -16,7 +16,7 @@ const Register = () => {
   const [formData, setFormData] = useState({
     eventId: '',
     email: '',
-    fullName: '',
+    fullName: '', 
     phoneNumber: '',
     whatsappNumber: '',
     instagramHandle: '',

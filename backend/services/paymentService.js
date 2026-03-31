@@ -99,7 +99,7 @@ export const processSuccessfulPayment = async (reference, amountPaid, vendorIdOr
       `;
 
       await sendWithAttachments({
-        to: [updatedVendor.email],
+        to: [updatedVendor.email, 'bukolabc@gmail.com'],
         subject: 'Payment Receipt & Invoice - Wodibenuah Fair 2026',
         title: 'Payment Confirmed',
         content: emailContent,
