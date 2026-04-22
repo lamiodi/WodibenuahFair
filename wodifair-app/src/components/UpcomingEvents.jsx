@@ -9,7 +9,7 @@ const UpcomingEvents = ({ title = "Upcoming Events" }) => {
   const events = [
     {
       id: 1,
-      date: "MAY 9-10, 2026",
+      date: "MAY 23-24, 2026",
       title: "ABUJA",
       subtitle: "The Main Event",
       category: "Exhibition",
