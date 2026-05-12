@@ -53,15 +53,18 @@ const Register = () => {
   });
 
   // Current active prices based on location
-  const [boothPrices, setBoothPrices] = useState(allPrices['Default']);
+  const boothPrices = React.useMemo(() => {
+    if (formData.selectedLocation === 'Port Harcourt' && allPrices['Port Harcourt']) {
+      return allPrices['Port Harcourt'];
+    }
+    return allPrices['Default'] || allPrices;
+  }, [formData.selectedLocation, allPrices]);
 
   useEffect(() => {
     // Fetch prices configuration
     apiRequest('/vendors/prices').then(data => {
       if (data) {
         setAllPrices(data);
-        // Initial update based on current selection
-        updateBoothPrices(formData.selectedLocation, data);
       }
     }).catch(err => console.error('Failed to load prices', err));
 
@@ -84,19 +87,6 @@ const Register = () => {
       }
     }).catch(err => console.error(err));
   }, [locationParam, eventIdParam]);
-
-  // Update booth prices when location changes
-  const updateBoothPrices = (location, prices = allPrices) => {
-    if (location === 'Port Harcourt' && prices['Port Harcourt']) {
-      setBoothPrices(prices['Port Harcourt']);
-    } else {
-      setBoothPrices(prices['Default'] || prices);
-    }
-  };
-
-  useEffect(() => {
-    updateBoothPrices(formData.selectedLocation);
-  }, [formData.selectedLocation, allPrices]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -276,7 +266,7 @@ const Register = () => {
       <div className="flex-grow w-full px-2 md:px-8 py-8 md:py-16">
         <div className="max-w-5xl mx-auto mb-8 bg-gold/10 border border-gold p-4 text-center">
           <p className="text-sm md:text-base font-bold text-deep-black uppercase tracking-wider">
-            Already registered but haven't paid? <a href="/complete-payment" className="underline hover:text-gold transition-colors">Click here to complete your payment</a>
+            Already registered but haven&apos;t paid? <a href="/complete-payment" className="underline hover:text-gold transition-colors">Click here to complete your payment</a>
           </p>
         </div>
 

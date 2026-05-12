@@ -125,7 +125,7 @@ const CompletePayment = () => {
                     </h1>
 
                     <p className="text-gray-600 mb-8 text-center text-sm">
-                        Already registered but haven't paid yet? Enter the email address you used to register to continue to payment and secure your booth.
+                        Already registered but haven&apos;t paid yet? Enter the email address you used to register to continue to payment and secure your booth.
                     </p>
 
                     <form onSubmit={handleLookup} className="mb-8">
