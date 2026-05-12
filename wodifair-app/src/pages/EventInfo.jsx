@@ -26,6 +26,11 @@ const EventInfo = () => {
       category: "Wodibenuahfair",
       title: "Security Highlights", 
       video: "/images/WhatsApp Video 2026-02-08 at 2.01.13 PM.mp4"
+    },
+    { 
+      category: "Wodibenuahfair",
+      title: "Fair Experience", 
+      video: "/WhatsApp Video 2026-05-11 at 1.50.50 PM.mp4"
     }
   ];
 

@@ -483,6 +483,31 @@ const Register = () => {
                       </option>
                     ))}
                   </select>
+
+                  {/* Vendor Slot Amenities */}
+                  <div className="mt-8 bg-gray-50 border border-gray-200 p-6 md:p-8">
+                    <h4 className="text-sm font-bold uppercase tracking-[0.15em] text-deep-black mb-6 flex items-center gap-3">
+                      <svg className="w-5 h-5 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                      Your slot comes with
+                    </h4>
+                    <ul className="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-6">
+                      {[
+                        'Your access tag',
+                        'Your vendor flyer',
+                        'Electricity socket',
+                        'The space of your preferred booth',
+                        'A table',
+                        '3 chairs'
+                      ].map((item, idx) => (
+                        <li key={idx} className="flex items-start gap-3 group">
+                          <div className="mt-1 w-4 h-4 rounded-full bg-gold/20 flex items-center justify-center flex-shrink-0 group-hover:bg-gold transition-colors">
+                            <div className="w-1.5 h-1.5 rounded-full bg-gold group-hover:bg-white transition-colors"></div>
+                          </div>
+                          <span className="text-sm font-medium text-gray-700 leading-tight">{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 </div>
               </div>
             </div>
