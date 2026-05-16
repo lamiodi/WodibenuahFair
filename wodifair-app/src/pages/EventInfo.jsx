@@ -4,6 +4,7 @@ import Footer from '../components/Footer';
 import UpcomingEvents from '../components/UpcomingEvents';
 import EventHighlights from '../components/EventHighlights';
 import VenueMap from '../components/VenueMap';
+import SEO from '../components/SEO';
 
 const EventInfo = () => {
   const events = [
@@ -51,6 +52,11 @@ const EventInfo = () => {
 
   return (
     <div className="min-h-screen bg-cream text-deep-black font-body flex flex-col">
+      <SEO 
+        title="Event Information & Schedule" 
+        description="Discover the upcoming Wodifair exhibitions in Abuja, Port Harcourt, and Lagos. View event schedules, highlights, and venue maps."
+        url="/event-info"
+      />
       
       {/* ============================================
           TITLE BANNER: "OUR EVENTS"

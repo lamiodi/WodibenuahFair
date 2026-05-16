@@ -3,6 +3,7 @@ import toast from 'react-hot-toast';
 import Navigation from '../components/Navigation';
 import Footer from '../components/Footer';
 import { apiRequest } from '../services/api';
+import SEO from '../components/SEO';
 
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -49,7 +50,12 @@ const Contact = () => {
 
   return (
     <div className="min-h-screen bg-cream text-deep-black font-body flex flex-col">
-      {/* Title Banner (Consistent with Home & Register) */}
+      <SEO 
+        title="Contact Us" 
+        description="Get in touch with the Wodifair team. Reach out for vendor inquiries, sponsorships, or general questions about our upcoming events."
+        url="/contact"
+      />
+      {/* Title Banner (Consistent with Home) */}
       <div className="w-full px-2 md:px-8 py-3 md:py-6 border-b border-deep-black">
         <div className="relative w-full max-w-[1920px] mx-auto">
           <div className="relative flex flex-col items-center w-full overflow-hidden">

@@ -2,6 +2,7 @@ import React, { useRef } from 'react';
 import Navigation from '../components/Navigation';
 import Footer from '../components/Footer';
 import { motion, useScroll, useTransform } from 'framer-motion';
+import SEO from '../components/SEO';
 
 const About = () => {
   const containerRef = useRef(null);
@@ -14,6 +15,11 @@ const About = () => {
 
   return (
     <div className="min-h-screen bg-cream text-deep-black font-body" ref={containerRef}>
+      <SEO 
+        title="About Us" 
+        description="Learn about the Wodibenuah Fair, our mission to elevate African luxury, and the community of premium vendors and elite customers we've built."
+        url="/about"
+      />
       {/* Title Banner */}
       <div className="w-full px-2 md:px-8 py-3 md:py-6 border-b border-deep-black bg-white sticky top-0 z-50">
         <div className="relative w-full max-w-[1920px] mx-auto">

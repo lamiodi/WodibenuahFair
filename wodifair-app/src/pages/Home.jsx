@@ -8,6 +8,7 @@ import ExhibitionHighlightVideo from '../components/ExhibitionHighlightVideo';
 import UpcomingEvents from '../components/UpcomingEvents';
 import SponsorshipCTA from '../components/SponsorshipCTA';
 import HomePopup from '../components/HomePopup';
+import SEO from '../components/SEO';
 import { motion, AnimatePresence } from 'framer-motion';
 
   const slides = [
@@ -40,6 +41,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 
   return (
     <div className="min-h-screen flex flex-col bg-cream text-deep-black font-body">
+      <SEO 
+        title="Home" 
+        description="Wodifair is the premier luxury exhibition connecting elite customers with top fashion, food, and lifestyle brands across Abuja, Lagos, and Port Harcourt." 
+        url="/"
+      />
       <HomePopup />
       
       {/* ============================================

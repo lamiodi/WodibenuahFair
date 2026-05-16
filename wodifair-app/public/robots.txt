@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+
+# Disallow admin routes
+Disallow: /admin/
+Disallow: /admin
+
+# Sitemap
+Sitemap: https://wodibenuah-fair.vercel.app/sitemap.xml
