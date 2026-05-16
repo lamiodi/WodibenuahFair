@@ -5,6 +5,7 @@ import Footer from '../components/Footer';
 import toast, { Toaster } from 'react-hot-toast';
 import PaystackPop from '@paystack/inline-js';
 import { apiRequest } from '../services/api';
+import SEO from '../components/SEO';
 
 const CompletePayment = () => {
     const [email, setEmail] = useState('');
@@ -115,6 +116,12 @@ const CompletePayment = () => {
 
     return (
         <div className="min-h-screen bg-[#F5F5F0] text-deep-black font-body">
+            <SEO
+                title="Complete Payment"
+                description="Complete your pending Wodibenuah Fair vendor payment securely."
+                url="/complete-payment"
+                noindex
+            />
             <Toaster position="top-center" reverseOrder={false} />
             <Navigation />
 

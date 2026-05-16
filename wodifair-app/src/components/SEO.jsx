@@ -1,40 +1,70 @@
 import React from 'react';
 import { Helmet } from 'react-helmet-async';
 
-const SEO = ({ title, description, keywords, image, url }) => {
-  const siteTitle = 'Wodifair - Luxury Exhibition & Trade Fair';
-  const defaultDescription = 'Wodifair is a premier luxury exhibition and trade fair connecting premium brands with elite customers in Abuja, Port Harcourt, and Lagos.';
-  const defaultKeywords = 'trade fair, luxury exhibition, abuja events, lagos events, premium brands';
-  const defaultImage = '/images/seo-default.jpg'; // We should probably ensure this exists or use a logo
-  const siteUrl = import.meta.env.VITE_SITE_URL || 'https://wodibenuahfair.com';
+const SITE_NAME = 'Wodibenuah Fair';
+const SITE_URL = (import.meta.env.VITE_SITE_URL || 'https://wodibenuah-fair.vercel.app').replace(/\/$/, '');
+const DEFAULT_TITLE = `${SITE_NAME} | Luxury Trade Fair in Abuja, Lagos & Port Harcourt`;
+const DEFAULT_DESCRIPTION =
+  'Wodibenuah Fair is a luxury trade fair connecting premium brands with customers across Abuja, Lagos, and Port Harcourt through curated exhibitions, vendor showcases, and cultural experiences.';
+const DEFAULT_KEYWORDS =
+  'Wodibenuah Fair, Wodifair, trade fair Nigeria, Abuja exhibition, Lagos exhibition, Port Harcourt exhibition, vendor registration, luxury fair';
+const DEFAULT_IMAGE = '/images/Wodi%20SM%20(17).png';
 
-  const fullTitle = title ? `${title} | Wodifair` : siteTitle;
-  const metaDescription = description || defaultDescription;
-  const metaKeywords = keywords || defaultKeywords;
-  const metaImage = image ? `${siteUrl}${image}` : `${siteUrl}${defaultImage}`;
-  const metaUrl = url ? `${siteUrl}${url}` : siteUrl;
+const toAbsoluteUrl = (value) => {
+  if (!value) return `${SITE_URL}${DEFAULT_IMAGE}`;
+  if (/^https?:\/\//i.test(value)) return value;
+  return `${SITE_URL}${value.startsWith('/') ? value : `/${value}`}`;
+};
+
+const normalizeUrl = (value = '/') => {
+  if (/^https?:\/\//i.test(value)) return value;
+  const path = value.startsWith('/') ? value : `/${value}`;
+  return path === '/' ? `${SITE_URL}/` : `${SITE_URL}${path}`;
+};
+
+const SEO = ({
+  title,
+  description,
+  keywords,
+  image,
+  url = '/',
+  type = 'website',
+  noindex = false,
+  structuredData,
+}) => {
+  const fullTitle = title ? `${title} | ${SITE_NAME}` : DEFAULT_TITLE;
+  const metaDescription = description || DEFAULT_DESCRIPTION;
+  const metaKeywords = keywords || DEFAULT_KEYWORDS;
+  const metaImage = toAbsoluteUrl(image);
+  const metaUrl = normalizeUrl(url);
+  const robots = noindex ? 'noindex, nofollow' : 'index, follow';
 
   return (
-    <Helmet>
-      {/* Standard Metadata */}
+    <Helmet prioritizeSeoTags>
       <title>{fullTitle}</title>
       <meta name="description" content={metaDescription} />
       <meta name="keywords" content={metaKeywords} />
+      <meta name="author" content={SITE_NAME} />
+      <meta name="robots" content={robots} />
+      <meta name="googlebot" content={robots} />
       <link rel="canonical" href={metaUrl} />
 
-      {/* Open Graph / Facebook */}
-      <meta property="og:type" content="website" />
+      <meta property="og:site_name" content={SITE_NAME} />
+      <meta property="og:locale" content="en_NG" />
+      <meta property="og:type" content={type} />
       <meta property="og:url" content={metaUrl} />
       <meta property="og:title" content={fullTitle} />
       <meta property="og:description" content={metaDescription} />
       <meta property="og:image" content={metaImage} />
 
-      {/* Twitter */}
-      <meta property="twitter:card" content="summary_large_image" />
-      <meta property="twitter:url" content={metaUrl} />
-      <meta property="twitter:title" content={fullTitle} />
-      <meta property="twitter:description" content={metaDescription} />
-      <meta property="twitter:image" content={metaImage} />
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:title" content={fullTitle} />
+      <meta name="twitter:description" content={metaDescription} />
+      <meta name="twitter:image" content={metaImage} />
+
+      {structuredData ? (
+        <script type="application/ld+json">{JSON.stringify(structuredData)}</script>
+      ) : null}
     </Helmet>
   );
 };

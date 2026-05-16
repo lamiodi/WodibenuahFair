@@ -42,9 +42,17 @@ import { motion, AnimatePresence } from 'framer-motion';
   return (
     <div className="min-h-screen flex flex-col bg-cream text-deep-black font-body">
       <SEO 
-        title="Home" 
+        title="Luxury Trade Fair in Abuja, Lagos & Port Harcourt"
         description="Wodifair is the premier luxury exhibition connecting elite customers with top fashion, food, and lifestyle brands across Abuja, Lagos, and Port Harcourt." 
         url="/"
+        image="/images/IMG_0072.jpg"
+        structuredData={{
+          '@context': 'https://schema.org',
+          '@type': 'Organization',
+          name: 'Wodibenuah Fair',
+          url: 'https://wodibenuah-fair.vercel.app/',
+          logo: 'https://wodibenuah-fair.vercel.app/images/Wodi%20SM%20(17).png',
+        }}
       />
       <HomePopup />
       

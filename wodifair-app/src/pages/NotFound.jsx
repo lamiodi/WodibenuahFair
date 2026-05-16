@@ -2,10 +2,17 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import Navigation from '../components/Navigation';
 import Footer from '../components/Footer';
+import SEO from '../components/SEO';
 
 const NotFound = () => {
   return (
     <div className="min-h-screen bg-cream text-deep-black font-body flex flex-col">
+      <SEO
+        title="Page Not Found"
+        description="The page you requested could not be found on Wodibenuah Fair."
+        url="/404"
+        noindex
+      />
       <Navigation />
       
       <div className="flex-grow flex items-center justify-center px-4 py-20 relative overflow-hidden">

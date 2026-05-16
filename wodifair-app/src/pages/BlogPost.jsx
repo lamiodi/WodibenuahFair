@@ -69,8 +69,21 @@ const BlogPost = () => {
       <SEO 
         title={post.title} 
         description={post.excerpt} 
-        image={post.image_url} 
+        image={post.image_url || post.image}
         url={`/blog/${post.slug}`} 
+        type="article"
+        structuredData={{
+          '@context': 'https://schema.org',
+          '@type': 'Article',
+          headline: post.title,
+          description: post.excerpt,
+          image: post.image_url || post.image,
+          datePublished: post.published_at,
+          author: {
+            '@type': 'Organization',
+            name: 'Wodibenuah Fair',
+          },
+        }}
       />
       <Navigation activeItem="Blog" />
 

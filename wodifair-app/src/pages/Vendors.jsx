@@ -90,7 +90,12 @@ const Vendors = () => {
 
   return (
     <div className="min-h-screen bg-cream text-deep-black font-body flex flex-col">
-      
+      <SEO
+        title="Explore Vendors"
+        description="Explore fashion, beauty, lifestyle, and luxury vendors featured at Wodibenuah Fair across Abuja, Lagos, and Port Harcourt."
+        url="/vendors"
+        image="/images/carousel/IMG_0164.jpg"
+      />
       {/* ============================================
           TITLE BANNER: "OUR VENDORS"
           With Embedded Image in 'O'

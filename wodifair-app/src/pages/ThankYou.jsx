@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import SEO from '../components/SEO';
 
 const ThankYou = () => {
   const [searchParams] = useSearchParams();
@@ -14,6 +15,12 @@ const ThankYou = () => {
 
   return (
     <div className="min-h-screen bg-white flex flex-col items-center justify-center px-4 py-20">
+      <SEO
+        title="Payment Successful"
+        description="Your Wodibenuah Fair payment has been received successfully."
+        url="/thank-you"
+        noindex
+      />
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

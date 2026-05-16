@@ -1,10 +1,16 @@
 import React from 'react';
 import Navigation from '../components/Navigation';
 import Footer from '../components/Footer';
+import SEO from '../components/SEO';
 
 const Privacy = () => {
   return (
     <div className="min-h-screen bg-cream text-deep-black font-body flex flex-col">
+      <SEO
+        title="Privacy Policy"
+        description="Learn how Wodibenuah Fair collects, uses, stores, and protects vendor, attendee, and partner information."
+        url="/privacy"
+      />
       {/* Title Banner */}
       <div className="w-full px-2 md:px-8 py-3 md:py-6 border-b border-deep-black">
         <div className="relative w-full max-w-[1920px] mx-auto text-center">
