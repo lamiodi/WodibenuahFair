@@ -114,20 +114,23 @@ import { motion, AnimatePresence } from 'framer-motion';
           ============================================ */}
       <div className="w-full px-2 md:px-8 py-4 md:py-8">
         <div className="relative w-full h-[90vh] overflow-hidden border border-deep-black bg-black group">
-          <AnimatePresence mode='wait'>
+          {slides.map((slide, index) => (
             <motion.img 
-              key={currentSlide}
-              src={slides[currentSlide].image} 
-              alt="Hero"
-              className="absolute inset-0 w-full h-full object-cover opacity-60" // Darkened opacity for better text contrast
-              initial={{ opacity: 0, scale: 1.1 }}
-              animate={{ opacity: 0.6, scale: 1 }}
-              exit={{ opacity: 0 }}
+              key={index}
+              src={slide.image} 
+              alt={`Hero ${index + 1}`}
+              className="absolute inset-0 w-full h-full object-cover" // Base styles
+              initial={{ opacity: 0, scale: 1.1, zIndex: 0 }}
+              animate={{ 
+                opacity: currentSlide === index ? 0.6 : 0, 
+                scale: currentSlide === index ? 1 : 1.1,
+                zIndex: currentSlide === index ? 1 : 0
+              }}
               transition={{ duration: 1.5 }}
             />
-          </AnimatePresence>
+          ))}
           
-          <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-4 z-10">
+          <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-4 z-10 pointer-events-none">
             {/* Value Proposition */}
             <p className="text-white/90 text-sm md:text-base uppercase tracking-[0.4em] mb-4 font-bold drop-shadow-md">
               Connecting Premium Brands with Elite Customers
@@ -169,7 +172,7 @@ import { motion, AnimatePresence } from 'framer-motion';
             </div>
 
             {/* Call to Action Buttons */}
-            <div className="flex flex-col md:flex-row gap-6 mt-8">
+            <div className="flex flex-col md:flex-row gap-6 mt-8 pointer-events-auto">
               <div className="relative group/btn">
                 <Link to="/register" className="bg-white text-deep-black px-10 py-4 text-sm font-bold uppercase tracking-[0.2em] hover:bg-gold hover:text-white transition-all duration-300 inline-block min-w-[200px]">
                   Vendor Registration
