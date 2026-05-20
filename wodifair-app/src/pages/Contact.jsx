@@ -67,7 +67,7 @@ const Contact = () => {
                  <div className="absolute inset-0 z-0 flex items-center justify-center">
                     <div className="mt-[0.11em] w-[80%] h-[89%] overflow-hidden rounded-full">
                      <img 
-                       src="/images/IMG_3756.JPG.jpeg" 
+                       src="https://res.cloudinary.com/dwmz4youk/image/upload/v1779310123/wodifair/IMG_3756.JPG.jpg" 
                        alt="Contact"
                        className="w-full h-full object-cover"
                      />
@@ -83,7 +83,7 @@ const Contact = () => {
                  <div className="absolute inset-0 z-0 flex items-center justify-center">
                     <div className="lg:ms-3  mt-[0.11em] w-[80%] h-[89%] overflow-hidden rounded-full">
                      <img 
-                       src="/images/IMG_3766.JPG.jpeg" 
+                       src="https://res.cloudinary.com/dwmz4youk/image/upload/v1779310116/wodifair/IMG_3766.JPG.jpg" 
                        alt="Contact"
                        className="w-full h-full object-cover"
                      />
@@ -114,7 +114,7 @@ const Contact = () => {
              {/* Background Image */}
              <div className="absolute inset-0 z-0">
                <img 
-                 src="/images/IMG_8375-2.jpg" 
+                 src="https://res.cloudinary.com/dwmz4youk/image/upload/v1779310103/wodifair/IMG_8375-2.jpg" 
                  alt="Wodifair Exhibition Crowd - Connecting Brands and Customers" 
                  className="w-full h-full object-cover opacity-80"
                  loading="lazy"

@@ -13,17 +13,17 @@ import { motion, AnimatePresence } from 'framer-motion';
 
   const slides = [
     {
-      image: "/images/IMG_0072.jpg",
+      image: "https://res.cloudinary.com/dwmz4youk/image/upload/v1779310108/wodifair/IMG_0072.jpg",
       title: "ABUJA",
       subtitle: "May 23rd & 24th Edition"
     },
     {
-      image: "/images/IMG_0088.jpg",
+      image: "https://res.cloudinary.com/dwmz4youk/image/upload/v1779310109/wodifair/IMG_0088.jpg",
       title: "PORT HARCOURT",
       subtitle: "August 2026 Edition"
     },
     {
-      image: "/images/IMG_0162.jpg",
+      image: "https://res.cloudinary.com/dwmz4youk/image/upload/v1779310112/wodifair/IMG_0162.jpg",
       title: "LAGOS",
       subtitle: "December 2026 Edition"
     }
@@ -45,13 +45,13 @@ import { motion, AnimatePresence } from 'framer-motion';
         title="Luxury Trade Fair in Abuja, Lagos & Port Harcourt"
         description="Wodifair is the premier luxury exhibition connecting elite customers with top fashion, food, and lifestyle brands across Abuja, Lagos, and Port Harcourt." 
         url="/"
-        image="/images/IMG_0072.jpg"
+        image="https://res.cloudinary.com/dwmz4youk/image/upload/v1779310108/wodifair/IMG_0072.jpg"
         structuredData={{
           '@context': 'https://schema.org',
           '@type': 'Organization',
           name: 'Wodibenuah Fair',
           url: 'https://wodibenuah-fair.vercel.app/',
-          logo: 'https://wodibenuah-fair.vercel.app/images/Wodi%20SM%20(17).png',
+          logo: 'https://wodibenuah-fair.vercel.apphttps://res.cloudinary.com/dwmz4youk/image/upload/v1779310125/wodifair/Wodi_SM_17.png',
         }}
       />
       <HomePopup />
@@ -74,7 +74,7 @@ import { motion, AnimatePresence } from 'framer-motion';
                   <div className="absolute inset-0 z-0 flex items-center justify-center">
                      <div className="mt-[0.1em]  w-[65%] h-[90%] overflow-hidden rounded-full">
                       <img 
-                        src="/images/ceoimage.png" 
+                        src="https://res.cloudinary.com/dwmz4youk/image/upload/v1779310052/wodifair/ceoimage.png" 
                         alt="Portrait"
                         className="w-full h-full object-cover"
                       />
@@ -93,7 +93,7 @@ import { motion, AnimatePresence } from 'framer-motion';
                   <div className="absolute inset-0 z-0 flex items-center justify-center">
                      <div className="ms-1 mt-[0.159em]  w-[59%] h-[89%] overflow-hidden rounded-full">
                       <img 
-                        src="/images/IMG_3767.JPG.jpeg" 
+                        src="https://res.cloudinary.com/dwmz4youk/image/upload/v1779310117/wodifair/IMG_3767.JPG.jpg" 
                         alt="Portrait"
                         className="w-full h-full object-cover"
                       />
@@ -307,7 +307,7 @@ import { motion, AnimatePresence } from 'framer-motion';
           <div className="flex flex-col gap-8 justify-between">
             <div className="group cursor-pointer">
               <div className="aspect-[3/4] overflow-hidden mb-4 bg-gray-200 border border-deep-black">
-                <img src="/images/IMG_3766.JPG.jpeg" alt="Vibrant Atmosphere" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                <img src="https://res.cloudinary.com/dwmz4youk/image/upload/v1779310116/wodifair/IMG_3766.JPG.jpg" alt="Vibrant Atmosphere" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
               </div>
               <h3 className="font-heading font-bold uppercase text-xs tracking-[0.2em] mb-3 text-deep-black">Vibrant Atmosphere</h3>
               <p className="text-xs text-gray-600 leading-relaxed">
@@ -317,7 +317,7 @@ import { motion, AnimatePresence } from 'framer-motion';
             
             <div className="group cursor-pointer">
               <div className="aspect-[4/3] overflow-hidden mb-4 bg-gray-200 border border-deep-black">
-                <img src="/images/hi/IMG_9962.jpg" alt="Shared Moments" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                <img src="https://res.cloudinary.com/dwmz4youk/image/upload/v1779310106/wodifair/IMG_9962.jpg" alt="Shared Moments" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
               </div>
               <h3 className="font-heading font-bold uppercase text-xs tracking-[0.2em] mb-3 text-deep-black">Shared Moments</h3>
               <p className="text-xs text-gray-600 leading-relaxed">
@@ -329,7 +329,7 @@ import { motion, AnimatePresence } from 'framer-motion';
           <div className="lg:col-span-2 h-full">
             <div className="h-full w-full bg-gray-200 overflow-hidden relative group min-h-[600px] lg:min-h-full border border-deep-black">
               <img 
-                src="/images/hi/IMG_8810-2.jpg" 
+                src="https://res.cloudinary.com/dwmz4youk/image/upload/v1779310107/wodifair/IMG_8810-2.jpg" 
                 alt="Exhibition Centerpiece" 
                 className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
               />
@@ -339,7 +339,7 @@ import { motion, AnimatePresence } from 'framer-motion';
           <div className="flex flex-col gap-8 justify-between">
             <div className="group cursor-pointer">
               <div className="aspect-[3/4] overflow-hidden mb-4 bg-gray-200 border border-deep-black">
-                <img src="/images/hi/IMG_0538.jpg" alt="Active Engagement" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                <img src="https://res.cloudinary.com/dwmz4youk/image/upload/v1779310111/wodifair/IMG_0538.jpg" alt="Active Engagement" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
               </div>
               <h3 className="font-heading font-bold uppercase text-xs tracking-[0.2em] mb-3 text-deep-black">Active Engagement</h3>
               <p className="text-xs text-gray-600 leading-relaxed">
@@ -349,7 +349,7 @@ import { motion, AnimatePresence } from 'framer-motion';
             
             <div className="group cursor-pointer">
               <div className="aspect-[4/3] overflow-hidden mb-4 bg-gray-200 border border-deep-black">
-                <img src="/images/IMG_3767.JPG.jpeg" alt="Festive Celebration" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                <img src="https://res.cloudinary.com/dwmz4youk/image/upload/v1779310117/wodifair/IMG_3767.JPG.jpg" alt="Festive Celebration" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
               </div>
               <h3 className="font-heading font-bold uppercase text-xs tracking-[0.2em] mb-3 text-deep-black">Festive Celebration</h3>
               <p className="text-xs text-gray-600 leading-relaxed">
@@ -381,7 +381,7 @@ import { motion, AnimatePresence } from 'framer-motion';
         {/* Background Image Layer */}
         <div className="relative md:absolute inset-0 z-0 h-[400px] md:h-full">
           <img 
-            src="/images/IMG_8532-2.jpg" 
+            src="https://res.cloudinary.com/dwmz4youk/image/upload/v1779310102/wodifair/IMG_8532-2.jpg" 
             alt="Wodifair Exhibition Crowd"
             className="w-full h-full object-cover"
           />

@@ -11,12 +11,12 @@ const EventInfo = () => {
     { 
       category: "WODIFAIR 2024",
       title: "Lagos April 4th & 5th 2024", 
-      video: "/video/IMG_7859.MP4"
+      video: "https://res.cloudinary.com/dwmz4youk/video/upload/v1779310056/wodifair/IMG_7859.mp4"
     },
     { 
       category: "Wodibenuahfair",
       title: "Customer Highlights", 
-      video: "/video/IMG_9437.MP4"
+      video: "https://res.cloudinary.com/dwmz4youk/video/upload/v1779310038/wodifair/IMG_9437.mp4"
     },
     { 
       category: "Wodibenuahfair",
@@ -26,19 +26,19 @@ const EventInfo = () => {
     { 
       category: "Wodibenuahfair",
       title: "Security Highlights", 
-      video: "/images/WhatsApp Video 2026-02-08 at 2.01.13 PM.mp4"
+      video: "https://res.cloudinary.com/dwmz4youk/video/upload/v1779310061/wodifair/WhatsApp_Video_2026-02-08_at_2.01.13_PM.mp4"
     },
     { 
       category: "Wodibenuahfair",
       title: "Fair Experience", 
-      video: "/WhatsApp Video 2026-05-11 at 1.50.50 PM.mp4"
+      video: "https://res.cloudinary.com/dwmz4youk/video/upload/v1779310074/wodifair/WhatsApp_Video_2026-05-11_at_1.50.50_PM.mp4"
     }
   ];
 
   const carouselImages = [
-    "/images/carousel/IMG_8966.jpg",
-    "/images/carousel/IMG_9357.jpg",
-    "/images/carousel/IMG_9363-2.jpg"
+    "https://res.cloudinary.com/dwmz4youk/image/upload/v1779310101/wodifair/IMG_8966.jpg",
+    "https://res.cloudinary.com/dwmz4youk/image/upload/v1779310097/wodifair/IMG_9357.jpg",
+    "https://res.cloudinary.com/dwmz4youk/image/upload/v1779310092/wodifair/IMG_9363-2.jpg"
   ];
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
@@ -71,7 +71,7 @@ const EventInfo = () => {
                <div className="absolute inset-0 z-0 flex items-center justify-center">
                   <div className="mt-[0.11em] w-[80%] h-[80%] overflow-hidden rounded-full">
                    <img 
-                     src="/images/IMG_3766.JPG.jpeg" 
+                     src="https://res.cloudinary.com/dwmz4youk/image/upload/v1779310116/wodifair/IMG_3766.JPG.jpg" 
                      alt="Event"
                      className="w-full h-full object-cover"
                    />
@@ -85,7 +85,7 @@ const EventInfo = () => {
                <div className="absolute inset-0 z-0 flex items-center justify-center">
                   <div className="lg:ms-5 ms-[0.05em] mb-[0.1em] lg:mt-[0.1em] xl:mt-[0.2em] w-[60%] lg:w-[65%] h-[75%] overflow-hidden rounded-t-none rounded-b-full translate-y-2">
                    <img 
-                     src="/images/IMG_3756.JPG.jpeg" 
+                     src="https://res.cloudinary.com/dwmz4youk/image/upload/v1779310123/wodifair/IMG_3756.JPG.jpg" 
                      alt="Event"
                      className="w-full h-full object-cover"
                    />
@@ -115,12 +115,12 @@ const EventInfo = () => {
                 <span className="whitespace-nowrap">
                   UPCOMING
                   <span className="inline-block align-middle ml-2 md:ml-4 w-16 sm:w-24 md:w-48 h-8 sm:h-10 md:h-16 rounded-full overflow-hidden border border-deep-black">
-                    <img src="/images/IMG_3764.JPG.jpeg" className="w-full h-full object-cover" alt="" />
+                    <img src="https://res.cloudinary.com/dwmz4youk/image/upload/v1779310120/wodifair/IMG_3764.JPG.jpg" className="w-full h-full object-cover" alt="" />
                   </span>
                 </span>
                 <br />
                 <span className="inline-block align-middle mr-2 md:mr-4 w-16 sm:w-24 md:w-48 h-8 sm:h-10 md:h-16 rounded-full overflow-hidden border border-deep-black">
-                  <img src="/images/IMG_3765.JPG.jpeg" className="w-full h-full object-cover" alt="" />
+                  <img src="https://res.cloudinary.com/dwmz4youk/image/upload/v1779310113/wodifair/IMG_3765.JPG.jpg" className="w-full h-full object-cover" alt="" />
                 </span>
                 EVENTS
                 <br />

@@ -17,7 +17,7 @@ const Loading = () => {
             className="w-20 h-20 md:w-24 md:h-24 relative"
           >
              <img 
-               src="/images/Wodi SM (17).png" 
+               src="https://res.cloudinary.com/dwmz4youk/image/upload/v1779310125/wodifair/Wodi_SM_17.png" 
                alt="Wodifair Loading" 
                className="w-full h-full object-contain p-2"
              />

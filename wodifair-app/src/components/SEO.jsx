@@ -8,7 +8,7 @@ const DEFAULT_DESCRIPTION =
   'Wodibenuah Fair is a luxury trade fair connecting premium brands with customers across Abuja, Lagos, and Port Harcourt through curated exhibitions, vendor showcases, and cultural experiences.';
 const DEFAULT_KEYWORDS =
   'Wodibenuah Fair, Wodifair, trade fair Nigeria, Abuja exhibition, Lagos exhibition, Port Harcourt exhibition, vendor registration, luxury fair';
-const DEFAULT_IMAGE = '/images/Wodi%20SM%20(17).png';
+const DEFAULT_IMAGE = 'https://res.cloudinary.com/dwmz4youk/image/upload/v1779310125/wodifair/Wodi_SM_17.png';
 
 const toAbsoluteUrl = (value) => {
   if (!value) return `${SITE_URL}${DEFAULT_IMAGE}`;

@@ -15,7 +15,7 @@ const UpcomingEvents = ({ title = "Upcoming Events" }) => {
       category: "Exhibition",
       location: "Venue TBD, Abuja",
       city: "Abuja",
-      image: "/images/abuja may 9th 2026.jpeg",
+      image: "https://res.cloudinary.com/dwmz4youk/image/upload/v1779310115/wodifair/abuja_may_9th_2026.jpg",
       mapUrl: "https://maps.google.com/maps?q=Abuja&t=&z=13&ie=UTF8&iwloc=&output=embed",
       directionsUrl: "https://www.google.com/maps/dir/?api=1&destination=Abuja"
     },
@@ -27,7 +27,7 @@ const UpcomingEvents = ({ title = "Upcoming Events" }) => {
       category: "Exhibition",
       location: "Venue TBD, Port Harcourt",
       city: "Port Harcourt",
-      image: "/images/pport harcourt.jpg",
+      image: "https://res.cloudinary.com/dwmz4youk/image/upload/v1779310124/wodifair/pport_harcourt.jpg",
       mapUrl: "https://maps.google.com/maps?q=Port+Harcourt&t=&z=12&ie=UTF8&iwloc=&output=embed",
       directionsUrl: "https://www.google.com/maps/dir/?api=1&destination=Port+Harcourt"
     },
@@ -39,7 +39,7 @@ const UpcomingEvents = ({ title = "Upcoming Events" }) => {
       category: "Exhibition",
       location: "Venue TBD, Lagos",
       city: "Lagos",
-      image: "/images/Lagosdecember12thedition.png",
+      image: "https://res.cloudinary.com/dwmz4youk/image/upload/v1779310067/wodifair/Lagosdecember12thedition.png",
       mapUrl: "https://maps.google.com/maps?q=Lagos&t=&z=11&ie=UTF8&iwloc=&output=embed",
       directionsUrl: "https://www.google.com/maps/dir/?api=1&destination=Lagos"
     }

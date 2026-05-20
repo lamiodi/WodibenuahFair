@@ -71,7 +71,7 @@ const HomePopup = () => {
             {/* Image Section (Left) */}
             <div className="w-full md:w-1/2 h-64 md:h-auto relative">
               <img 
-                src="/images/IMG_3766.JPG.jpeg" 
+                src="https://res.cloudinary.com/dwmz4youk/image/upload/v1779310116/wodifair/IMG_3766.JPG.jpg" 
                 alt="Wodifair Atmosphere" 
                 className="w-full h-full object-cover"
               />

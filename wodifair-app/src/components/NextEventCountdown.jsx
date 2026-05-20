@@ -73,7 +73,7 @@ const NextEventCountdown = () => {
       >
         <div 
           className="w-full h-full bg-cover bg-center opacity-55"
-          style={{ backgroundImage: 'url(/images/Gemini_Generated_Image_euj3e6euj3e6euj3.png)' }}
+          style={{ backgroundImage: 'url(https://res.cloudinary.com/dwmz4youk/image/upload/v1779310064/wodifair/Gemini_Generated_Image_euj3e6euj3e6euj3.png)' }}
         ></div>
         <div className="absolute inset-0 bg-gradient-to-t from-deep-black via-deep-black/60 to-transparent"></div>
         <div className="absolute inset-0 bg-gradient-to-r from-deep-black via-transparent to-deep-black"></div>

@@ -6,7 +6,7 @@ const VenueMap = () => {
       {/* Background Image (Optional - Use a generic venue or abstract map image) */}
       <div className="absolute inset-0 z-0">
           <img 
-            src="/images/abuja may 9th 2026.jpeg" 
+            src="https://res.cloudinary.com/dwmz4youk/image/upload/v1779310115/wodifair/abuja_may_9th_2026.jpg" 
             alt="Venue Location" 
             className="w-full h-full object-cover opacity-30 grayscale group-hover:grayscale-0 transition-all duration-700 transform group-hover:scale-105"
           />

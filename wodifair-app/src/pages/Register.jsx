@@ -283,7 +283,7 @@ const Register = () => {
             {/* Background Image */}
             <div className="absolute inset-0 z-0">
               <img
-                src="/images/Gemini_Generated_Image_euj3e6euj3e6euj3.png"
+                src="https://res.cloudinary.com/dwmz4youk/image/upload/v1779310064/wodifair/Gemini_Generated_Image_euj3e6euj3e6euj3.png"
                 alt="Background"
                 className="w-full h-full object-cover opacity-80"
               />

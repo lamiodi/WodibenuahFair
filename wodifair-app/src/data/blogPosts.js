@@ -24,8 +24,8 @@ Health is the new wealth. The wellness sector at Wodifair expanded significantly
 
 These trends are more than passing fads; they are the pillars of the new African economy. Wodifair remains at the forefront, curating the brands that are leading this transformation.`,
     category: "Market Trends",
-    image: "/images/carousel/IMG_0164.jpg",
-    image_url: "/images/carousel/IMG_0164.jpg",
+    image: "https://res.cloudinary.com/dwmz4youk/image/upload/v1779310110/wodifair/IMG_0164.jpg",
+    image_url: "https://res.cloudinary.com/dwmz4youk/image/upload/v1779310110/wodifair/IMG_0164.jpg",
     published_at: "2026-04-10T10:00:00Z",
     created_at: "2026-04-10T09:00:00Z"
   },
@@ -53,8 +53,8 @@ Your fellow vendors are potential collaborators, not just competitors. Take the 
 
 By mastering these elements, you position your brand not just to sell, but to leave a lasting legacy in the minds of the Wodifair community.`,
     category: "Business Strategy",
-    image: "/images/droneaerialphotos/DJI_0512.jpg",
-    image_url: "/images/droneaerialphotos/DJI_0512.jpg",
+    image: "https://res.cloudinary.com/dwmz4youk/image/upload/v1779310083/wodifair/DJI_0512.jpg",
+    image_url: "https://res.cloudinary.com/dwmz4youk/image/upload/v1779310083/wodifair/DJI_0512.jpg",
     published_at: "2026-03-15T14:30:00Z",
     created_at: "2026-03-15T12:00:00Z"
   },
@@ -76,8 +76,8 @@ In an era of disposable trends, Timeless Tailoring champions longevity. Their ph
 
 Supporting these brands is a vote for a better future. By choosing eco-luxe, you are driving the demand for ethical practices and proving that fashion can be a force for good. Join us at the "Green Pavilion" in our next edition to discover more innovators changing the fabric of the industry.`,
     category: "Sustainable Fashion",
-    image: "/images/hi/IMG_0538.jpg",
-    image_url: "/images/hi/IMG_0538.jpg",
+    image: "https://res.cloudinary.com/dwmz4youk/image/upload/v1779310111/wodifair/IMG_0538.jpg",
+    image_url: "https://res.cloudinary.com/dwmz4youk/image/upload/v1779310111/wodifair/IMG_0538.jpg",
     published_at: "2026-02-28T09:15:00Z",
     created_at: "2026-02-28T08:00:00Z"
   },
@@ -99,8 +99,8 @@ Tradition met modernity at "Sweet Delights," where classic treats were reimagine
 
 The food court is the beating heart of Wodifair—a place where deals are discussed over meals and strangers become friends. It is a reminder that food is the ultimate connector. Whether you are a dedicated foodie or just refueling between shopping sprees, the flavors of Wodifair are not to be missed.`,
     category: "Food & Culture",
-    image: "/images/droneaerialphotos/DJI_0514.jpg",
-    image_url: "/images/droneaerialphotos/DJI_0514.jpg",
+    image: "https://res.cloudinary.com/dwmz4youk/image/upload/v1779310098/wodifair/DJI_0514.jpg",
+    image_url: "https://res.cloudinary.com/dwmz4youk/image/upload/v1779310098/wodifair/DJI_0514.jpg",
     published_at: "2026-01-20T11:45:00Z",
     created_at: "2026-01-20T10:00:00Z"
   },
@@ -124,8 +124,8 @@ Beyond the booths, Wodifair is a center of learning. Our expert-led workshops co
 
 If you are serious about scaling your business, Wodifair is your stage. Join us, and let's build the future of African commerce together.`,
     category: "Entrepreneurship",
-    image: "/images/droneaerialphotos/DJI_0519.jpg",
-    image_url: "/images/droneaerialphotos/DJI_0519.jpg",
+    image: "https://res.cloudinary.com/dwmz4youk/image/upload/v1779310089/wodifair/DJI_0519.jpg",
+    image_url: "https://res.cloudinary.com/dwmz4youk/image/upload/v1779310089/wodifair/DJI_0519.jpg",
     published_at: "2025-12-05T16:20:00Z",
     created_at: "2025-12-05T15:00:00Z"
   }

@@ -33,7 +33,7 @@ const SponsorshipCTA = () => {
         {/* Right: Image - Grayscale to Color hover effect */}
         <div className="lg:w-1/2 relative min-h-[400px] group overflow-hidden bg-gray-900">
           <img 
-            src="/images/IMG_3763.JPG.jpeg" 
+            src="https://res.cloudinary.com/dwmz4youk/image/upload/v1779310118/wodifair/IMG_3763.JPG.jpg" 
             alt="Sponsorship Opportunity"
             className="w-full h-full object-cover grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-1000 scale-100 group-hover:scale-105"
           />

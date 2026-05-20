@@ -10,7 +10,7 @@ const EventHighlights = () => {
       badge: "Premium",
       description: "Exclusive access to our premium lounge with complimentary champagne and networking opportunities.",
       mediaType: "video",
-      src: "/images/WhatsApp Video 2026-02-08 at 2.01.02 PM.mp4"
+      src: "https://res.cloudinary.com/dwmz4youk/video/upload/v1779310076/wodifair/WhatsApp_Video_2026-02-08_at_2.01.02_PM.mp4"
     },
     {
       id: 2,

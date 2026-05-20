@@ -32,7 +32,7 @@ const About = () => {
                  <div className="absolute inset-0 z-0 flex items-center justify-center">
                     <div className="ms-[0.04em] mt-[0.099em] w-[58%] h-[87%] overflow-hidden rounded-full border border-deep-black">
                      <img 
-                       src="/images/ceoimage.png" 
+                       src="https://res.cloudinary.com/dwmz4youk/image/upload/v1779310052/wodifair/ceoimage.png" 
                        alt="CEO"
                        className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-500"
                      />
@@ -63,7 +63,7 @@ const About = () => {
                  <div className="absolute inset-0 z-0 flex items-center justify-center">
                     <div className="lg:ms-5 ms-[0.13em] mt-[0.19em] w-[56%] h-[75%] overflow-hidden rounded-[18px] border border-deep-black">
                      <img 
-                       src="/images/lagos december 2026.jpeg" 
+                       src="https://res.cloudinary.com/dwmz4youk/image/upload/v1779310121/wodifair/lagos_december_2026.jpg" 
                        alt="Lagos Event"
                        className="w-full h-full object-cover transition-all duration-500"
                      />
@@ -83,7 +83,7 @@ const About = () => {
       <div className="relative w-full h-[60vh] md:h-[80vh] overflow-hidden border-b border-deep-black">
         <motion.div style={{ y }} className="absolute inset-0 w-full h-full">
           <img 
-            src="/images/pport harcourt.jpg" 
+            src="https://res.cloudinary.com/dwmz4youk/image/upload/v1779310124/wodifair/pport_harcourt.jpg" 
             alt="Wodibenuah Fair Crowd" 
             className="w-full h-full object-cover opacity-90"
           />
@@ -166,7 +166,7 @@ const About = () => {
               <div className="flex flex-col md:flex-row gap-12 items-center">
                 <div className="w-full md:w-1/2 aspect-[3/4] overflow-hidden border border-gray-200 bg-gray-100 relative group">
                   <img 
-                    src="/images/ceoimage.png" 
+                    src="https://res.cloudinary.com/dwmz4youk/image/upload/v1779310052/wodifair/ceoimage.png" 
                     alt="Founder & CEO" 
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                   />
@@ -186,7 +186,7 @@ const About = () => {
                   </p>
 
                   <img 
-                    src="/images/Wodi SM (17).png" 
+                    src="https://res.cloudinary.com/dwmz4youk/image/upload/v1779310125/wodifair/Wodi_SM_17.png" 
                     alt="Signature" 
                     className="h-12 opacity-60"
                   />
@@ -216,7 +216,7 @@ const About = () => {
                 className="w-full aspect-square bg-gray-200 overflow-hidden border border-deep-black mt-8"
               >
                 <img 
-                  src="/images/Lagosdecember12thedition.png" 
+                  src="https://res.cloudinary.com/dwmz4youk/image/upload/v1779310067/wodifair/Lagosdecember12thedition.png" 
                   alt="Lagos Edition" 
                   className="w-full h-full object-cover"
                 />

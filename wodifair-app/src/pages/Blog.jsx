@@ -91,7 +91,7 @@ const Blog = () => {
         title="Blog"
         description="Read updates, exhibitor stories, and event insights from Wodibenuah Fair across Abuja, Lagos, and Port Harcourt."
         url="/blog"
-        image={featuredPost?.image || '/images/IMG_3766.JPG.jpeg'}
+        image={featuredPost?.image || 'https://res.cloudinary.com/dwmz4youk/image/upload/v1779310116/wodifair/IMG_3766.JPG.jpg'}
       />
       {/* Title Banner */}
       <div className="w-full px-2 md:px-8 py-3 md:py-6 border-b border-deep-black">
@@ -102,7 +102,7 @@ const Blog = () => {
                <div className="absolute inset-0 z-0 flex items-center justify-center">
                   <div className="mt-[0.1em] w-[80%] h-[80%] overflow-hidden rounded-full">
                    <img 
-                     src="/images/IMG_3766.JPG.jpeg" 
+                     src="https://res.cloudinary.com/dwmz4youk/image/upload/v1779310116/wodifair/IMG_3766.JPG.jpg" 
                      alt="Blog"
                      className="w-full h-full object-cover grayscale"
                    />

@@ -12,73 +12,73 @@ const Vendors = () => {
     {
       name: "Luxe Apparel",
       category: "Fashion",
-      image: "/images/droneaerialphotos/DJI_0509.jpg", 
+      image: "https://res.cloudinary.com/dwmz4youk/image/upload/v1779310094/wodifair/DJI_0509.jpg", 
       booth: "A-12"
     },
     {
       name: "Urban Trends",
       category: "Fashion",
-      image: "/images/droneaerialphotos/DJI_0510.jpg",
+      image: "https://res.cloudinary.com/dwmz4youk/image/upload/v1779310099/wodifair/DJI_0510.jpg",
       booth: "B-05"
     },
     {
       name: "Glow Beauty",
       category: "Beauty",
-      image: "/images/droneaerialphotos/DJI_0511.jpg",
+      image: "https://res.cloudinary.com/dwmz4youk/image/upload/v1779310088/wodifair/DJI_0511.jpg",
       booth: "C-08"
     },
     {
       name: "Pure Wellness",
       category: "Lifestyle",
-      image: "/images/droneaerialphotos/DJI_0512.jpg",
+      image: "https://res.cloudinary.com/dwmz4youk/image/upload/v1779310083/wodifair/DJI_0512.jpg",
       booth: "C-09"
     },
     {
       name: "Artisan Home",
       category: "Lifestyle",
-      image: "/images/droneaerialphotos/DJI_0513.jpg",
+      image: "https://res.cloudinary.com/dwmz4youk/image/upload/v1779310086/wodifair/DJI_0513.jpg",
       booth: "D-15"
     },
     {
       name: "Taste of Africa",
       category: "Lifestyle",
-      image: "/images/droneaerialphotos/DJI_0514.jpg",
+      image: "https://res.cloudinary.com/dwmz4youk/image/upload/v1779310098/wodifair/DJI_0514.jpg",
       booth: "E-02"
     },
     {
       name: "Royal Fabrics",
       category: "Fashion",
-      image: "/images/droneaerialphotos/DJI_0515.jpg",
+      image: "https://res.cloudinary.com/dwmz4youk/image/upload/v1779310100/wodifair/DJI_0515.jpg",
       booth: "A-14"
     },
     {
       name: "Natural Essence",
       category: "Beauty",
-      image: "/images/droneaerialphotos/DJI_0516.jpg",
+      image: "https://res.cloudinary.com/dwmz4youk/image/upload/v1779310095/wodifair/DJI_0516.jpg",
       booth: "C-11"
     },
     {
       name: "Modern Living",
       category: "Lifestyle",
-      image: "/images/droneaerialphotos/DJI_0517.jpg",
+      image: "https://res.cloudinary.com/dwmz4youk/image/upload/v1779310105/wodifair/DJI_0517.jpg",
       booth: "D-03"
     },
     {
       name: "Heritage Crafts",
       category: "Lifestyle",
-      image: "/images/droneaerialphotos/DJI_0518.jpg",
+      image: "https://res.cloudinary.com/dwmz4youk/image/upload/v1779310091/wodifair/DJI_0518.jpg",
       booth: "D-07"
     },
     {
       name: "Elite Styles",
       category: "Fashion",
-      image: "/images/droneaerialphotos/DJI_0519.jpg",
+      image: "https://res.cloudinary.com/dwmz4youk/image/upload/v1779310089/wodifair/DJI_0519.jpg",
       booth: "B-08"
     },
     {
       name: "Zen Garden",
       category: "Lifestyle",
-      image: "/images/droneaerialphotos/DJI_0520.jpg",
+      image: "https://res.cloudinary.com/dwmz4youk/image/upload/v1779310084/wodifair/DJI_0520.jpg",
       booth: "E-05"
     }
   ];
@@ -94,7 +94,7 @@ const Vendors = () => {
         title="Explore Vendors"
         description="Explore fashion, beauty, lifestyle, and luxury vendors featured at Wodibenuah Fair across Abuja, Lagos, and Port Harcourt."
         url="/vendors"
-        image="/images/carousel/IMG_0164.jpg"
+        image="https://res.cloudinary.com/dwmz4youk/image/upload/v1779310110/wodifair/IMG_0164.jpg"
       />
       {/* ============================================
           TITLE BANNER: "OUR VENDORS"
@@ -111,7 +111,7 @@ const Vendors = () => {
                <div className="absolute inset-0 z-0 flex items-center justify-center">
                   <div className=" ms-2 lg:ms-3   mt-[0.1em] w-[85%] h-[81%] overflow-hidden rounded-full">
                    <img 
-                     src="/images/IMG_3766.JPG.jpeg" 
+                     src="https://res.cloudinary.com/dwmz4youk/image/upload/v1779310116/wodifair/IMG_3766.JPG.jpg" 
                      alt="Vendor"
                      className="w-full h-full object-cover"
                    />
@@ -158,7 +158,7 @@ const Vendors = () => {
           {/* Right: Image */}
           <div className="lg:w-1/2 relative min-h-[400px]">
             <img 
-              src="/images/carousel/IMG_0164.jpg" 
+              src="https://res.cloudinary.com/dwmz4youk/image/upload/v1779310110/wodifair/IMG_0164.jpg" 
               alt="Vendor Showcase"
               className="w-full h-full object-cover"
             />
