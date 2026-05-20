@@ -9,30 +9,14 @@ const NextEventCountdown = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    apiRequest('/events/next')
-      .then(data => {
-        if (data) {
-          setNextEvent(data);
-        } else {
-            setNextEvent({
-                title: "Wodibenuah Fair Abuja",
-                start_date: "2026-05-23T10:00:00",
-                location: "BMO EVENT CENTER, Wuse 2",
-                is_registration_open: true
-            });
-        }
-        setLoading(false);
-      })
-      .catch(err => {
-        console.error('Error fetching next event:', err);
-        setNextEvent({
-            title: "Wodibenuah Fair Abuja",
-            start_date: "2026-05-23T10:00:00",
-            location: "BMO EVENT CENTER, Wuse 2",
-            is_registration_open: true
-        });
-        setLoading(false);
-      });
+    // Hardcode to the exact requested dates to override any old database records
+    setNextEvent({
+        title: "Wodibenuah Fair Abuja",
+        start_date: "2026-05-23T10:00:00",
+        location: "BMO EVENT CENTER, Wuse 2",
+        is_registration_open: true
+    });
+    setLoading(false);
   }, []);
 
   useEffect(() => {
