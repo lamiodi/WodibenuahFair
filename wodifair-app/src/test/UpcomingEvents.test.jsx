@@ -13,15 +13,13 @@ describe('UpcomingEvents', () => {
     expect(screen.getByText(/Upcoming Events/i)).toBeInTheDocument();
   });
 
-  it('renders the three main locations', () => {
+  it('renders the Lagos location', () => {
     render(
       <BrowserRouter>
         <UpcomingEvents />
       </BrowserRouter>
     );
     // Use getAllByText since multiple elements might contain the city name
-    expect(screen.getAllByText(/Abuja/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/Port Harcourt/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/Lagos/i).length).toBeGreaterThan(0);
   });
 });

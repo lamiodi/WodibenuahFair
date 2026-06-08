@@ -5,34 +5,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 const UpcomingEvents = ({ title = "Upcoming Events" }) => {
   const [activeEventIndex, setActiveEventIndex] = useState(0);
 
-  // Hardcoded events as per user request: Abuja, Port Harcourt, Lagos
+  // Hardcoded events as per user request: Lagos only
   const events = [
     {
       id: 1,
-      date: "MAY 23-24, 2026",
-      title: "ABUJA",
-      subtitle: "The Main Event",
-      category: "Exhibition",
-      location: "Venue TBD, Abuja",
-      city: "Abuja",
-      image: "https://res.cloudinary.com/dwmz4youk/image/upload/v1779310115/wodifair/abuja_may_9th_2026.jpg",
-      mapUrl: "https://maps.google.com/maps?q=Abuja&t=&z=13&ie=UTF8&iwloc=&output=embed",
-      directionsUrl: "https://www.google.com/maps/dir/?api=1&destination=Abuja"
-    },
-    {
-      id: 2,
-      date: "AUGUST 2026",
-      title: "PORT HARCOURT",
-      subtitle: "Summer Edition",
-      category: "Exhibition",
-      location: "Venue TBD, Port Harcourt",
-      city: "Port Harcourt",
-      image: "https://res.cloudinary.com/dwmz4youk/image/upload/v1779310124/wodifair/pport_harcourt.jpg",
-      mapUrl: "https://maps.google.com/maps?q=Port+Harcourt&t=&z=12&ie=UTF8&iwloc=&output=embed",
-      directionsUrl: "https://www.google.com/maps/dir/?api=1&destination=Port+Harcourt"
-    },
-    {
-      id: 3,
       date: "DECEMBER 2026",
       title: "LAGOS",
       subtitle: "Holiday Edition",

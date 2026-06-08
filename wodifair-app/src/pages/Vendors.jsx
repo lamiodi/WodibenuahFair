@@ -92,7 +92,7 @@ const Vendors = () => {
     <div className="min-h-screen bg-cream text-deep-black font-body flex flex-col">
       <SEO
         title="Explore Vendors"
-        description="Explore fashion, beauty, lifestyle, and luxury vendors featured at Wodibenuah Fair across Abuja, Lagos, and Port Harcourt."
+        description="Explore fashion, beauty, lifestyle, and luxury vendors featured at Wodibenuah Fair in Lagos."
         url="/vendors"
         image="https://res.cloudinary.com/dwmz4youk/image/upload/v1779310110/wodifair/IMG_0164.jpg"
       />

@@ -13,16 +13,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 
   const slides = [
     {
-      image: "https://res.cloudinary.com/dwmz4youk/image/upload/v1779310108/wodifair/IMG_0072.jpg",
-      title: "ABUJA",
-      subtitle: "May 23rd & 24th Edition"
-    },
-    {
-      image: "https://res.cloudinary.com/dwmz4youk/image/upload/v1779310109/wodifair/IMG_0088.jpg",
-      title: "PORT HARCOURT",
-      subtitle: "August 2026 Edition"
-    },
-    {
       image: "https://res.cloudinary.com/dwmz4youk/image/upload/v1779310112/wodifair/IMG_0162.jpg",
       title: "LAGOS",
       subtitle: "December 2026 Edition"
@@ -42,10 +32,10 @@ import { motion, AnimatePresence } from 'framer-motion';
   return (
     <div className="min-h-screen flex flex-col bg-cream text-deep-black font-body">
       <SEO 
-        title="Luxury Trade Fair in Abuja, Lagos & Port Harcourt"
-        description="Wodifair is the premier luxury exhibition connecting elite customers with top fashion, food, and lifestyle brands across Abuja, Lagos, and Port Harcourt." 
+        title="Luxury Trade Fair in Lagos"
+        description="Wodibenuah Fair is the premier luxury exhibition connecting elite customers with top fashion, food, and lifestyle brands in Lagos." 
         url="/"
-        image="https://res.cloudinary.com/dwmz4youk/image/upload/v1779310108/wodifair/IMG_0072.jpg"
+        image="https://res.cloudinary.com/dwmz4youk/image/upload/v1779310112/wodifair/IMG_0162.jpg"
         structuredData={{
           '@context': 'https://schema.org',
           '@type': 'Organization',
@@ -237,31 +227,7 @@ import { motion, AnimatePresence } from 'framer-motion';
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {/* Abuja */}
-            <div className="group border border-deep-black p-8 hover:bg-deep-black hover:text-white transition-all duration-300 flex flex-col items-center text-center">
-              <h3 className="text-3xl font-heading font-bold uppercase mb-2">Abuja</h3>
-              <p className="text-sm font-bold tracking-[0.2em] uppercase mb-8 opacity-70">May 23rd & 24th, 2026</p>
-              <Link 
-                to="/register?location=Abuja" 
-                className="mt-auto inline-block px-8 py-3 border border-current text-xs font-bold uppercase tracking-[0.2em] hover:bg-white hover:text-deep-black transition-colors"
-              >
-                Vendor Registration
-              </Link>
-            </div>
-
-            {/* Port Harcourt */}
-            <div className="group border border-deep-black p-8 hover:bg-deep-black hover:text-white transition-all duration-300 flex flex-col items-center text-center">
-              <h3 className="text-3xl font-heading font-bold uppercase mb-2">Port Harcourt</h3>
-              <p className="text-sm font-bold tracking-[0.2em] uppercase mb-8 opacity-70">August 2026</p>
-              <Link 
-                to="/register?location=Port Harcourt" 
-                className="mt-auto inline-block px-8 py-3 border border-current text-xs font-bold uppercase tracking-[0.2em] hover:bg-white hover:text-deep-black transition-colors"
-              >
-                Vendor Registration
-              </Link>
-            </div>
-
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-md mx-auto">
             {/* Lagos */}
             <div className="group border border-deep-black p-8 hover:bg-deep-black hover:text-white transition-all duration-300 flex flex-col items-center text-center">
               <h3 className="text-3xl font-heading font-bold uppercase mb-2">Lagos</h3>

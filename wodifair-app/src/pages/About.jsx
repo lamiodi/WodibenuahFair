@@ -131,7 +131,7 @@ const About = () => {
                   At Wodibenuah Fair, we believe in the power of connection. We are more than just an event; we are a platform that bridges the gap between exceptional brands and discerning audiences. Our mission is to create an immersive environment where commerce meets culture, fostering growth for businesses and unforgettable experiences for attendees.
                 </p>
                 <p>
-                  From fashion and beauty to art and lifestyle, we curate a diverse selection of vendors that represent the best of creativity and innovation. Whether in Abuja, Port Harcourt, or Lagos, our fairs are designed to inspire, engage, and elevate.
+                  From fashion and beauty to art and lifestyle, we curate a diverse selection of vendors that represent the best of creativity and innovation. In Lagos, our fairs are designed to inspire, engage, and elevate.
                 </p>
               </div>
             </motion.div>
@@ -139,8 +139,8 @@ const About = () => {
             {/* Stats / Highlights */}
             <div className="grid grid-cols-2 md:grid-cols-3 gap-8 border-y border-deep-black py-12">
               <div className="text-center">
-                <h4 className="text-4xl md:text-6xl font-heading font-bold mb-2">3+</h4>
-                <p className="text-xs font-bold uppercase tracking-widest text-gray-500">Major Cities</p>
+                <h4 className="text-4xl md:text-6xl font-heading font-bold mb-2">1+</h4>
+                <p className="text-xs font-bold uppercase tracking-widest text-gray-500">Major City</p>
               </div>
               <div className="text-center border-l border-gray-200">
                 <h4 className="text-4xl md:text-6xl font-heading font-bold mb-2">500+</h4>
@@ -207,7 +207,7 @@ const About = () => {
               >
                 <img 
                   src="/images/ceoimage 2.png" 
-                  alt="Abuja Edition" 
+                  alt="Lagos Edition" 
                   className="w-full h-full object-cover"
                 />
               </motion.div>

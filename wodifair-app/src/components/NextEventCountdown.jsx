@@ -11,9 +11,9 @@ const NextEventCountdown = () => {
   useEffect(() => {
     // Hardcode to the exact requested dates to override any old database records
     setNextEvent({
-        title: "Wodibenuah Fair Abuja",
-        start_date: "2026-05-23T10:00:00",
-        location: "BMO EVENT CENTER, Wuse 2",
+        title: "Wodibenuah Fair Lagos",
+        start_date: "2026-12-12T10:00:00",
+        location: "Venue TBD, Lagos",
         is_registration_open: true
     });
     setLoading(false);

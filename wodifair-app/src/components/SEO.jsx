@@ -3,11 +3,11 @@ import { Helmet } from 'react-helmet-async';
 
 const SITE_NAME = 'Wodibenuah Fair';
 const SITE_URL = (import.meta.env.VITE_SITE_URL || 'https://wodibenuah-fair.vercel.app').replace(/\/$/, '');
-const DEFAULT_TITLE = `${SITE_NAME} | Luxury Trade Fair in Abuja, Lagos & Port Harcourt`;
+const DEFAULT_TITLE = `${SITE_NAME} | Luxury Trade Fair in Lagos`;
 const DEFAULT_DESCRIPTION =
-  'Wodibenuah Fair is a luxury trade fair connecting premium brands with customers across Abuja, Lagos, and Port Harcourt through curated exhibitions, vendor showcases, and cultural experiences.';
+  'Wodibenuah Fair is a luxury trade fair connecting premium brands with customers in Lagos through curated exhibitions, vendor showcases, and cultural experiences.';
 const DEFAULT_KEYWORDS =
-  'Wodibenuah Fair, Wodifair, trade fair Nigeria, Abuja exhibition, Lagos exhibition, Port Harcourt exhibition, vendor registration, luxury fair';
+  'Wodibenuah Fair, Wodifair, trade fair Nigeria, Lagos exhibition, vendor registration, luxury fair';
 const DEFAULT_IMAGE = 'https://res.cloudinary.com/dwmz4youk/image/upload/v1779310125/wodifair/Wodi_SM_17.png';
 
 const toAbsoluteUrl = (value) => {

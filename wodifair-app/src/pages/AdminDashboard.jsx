@@ -1291,8 +1291,8 @@ const AdminDashboard = () => {
                 <div className={`px-2 py-1 rounded ${currentVendor.is_previous_vendor ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-500'}`}>
                   Previous Vendor: {currentVendor.is_previous_vendor ? 'Yes' : 'No'}
                 </div>
-                <div className={`px-2 py-1 rounded ${currentVendor.live_in_abuja ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-500'}`}>
-                  Local Resident: {currentVendor.live_in_abuja ? 'Yes' : 'No'}
+                <div className={`px-2 py-1 rounded ${currentVendor.live_in_lagos ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-500'}`}>
+                  Local Resident: {currentVendor.live_in_lagos ? 'Yes' : 'No'}
                 </div>
               </div>
             </div>

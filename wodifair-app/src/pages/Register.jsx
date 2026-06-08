@@ -26,7 +26,7 @@ const Register = () => {
     boothType: '',
     selectedLocation: '',
     isPreviousVendor: false,
-    liveInAbuja: false,
+    liveInLagos: false,
     categoryAccepted: false,
     agreeToMarket: false,
     agreeToWhatsapp: false,
@@ -44,20 +44,11 @@ const Register = () => {
       'Food Slot': 300000,
       'Drinks': 300000,
       'Half Booth': 190000
-    },
-    'Port Harcourt': {
-      'Royal Booth': 350000,
-      'Food Slot': 250000,
-      'Drinks': 300000,
-      'Single Booth': 175000
     }
   });
 
   // Current active prices based on location
   const boothPrices = React.useMemo(() => {
-    if (formData.selectedLocation === 'Port Harcourt' && allPrices['Port Harcourt']) {
-      return allPrices['Port Harcourt'];
-    }
     return allPrices['Default'] || allPrices;
   }, [formData.selectedLocation, allPrices]);
 
@@ -227,7 +218,7 @@ const Register = () => {
             </h2>
             <div className="w-20 h-[2px] bg-deep-black mx-auto mb-8"></div>
             <p className="text-lg text-gray-600 mb-10 leading-relaxed">
-              Thank you for registering for Wodibenuahfair Abuja 2026.
+              Thank you for registering for Wodibenuahfair Lagos 2026.
               We will review your application and contact you shortly via email.
             </p>
             <button
@@ -345,16 +336,9 @@ const Register = () => {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {/* Replaced with simple location selector if needed, or rely on selectedLocation state if it exists */}
-                {/* Assuming user still wants to choose "Abuja" or "Lagos" broadly? 
-                    The previous prompt asked for "a location selector that is like abuja or lagos".
-                    Let's check if 'selectedLocation' input exists in the form below line 300.
-                    I need to read more lines to confirm. 
-                    But for now, I will COMMENT OUT the specific eventId selector.
-                    I will also ensure 'eventId' is not strictly required by frontend validation if I remove the input.
-                    Wait, 'eventId' is marked 'required' in the select.
-                    If I remove it, I must handle the backend requirement.
-                    The backend might default it or I should pick a default event based on selectedLocation.
+                {/* Simple location selector for the vendor registration form */}
+                {/* Lagos is the current event location.
+                    We rely on 'selectedLocation' state in the form below.
                 */}
 
                 <div className="md:col-span-2 group">
@@ -381,9 +365,7 @@ const Register = () => {
                     className="w-full px-0 py-3 border-b border-gray-300 focus:border-deep-black bg-transparent outline-none transition-colors text-lg font-body cursor-pointer"
                   >
                     <option value="">SELECT LOCATION</option>
-                    <option value="Abuja">Abuja</option>
                     <option value="Lagos">Lagos</option>
-                    <option value="Port Harcourt">Port Harcourt</option>
                   </select>
                 </div>
 
@@ -518,7 +500,7 @@ const Register = () => {
               <div className="space-y-6">
                 {[
                   { name: 'isPreviousVendor', label: 'I am a previous vendor' },
-                  { name: 'liveInAbuja', label: `I live in ${formData.selectedLocation || 'Abuja'} / am available to exhibit in ${formData.selectedLocation || 'Abuja'} *` },
+                  { name: 'liveInLagos', label: `I live in ${formData.selectedLocation || 'Lagos'} / am available to exhibit in ${formData.selectedLocation || 'Lagos'} *` },
                   { name: 'categoryAccepted', label: 'I confirm my business category is accepted by the exhibition *' },
                   { name: 'agreeToMarket', label: 'I agree to ACTIVELY Market my business and contribute to the Fair *' },
                   { name: 'agreeToWhatsapp', label: 'I agree to JOIN & REMAIN ACTIVE in the assigned WhatsApp group *' }

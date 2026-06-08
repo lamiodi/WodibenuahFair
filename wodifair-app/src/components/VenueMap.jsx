@@ -6,7 +6,7 @@ const VenueMap = () => {
       {/* Background Image (Optional - Use a generic venue or abstract map image) */}
       <div className="absolute inset-0 z-0">
           <img 
-            src="https://res.cloudinary.com/dwmz4youk/image/upload/v1779310115/wodifair/abuja_may_9th_2026.jpg" 
+            src="https://res.cloudinary.com/dwmz4youk/image/upload/v1779310067/wodifair/Lagosdecember12thedition.png" 
             alt="Venue Location" 
             className="w-full h-full object-cover opacity-30 grayscale group-hover:grayscale-0 transition-all duration-700 transform group-hover:scale-105"
           />
@@ -32,18 +32,18 @@ const VenueMap = () => {
         <div className="w-12 h-[2px] bg-deep-black mx-auto mb-6"></div>
 
         <p className="text-gray-600 mb-8 leading-relaxed">
-          We are finalizing the exact coordinates for our main exhibition hall in Abuja. 
+          We are finalizing the exact coordinates for our main exhibition hall in Lagos. 
           Stay tuned for the official map update!
         </p>
 
         <div className="flex flex-col gap-3 text-xs font-bold uppercase tracking-wider text-deep-black">
           <div className="flex items-center justify-center gap-2">
             <svg className="w-4 h-4 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
-            <span>BMO EVENT CENTER, Wuse 2</span>
+            <span>Venue TBD, Lagos</span>
           </div>
           <div className="flex items-center justify-center gap-2">
             <svg className="w-4 h-4 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-            <span>May 23rd & 24th, 2026</span>
+            <span>December 12th, 2026</span>
           </div>
         </div>
       </div>

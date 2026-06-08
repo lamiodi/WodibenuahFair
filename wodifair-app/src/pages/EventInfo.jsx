@@ -54,7 +54,7 @@ const EventInfo = () => {
     <div className="min-h-screen bg-cream text-deep-black font-body flex flex-col">
       <SEO 
         title="Event Information & Schedule" 
-        description="Discover the upcoming Wodifair exhibitions in Abuja, Port Harcourt, and Lagos. View event schedules, highlights, and venue maps."
+        description="Discover the upcoming Wodibenuah Fair exhibition in Lagos. View event schedules, highlights, and venue maps."
         url="/event-info"
       />
       
@@ -241,13 +241,13 @@ const EventInfo = () => {
               Find Your<br/>Way
             </h2>
             <p className="text-gray-400 text-sm md:text-base leading-relaxed mb-12">
-              Located in the prestigious district of Abuja, our venue offers world-class facilities, 
+              Located in Lagos, our venue offers world-class facilities, 
               ample parking, and easy accessibility for all our guests.
             </p>
             <div className="space-y-6 border-t border-gray-800 pt-8">
                <div>
                  <h4 className="text-sm font-bold uppercase tracking-wider mb-2">Location</h4>
-                 <p className="text-gray-400 text-sm">BMO EVENT CENTER, Wuse 2</p>
+                 <p className="text-gray-400 text-sm">Venue TBD, Lagos</p>
                </div>
                <div>
                  <h4 className="text-sm font-bold uppercase tracking-wider mb-2">Hours</h4>

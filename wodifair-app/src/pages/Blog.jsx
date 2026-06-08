@@ -89,7 +89,7 @@ const Blog = () => {
     <div className="min-h-screen bg-cream text-deep-black font-body flex flex-col">
       <SEO
         title="Blog"
-        description="Read updates, exhibitor stories, and event insights from Wodibenuah Fair across Abuja, Lagos, and Port Harcourt."
+        description="Read updates, exhibitor stories, and event insights from Wodibenuah Fair in Lagos."
         url="/blog"
         image={featuredPost?.image || 'https://res.cloudinary.com/dwmz4youk/image/upload/v1779310116/wodifair/IMG_3766.JPG.jpg'}
       />

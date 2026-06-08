@@ -66,7 +66,7 @@ By mastering these elements, you position your brand not just to sell, but to le
     content: `Sustainability is the defining challenge of our time, and the fashion industry is answering the call. At Wodifair, we curate brands that prioritize the planet without compromising on style. Here are the eco-luxe pioneers you need to know.
 
 **EcoChic: Upcycled Elegance**
-Turning waste into wearable art, EcoChic is redefining luxury. Their latest collection, unveiled at our Abuja event, featured stunning architectural silhouettes created entirely from surplus fabrics. Each piece is unique, offering the exclusivity that true luxury demands while diverting waste from landfills.
+Turning waste into wearable art, EcoChic is redefining luxury. Their latest collection, unveiled at our Lagos event, featured stunning architectural silhouettes created entirely from surplus fabrics. Each piece is unique, offering the exclusivity that true luxury demands while diverting waste from landfills.
 
 **GreenThreads: Farm-to-Closet Transparency**
 GreenThreads is setting a new standard for supply chain integrity. Specializing in organic cotton essentials, they maintain direct relationships with farmers to ensure fair wages and regenerative farming practices. Their booth was a hub of education, inviting customers to trace the journey of their garment from seed to stitch.
