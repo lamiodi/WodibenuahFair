@@ -4,9 +4,9 @@ import { motion } from 'framer-motion';
 
 const NEXT_EVENT_DATA = {
   title: "Wodibenuah Fair Lagos 2026",
-  start_date: null,
+  start_date: "2026-12-13T10:00:00",
   location: "Lagos, Nigeria",
-  venue: "To Be Announced",
+  venue: "Five Palms Event Center",
   is_registration_open: true
 };
 

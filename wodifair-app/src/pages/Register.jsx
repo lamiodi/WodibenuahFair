@@ -37,6 +37,24 @@ const Register = () => {
   const [status, setStatus] = useState('idle'); // idle, submitting, success, error
   const [errorMessage, setErrorMessage] = useState('');
 
+  const resetForm = () => {
+    setFormData({ ...INITIAL_FORM_DATA });
+    // Re-fetch eventId for Lagos after reset
+    apiRequest('/events').then(data => {
+      if (data) {
+        const eventsList = Array.isArray(data) ? data : [data];
+        const lagosEvent = eventsList.find(e =>
+          e.location?.toLowerCase().includes('lagos')
+        );
+        if (lagosEvent) {
+          setFormData(prev => ({ ...prev, eventId: lagosEvent.id }));
+        }
+      }
+    }).catch(() => {});
+    setStatus('idle');
+    setErrorMessage('');
+  };
+
   // Store all pricing configurations
   const [allPrices, setAllPrices] = useState({
     'Default': {
@@ -112,9 +130,9 @@ const Register = () => {
               setStatus('success');
               setErrorMessage('');
               // Redirect to Thank You page with reference and location
-              navigate(`/thank-you?reference=${transaction.reference}&location=${encodeURIComponent(formData.selectedLocation || 'your location')}`);
+              navigate(`/thank-you?reference=${transaction.reference}&location=${encodeURIComponent(formData.selectedLocation || 'Lagos')}`);
             } else {
-              const msg = data.message || 'Payment verification failed.';
+              const msg = data.message || 'Payment verification failed. Please contact support if money was deducted.';
               toast.error(msg, { id: 'payment-toast' });
               setErrorMessage(msg);
               setStatus('error');
@@ -123,7 +141,7 @@ const Register = () => {
           })
           .catch(err => {
             console.error(err);
-            const msg = err.message || 'Error verifying payment.';
+            const msg = err.message || 'Error verifying payment. Please contact support with your Paystack reference.';
             toast.error(msg, { id: 'payment-toast' });
             setErrorMessage(msg);
             setStatus('error');
@@ -131,16 +149,51 @@ const Register = () => {
           });
       },
       onCancel: () => {
-        setStatus('error');
-        setErrorMessage('Transaction cancelled. Please try again when you are ready.');
-        toast.error('Transaction cancelled');
-        if (errorRef.current) errorRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        setStatus('idle');
+        setErrorMessage('');
+        toast.error('Payment cancelled');
       }
     });
   };
 
+  const validateForm = () => {
+    const errors = [];
+
+    if (!formData.eventId) {
+      errors.push('Event not loaded. Please refresh the page and try again.');
+    }
+
+    if (!formData.boothType) {
+      errors.push('Please select a booth type.');
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      errors.push('Please enter a valid email address.');
+    }
+
+    const phoneRegex = /^\+?[0-9]{10,15}$/;
+    if (!phoneRegex.test(formData.phoneNumber.replace(/\s/g, ''))) {
+      errors.push('Please enter a valid phone number (10-15 digits).');
+    }
+    if (!phoneRegex.test(formData.whatsappNumber.replace(/\s/g, ''))) {
+      errors.push('Please enter a valid WhatsApp number (10-15 digits).');
+    }
+
+    return errors;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const validationErrors = validateForm();
+    if (validationErrors.length > 0) {
+      setErrorMessage(validationErrors.join('\n'));
+      setStatus('error');
+      if (errorRef.current) errorRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+
     setStatus('submitting');
     setErrorMessage('');
     toast.loading('Registering vendor...', { id: 'register-toast' });
@@ -214,7 +267,7 @@ const Register = () => {
               Your payment is being processed. You will receive a confirmation email shortly.
             </p>
             <button
-              onClick={() => setStatus('idle')}
+              onClick={resetForm}
               className="bg-deep-black text-white px-10 py-4 text-xs font-bold uppercase tracking-[0.2em] hover:bg-white hover:text-deep-black border border-deep-black transition-all duration-300"
             >
               Submit Another
@@ -275,7 +328,7 @@ const Register = () => {
 
             <div className="relative z-10">
               <p className="text-xs md:text-sm font-bold tracking-[0.3em] uppercase mb-4 text-gray-300">
-                Wodibenuah Fair 2026
+                Wodibenuah Fair Lagos 2026
               </p>
               <h2 className="text-4xl md:text-6xl lg:text-7xl font-heading font-normal uppercase tracking-wide leading-none mb-6">
                 Join The<br />Exhibition
