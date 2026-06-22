@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import PaystackPop from '@paystack/inline-js';
 import Navigation from '../components/Navigation';
@@ -7,35 +7,35 @@ import Footer from '../components/Footer';
 import { apiRequest } from '../services/api';
 import SEO from '../components/SEO';
 
+const LAGOS_LOCATION = 'Lagos';
+
+const INITIAL_FORM_DATA = {
+  eventId: '',
+  email: '',
+  fullName: '',
+  phoneNumber: '',
+  whatsappNumber: '',
+  instagramHandle: '',
+  businessName: '',
+  sector: '',
+  boothType: '',
+  selectedLocation: LAGOS_LOCATION,
+  isPreviousVendor: false,
+  liveInLagos: false,
+  categoryAccepted: false,
+  agreeToMarket: false,
+  agreeToWhatsapp: false,
+  agreeToTerms: false
+};
+
 const Register = () => {
-  const [searchParams] = useSearchParams();
-  const locationParam = searchParams.get('location');
-  const eventIdParam = searchParams.get('eventId');
   const navigate = useNavigate();
   const errorRef = React.useRef(null);
 
-  const [formData, setFormData] = useState({
-    eventId: '',
-    email: '',
-    fullName: '', 
-    phoneNumber: '',
-    whatsappNumber: '',
-    instagramHandle: '',
-    businessName: '',
-    sector: '',
-    boothType: '',
-    selectedLocation: '',
-    isPreviousVendor: false,
-    liveInLagos: false,
-    categoryAccepted: false,
-    agreeToMarket: false,
-    agreeToWhatsapp: false,
-    agreeToTerms: false
-  });
+  const [formData, setFormData] = useState(INITIAL_FORM_DATA);
 
   const [status, setStatus] = useState('idle'); // idle, submitting, success, error
   const [errorMessage, setErrorMessage] = useState('');
-  const [events, setEvents] = useState([]);
 
   // Store all pricing configurations
   const [allPrices, setAllPrices] = useState({
@@ -47,10 +47,8 @@ const Register = () => {
     }
   });
 
-  // Current active prices based on location
-  const boothPrices = React.useMemo(() => {
-    return allPrices['Default'] || allPrices;
-  }, [formData.selectedLocation, allPrices]);
+  // Prices — single location (Lagos) for 2026
+  const boothPrices = allPrices['Default'] || allPrices;
 
   useEffect(() => {
     // Fetch prices configuration
@@ -60,25 +58,19 @@ const Register = () => {
       }
     }).catch(err => console.error('Failed to load prices', err));
 
-    // Fetch all events
+    // Fetch events and auto-select Lagos
     apiRequest('/events').then(data => {
       if (data) {
         const eventsList = Array.isArray(data) ? data : [data];
-        setEvents(eventsList);
-
-        if (eventIdParam) {
-          const matchedEvent = eventsList.find(e => e.id.toString() === eventIdParam);
-          if (matchedEvent) {
-            setFormData(prev => ({ ...prev, eventId: matchedEvent.id }));
-          }
-        } else if (locationParam) {
-          // Auto-select location from URL param if valid
-          const loc = locationParam.charAt(0).toUpperCase() + locationParam.slice(1);
-          setFormData(prev => ({ ...prev, selectedLocation: loc }));
+        const lagosEvent = eventsList.find(e =>
+          e.location?.toLowerCase().includes('lagos')
+        );
+        if (lagosEvent) {
+          setFormData(prev => ({ ...prev, eventId: lagosEvent.id }));
         }
       }
     }).catch(err => console.error(err));
-  }, [locationParam, eventIdParam]);
+  }, []);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -218,8 +210,8 @@ const Register = () => {
             </h2>
             <div className="w-20 h-[2px] bg-deep-black mx-auto mb-8"></div>
             <p className="text-lg text-gray-600 mb-10 leading-relaxed">
-              Thank you for registering for Wodibenuahfair Lagos 2026.
-              We will review your application and contact you shortly via email.
+              Thank you for registering for Wodibenuah Fair Lagos 2026.
+              Your payment is being processed. You will receive a confirmation email shortly.
             </p>
             <button
               onClick={() => setStatus('idle')}
@@ -336,37 +328,15 @@ const Register = () => {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {/* Simple location selector for the vendor registration form */}
-                {/* Lagos is the current event location.
-                    We rely on 'selectedLocation' state in the form below.
-                */}
-
+                {/* Lagos-only event for 2026 — location is pre-set */}
                 <div className="md:col-span-2 group">
-                  {/* Fallback hidden input to avoid validation errors if we auto-select */}
-                  {/* However, for now, let's just remove the visual selector. 
-                       I will assume the 'selectedLocation' dropdown (which I haven't seen yet but user asked for) 
-                       is further down or should be added here.
-                   */}
-
-                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1 group-focus-within:text-deep-black transition-colors">Select Location *</label>
-                  <p className="text-[10px] text-gray-400 mb-2 uppercase tracking-wide">Choose the city where you want to exhibit</p>
-                  <select
-                    required name="selectedLocation" value={formData.selectedLocation} onChange={(e) => {
-                      handleChange(e);
-                      // Auto-select event based on location if possible
-                      const loc = e.target.value;
-                      if (loc && events.length > 0) {
-                        const matched = events.find(ev => ev.location.toLowerCase().includes(loc.toLowerCase()));
-                        if (matched) {
-                          setFormData(prev => ({ ...prev, eventId: matched.id, selectedLocation: loc }));
-                        }
-                      }
-                    }}
-                    className="w-full px-0 py-3 border-b border-gray-300 focus:border-deep-black bg-transparent outline-none transition-colors text-lg font-body cursor-pointer"
-                  >
-                    <option value="">SELECT LOCATION</option>
-                    <option value="Lagos">Lagos</option>
-                  </select>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1 group-focus-within:text-deep-black transition-colors">Event Location</label>
+                  <p className="text-[10px] text-gray-400 mb-2 uppercase tracking-wide">This year&apos;s edition is Lagos only.</p>
+                  <div className="w-full px-0 py-3 border-b border-gray-300 text-lg font-body text-deep-black flex items-center justify-between">
+                    <span>Lagos, Nigeria</span>
+                    <span className="text-xs text-gold font-bold uppercase tracking-wider">2026 Edition</span>
+                  </div>
+                  <input type="hidden" name="selectedLocation" value={formData.selectedLocation} />
                 </div>
 
                 <div className="md:col-span-2 group">
@@ -500,7 +470,7 @@ const Register = () => {
               <div className="space-y-6">
                 {[
                   { name: 'isPreviousVendor', label: 'I am a previous vendor' },
-                  { name: 'liveInLagos', label: `I live in ${formData.selectedLocation || 'Lagos'} / am available to exhibit in ${formData.selectedLocation || 'Lagos'} *` },
+                  { name: 'liveInLagos', label: 'I live in Lagos / am available to exhibit in Lagos *' },
                   { name: 'categoryAccepted', label: 'I confirm my business category is accepted by the exhibition *' },
                   { name: 'agreeToMarket', label: 'I agree to ACTIVELY Market my business and contribute to the Fair *' },
                   { name: 'agreeToWhatsapp', label: 'I agree to JOIN & REMAIN ACTIVE in the assigned WhatsApp group *' }

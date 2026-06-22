@@ -7,31 +7,32 @@ const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
 
 router.post('/paystack', async (req, res) => {
     try {
-        // Validate event
-        const hash = crypto.createHmac('sha512', PAYSTACK_SECRET_KEY).update(JSON.stringify(req.body)).digest('hex');
-        
-        // If rawBody is available (better for verification), use it
-        // But for now, let's rely on JSON.stringify(req.body) if rawBody isn't set yet, 
-        // OR better, rely on req.rawBody if server.js is configured correctly.
-        
-        let signature = req.headers['x-paystack-signature'];
-        
-        // If server.js is configured with verify, use req.rawBody
-        if (req.rawBody) {
-            const rawHash = crypto.createHmac('sha512', PAYSTACK_SECRET_KEY).update(req.rawBody).digest('hex');
-            if (rawHash !== signature) {
-                return res.status(400).send('Invalid signature');
-            }
-        } else {
-            // Fallback (less reliable due to JSON formatting differences)
-            if (hash !== signature) {
-                 // Try one more time with standard JSON stringify
-                 // If this fails, we really need rawBody. 
-                 // Given the constraints, I will ensure server.js sets rawBody.
-                 console.warn('Warning: req.rawBody not found. Webhook verification might be flaky.');
-                 // For now, proceed if hash matches, else fail
-                 return res.status(400).send('Invalid signature');
-            }
+        // Fail fast if the global express.json() verify callback isn't
+        // wired up. server.js:103-109 always sets req.rawBody, so under
+        // normal operation we never reach this branch — if we do, it's
+        // a server misconfig that should NOT be silently papered over
+        // with a JSON.stringify(req.body) fallback (the byte
+        // representation of the parsed object is not guaranteed to
+        // match the original body Paystack signed, so the HMAC would
+        // silently never match and every event would 400). Loud 500
+        // is the correct response.
+        if (!Buffer.isBuffer(req.rawBody)) {
+            console.error('webhook misconfig: req.rawBody is not a Buffer');
+            return res.status(500).send('Server misconfigured: req.rawBody is not a Buffer');
+        }
+
+        // Verify the HMAC SHA-512 signature over the EXACT raw bytes
+        // Paystack sent. This is the only correct way — re-serialising
+        // req.body (JSON.stringify) is not byte-equal to the original
+        // and the signature will not match.
+        const expected = crypto
+            .createHmac('sha512', PAYSTACK_SECRET_KEY)
+            .update(req.rawBody)
+            .digest('hex');
+
+        const signature = req.headers['x-paystack-signature'];
+        if (!signature || expected !== signature) {
+            return res.status(400).send('Invalid signature');
         }
 
         const event = req.body;
@@ -42,7 +43,7 @@ router.post('/paystack', async (req, res) => {
             // Paystack metadata is sometimes nested or flat depending on how it was sent.
             // Our frontend sends it as { vendorId: ... } inside metadata object.
             const vendorId = metadata ? metadata.vendorId : null;
-            
+
             // Amount comes in kobo, convert to Naira
             const amountPaid = amount / 100;
 
@@ -56,11 +57,13 @@ router.post('/paystack', async (req, res) => {
             const isEmailLookup = !vendorId;
 
             try {
-                await processSuccessfulPayment(reference, amountPaid, identifier, isEmailLookup);
-                console.log(`Payment processed successfully via webhook for ${email}`);
+                const result = await processSuccessfulPayment(reference, amountPaid, identifier, isEmailLookup);
+                // processSuccessfulPayment returns { status: 'success' | 'already_paid', vendor }
+                // Either way the webhook should ack Paystack with 200.
+                console.log(`Payment ${result.status} via webhook for ${email}`);
             } catch (err) {
                 console.error(`Failed to process payment via webhook for ${email}:`, err);
-                // We still return 200 to Paystack to acknowledge receipt, 
+                // We still return 200 to Paystack to acknowledge receipt,
                 // but we might want to log this to an error tracking service.
             }
         }

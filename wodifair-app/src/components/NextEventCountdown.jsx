@@ -1,26 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { apiRequest } from '../services/api';
+
+const NEXT_EVENT_DATA = {
+  title: "Wodibenuah Fair Lagos 2026",
+  start_date: null,
+  location: "Lagos, Nigeria",
+  venue: "To Be Announced",
+  is_registration_open: true
+};
 
 const NextEventCountdown = () => {
-  const [nextEvent, setNextEvent] = useState(null);
+  const [nextEvent] = useState(NEXT_EVENT_DATA);
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Hardcode to the exact requested dates to override any old database records
-    setNextEvent({
-        title: "Wodibenuah Fair Lagos",
-        start_date: "2026-12-12T10:00:00",
-        location: "Venue TBD, Lagos",
-        is_registration_open: true
-    });
-    setLoading(false);
-  }, []);
-
-  useEffect(() => {
-    if (!nextEvent) return;
+    if (!nextEvent || !nextEvent.start_date) return;
 
     const timer = setInterval(() => {
       const eventDate = new Date(nextEvent.start_date).getTime();
@@ -43,7 +38,6 @@ const NextEventCountdown = () => {
     return () => clearInterval(timer);
   }, [nextEvent]);
 
-  if (loading) return null;
   if (!nextEvent) return null;
 
   return (
@@ -93,43 +87,77 @@ const NextEventCountdown = () => {
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           transition={{ delay: 0.4 }}
-          className="text-xl md:text-2xl font-body italic text-gray-300 mb-12 md:mb-16"
+          className="text-xl md:text-2xl font-body italic text-gray-300 mb-4"
         >
-          {new Date(nextEvent.start_date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-          <span className="mx-3 text-gold">|</span>
           {nextEvent.location}
         </motion.div>
 
-        {/* Countdown Timer - Large & Bold */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-16 mb-16 max-w-5xl mx-auto">
-          {[
-            { label: 'Days', value: timeLeft.days },
-            { label: 'Hours', value: timeLeft.hours },
-            { label: 'Minutes', value: timeLeft.minutes },
-            { label: 'Seconds', value: timeLeft.seconds }
-          ].map((item, idx) => (
+        {nextEvent.start_date ? (
+          <>
             <motion.div 
-              key={idx}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 + (idx * 0.1) }}
-              className="flex flex-col items-center group cursor-default"
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              transition={{ delay: 0.5 }}
+              className="text-lg md:text-xl font-body text-gray-400 mb-12 md:mb-16"
             >
-              <div className="relative">
-                <span className="text-6xl md:text-8xl font-heading font-bold text-transparent bg-clip-text bg-gradient-to-b from-white via-white to-gray-600 group-hover:text-gold transition-all duration-500">
-                  {String(item.value).padStart(2, '0')}
-                </span>
-                {/* Reflection effect */}
-                <span className="absolute -bottom-8 left-0 right-0 text-6xl md:text-8xl font-heading font-bold text-white opacity-5 transform scale-y-[-1] pointer-events-none blur-sm">
-                  {String(item.value).padStart(2, '0')}
-                </span>
-              </div>
-              <span className="text-xs font-bold uppercase tracking-[0.4em] text-gold mt-4 opacity-80 group-hover:opacity-100 transition-opacity">
-                {item.label}
-              </span>
+              {new Date(nextEvent.start_date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+              {nextEvent.venue && nextEvent.venue !== 'To Be Announced' && (
+                <> <span className="mx-3 text-gold">|</span> {nextEvent.venue}</>
+              )}
             </motion.div>
-          ))}
-        </div>
+
+            {/* Countdown Timer */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-16 mb-16 max-w-5xl mx-auto">
+              {[
+                { label: 'Days', value: timeLeft.days },
+                { label: 'Hours', value: timeLeft.hours },
+                { label: 'Minutes', value: timeLeft.minutes },
+                { label: 'Seconds', value: timeLeft.seconds }
+              ].map((item, idx) => (
+                <motion.div 
+                  key={idx}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5 + (idx * 0.1) }}
+                  className="flex flex-col items-center group cursor-default"
+                >
+                  <div className="relative">
+                    <span className="text-6xl md:text-8xl font-heading font-bold text-transparent bg-clip-text bg-gradient-to-b from-white via-white to-gray-600 group-hover:text-gold transition-all duration-500">
+                      {String(item.value).padStart(2, '0')}
+                    </span>
+                    <span className="absolute -bottom-8 left-0 right-0 text-6xl md:text-8xl font-heading font-bold text-white opacity-5 transform scale-y-[-1] pointer-events-none blur-sm">
+                      {String(item.value).padStart(2, '0')}
+                    </span>
+                  </div>
+                  <span className="text-xs font-bold uppercase tracking-[0.4em] text-gold mt-4 opacity-80 group-hover:opacity-100 transition-opacity">
+                    {item.label}
+                  </span>
+                </motion.div>
+              ))}
+            </div>
+          </>
+        ) : (
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6 }}
+            className="mb-16"
+          >
+            <div className="inline-flex flex-col items-center gap-4 px-10 py-8 border border-gold/30 bg-gold/5">
+              <span className="text-3xl md:text-4xl font-heading font-bold text-gold uppercase tracking-wider">
+                Coming Soon
+              </span>
+              {nextEvent.venue && (
+                <span className="text-sm md:text-base text-gray-400 uppercase tracking-[0.2em]">
+                  {nextEvent.venue}
+                </span>
+              )}
+              <span className="text-xs text-gray-500 uppercase tracking-widest mt-2">
+                Date & venue will be announced shortly
+              </span>
+            </div>
+          </motion.div>
+        )}
 
         {/* CTA Button */}
         <motion.div
