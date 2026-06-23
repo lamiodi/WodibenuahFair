@@ -431,6 +431,71 @@ router.get('/cloudinary/sign', safe(async (req, res) => {
 }));
 
 // ===========================================================================
+// BULK IMPORT  (bypasses rate limiter for initial data load)
+//   POST /api/retail/bulk-import
+//   Body: { products: [...], batchSize: 50 }
+// ===========================================================================
+let bulkImportLock = false;
+router.post('/bulk-import', safe(async (req, res) => {
+  if (bulkImportLock) {
+    return res.status(409).json({ error: 'Import already in progress' });
+  }
+  
+  bulkImportLock = true;
+  try {
+    const products = Array.isArray(req.body.products) ? req.body.products : [];
+    const batchSize = req.body.batchSize || 100;
+    
+    if (products.length === 0) {
+      return res.json({ seeded: 0, message: 'No products provided' });
+    }
+    
+    let seeded = 0;
+    let errors = 0;
+    const errorDetails = [];
+    
+    // Process in batches
+    for (let i = 0; i < products.length; i += batchSize) {
+      const batch = products.slice(i, Math.min(i + batchSize, products.length));
+      
+      for (const p of batch) {
+        try {
+          const id = uuidv4();
+          await pool.query(
+            `INSERT INTO retail.wodi_products
+               (id, barcode, name, "costPrice", "sellingPrice", "stockQuantity", "reorderLevel", category)
+             VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
+             ON CONFLICT (barcode) DO UPDATE SET
+               name = EXCLUDED.name,
+               "costPrice" = EXCLUDED."costPrice",
+               "sellingPrice" = EXCLUDED."sellingPrice",
+               "stockQuantity" = EXCLUDED."stockQuantity",
+               "reorderLevel" = EXCLUDED."reorderLevel",
+               category = EXCLUDED.category,
+               "updatedAt" = CURRENT_TIMESTAMP`,
+            [id, p.barcode, p.name, p.costPrice || 0, p.sellingPrice || 0, 
+             p.stockQuantity || 0, p.reorderLevel || 5, p.category || 'General']
+          );
+          seeded++;
+        } catch (e) {
+          errors++;
+          errorDetails.push({ name: p.name, error: e.message });
+        }
+      }
+    }
+    
+    res.json({ 
+      seeded, 
+      errors,
+      total: products.length,
+      details: errorDetails.slice(0, 10) // First 10 errors
+    });
+  } finally {
+    bulkImportLock = false;
+  }
+}));
+
+// ===========================================================================
 // SEED  (dev convenience — same shape as the old Next route)
 // ===========================================================================
 router.post('/seed', safe(async (req, res) => {

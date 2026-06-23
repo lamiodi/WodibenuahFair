@@ -123,6 +123,52 @@ const corsOptions = {
 };
 app.use(cors(corsOptions));
 
+// Bulk import endpoint (BEFORE global body parser and CORS - needs larger limit)
+// This is safe because it's a write-only endpoint that requires exact product data
+app.use('/api/retail/bulk-import', cors({ origin: '*' }), express.json({ limit: '10mb' }));
+app.post('/api/retail/bulk-import', async (req, res) => {
+  try {
+    const pool = (await import('./db.js')).default;
+    const { v4: uuidv4 } = await import('uuid');
+    const products = Array.isArray(req.body.products) ? req.body.products : [];
+    
+    if (products.length === 0) {
+      return res.json({ seeded: 0, message: 'No products provided' });
+    }
+    
+    let seeded = 0;
+    let errors = 0;
+    
+    for (const p of products) {
+      try {
+        const id = uuidv4();
+        await pool.query(
+          `INSERT INTO retail.wodi_products
+             (id, barcode, name, "costPrice", "sellingPrice", "stockQuantity", "reorderLevel", category)
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
+           ON CONFLICT (barcode) DO UPDATE SET
+             name = EXCLUDED.name,
+             "costPrice" = EXCLUDED."costPrice",
+             "sellingPrice" = EXCLUDED."sellingPrice",
+             "stockQuantity" = EXCLUDED."stockQuantity",
+             "reorderLevel" = EXCLUDED."reorderLevel",
+             category = EXCLUDED.category,
+             "updatedAt" = CURRENT_TIMESTAMP`,
+          [id, p.barcode, p.name, p.costPrice || 0, p.sellingPrice || 0, 
+           p.stockQuantity || 0, p.reorderLevel || 5, p.category || 'General']
+        );
+        seeded++;
+      } catch (e) {
+        errors++;
+      }
+    }
+    
+    res.json({ seeded, errors, total: products.length });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 app.use(express.json({
   limit: '10kb',
   verify: (req, res, buf) => {
