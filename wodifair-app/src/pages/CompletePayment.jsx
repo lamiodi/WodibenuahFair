@@ -15,6 +15,28 @@ const CompletePayment = () => {
     const [boothPrices, setBoothPrices] = useState({});
     const navigate = useNavigate();
 
+    const performLookup = async (targetEmail) => {
+        if (!targetEmail) return;
+        setStatus('checking');
+        setErrorMessage('');
+        setVendorData(null);
+
+        try {
+            const { vendor } = await apiRequest('/vendors/lookup', {
+                method: 'POST',
+                body: { email: targetEmail }
+            });
+
+            setVendorData(vendor);
+            setStatus('found');
+        } catch (err) {
+            console.error(err);
+            setStatus('error');
+            setErrorMessage(err.message || 'Error looking up registration.');
+            toast.error(err.message || 'Error looking up registration.');
+        }
+    };
+
     useEffect(() => {
         // Fetch prices to calculate appropriate payment amount
         const fetchPrices = async () => {
@@ -26,28 +48,19 @@ const CompletePayment = () => {
             }
         };
         fetchPrices();
+
+        // Auto lookup if email parameter is present in URL
+        const params = new URLSearchParams(window.location.search);
+        const emailParam = params.get('email');
+        if (emailParam) {
+            setEmail(emailParam);
+            performLookup(emailParam);
+        }
     }, []);
 
-    const handleLookup = async (e) => {
+    const handleLookup = (e) => {
         e.preventDefault();
-        setStatus('checking');
-        setErrorMessage('');
-        setVendorData(null);
-
-        try {
-            const { vendor } = await apiRequest('/vendors/lookup', {
-                method: 'POST',
-                body: { email }
-            });
-
-            setVendorData(vendor);
-            setStatus('found');
-        } catch (err) {
-            console.error(err);
-            setStatus('error');
-            setErrorMessage(err.message || 'Error looking up registration.');
-            toast.error(err.message || 'Error looking up registration.');
-        }
+        performLookup(email);
     };
 
     const calculateAmount = () => {

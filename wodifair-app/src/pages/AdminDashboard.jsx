@@ -27,6 +27,24 @@ const AdminDashboard = () => {
   // Vendor Details Modal State
   const [showVendorModal, setShowVendorModal] = useState(false);
   const [currentVendor, setCurrentVendor] = useState(null);
+  const [sendingEmailId, setSendingEmailId] = useState(null);
+
+  const handleSendEmailLink = async (vendor) => {
+    if (!vendor || !vendor.id) return;
+    setSendingEmailId(vendor.id);
+    toast.loading(`Sending payment link email to ${vendor.email}...`, { id: 'email-link-toast' });
+    try {
+      await apiRequest(`/vendors/${vendor.id}/send-payment-link`, {
+        method: 'POST'
+      });
+      toast.success(`Payment link email sent successfully to ${vendor.email}!`, { id: 'email-link-toast' });
+    } catch (err) {
+      console.error(err);
+      toast.error(err.message || 'Failed to send email. Please check server email settings.', { id: 'email-link-toast' });
+    } finally {
+      setSendingEmailId(null);
+    }
+  };
 
   // Blog Modal State
   const [showBlogModal, setShowBlogModal] = useState(false);
@@ -711,8 +729,21 @@ const AdminDashboard = () => {
                           <div className="text-xs mt-1 font-mono">₦{Number(vendor.amount_paid).toLocaleString()}</div>
                         )}
                       </td>
-                      <td className="py-4">
-                        <button onClick={() => openVendorModal(vendor)} className="text-sm font-bold uppercase tracking-wider text-gray-500 hover:text-deep-black">Details</button>
+                      <td className="py-4 flex items-center gap-2">
+                        <button onClick={() => openVendorModal(vendor)} className="text-xs font-bold uppercase tracking-wider text-gray-700 hover:text-deep-black border border-gray-300 px-3 py-1.5 bg-white hover:bg-gray-100 transition-colors">
+                          Details
+                        </button>
+                        {vendor.payment_status !== 'paid' && (
+                          <button
+                            onClick={() => handleSendEmailLink(vendor)}
+                            disabled={sendingEmailId === vendor.id}
+                            className="text-xs font-bold uppercase tracking-wider bg-gold text-deep-black hover:bg-black hover:text-white px-3 py-1.5 transition-colors disabled:opacity-50 flex items-center gap-1.5 shadow-sm"
+                            title="Send payment link email to vendor"
+                          >
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 002-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                            {sendingEmailId === vendor.id ? 'Sending...' : 'Send Link'}
+                          </button>
+                        )}
                       </td>
                     </tr>
                   )) : (
@@ -1297,10 +1328,47 @@ const AdminDashboard = () => {
               </div>
             </div>
 
-            <div className="mt-8 flex justify-end">
+            <div className="mt-8 flex flex-wrap gap-3 justify-end border-t border-gray-200 pt-6">
+              {currentVendor.payment_status !== 'paid' && (
+                <>
+                  <button
+                    onClick={() => handleSendEmailLink(currentVendor)}
+                    disabled={sendingEmailId === currentVendor.id}
+                    className="bg-deep-black text-white px-5 py-3 text-xs font-bold uppercase tracking-wider hover:bg-gold hover:text-deep-black transition-colors disabled:opacity-50 flex items-center gap-2 shadow-sm"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 002-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                    {sendingEmailId === currentVendor.id ? 'Sending Email...' : 'Send Payment Email'}
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      const payUrl = `${window.location.origin}/complete-payment?email=${encodeURIComponent(currentVendor.email)}`;
+                      navigator.clipboard.writeText(payUrl);
+                      toast.success('Payment link copied to clipboard!');
+                    }}
+                    className="bg-gold text-deep-black px-5 py-3 text-xs font-bold uppercase tracking-wider hover:bg-black hover:text-white transition-colors flex items-center gap-2"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 012-2v-8a2 2 0 01-2-2h-8a2 2 0 01-2 2v8a2 2 0 012 2z" />
+                    </svg>
+                    Copy Payment Link
+                  </button>
+                </>
+              )}
+              <a
+                href={`mailto:${currentVendor.email}?subject=${encodeURIComponent('Wodibenuah Fair Lagos 2026 - Vendor Registration Payment Link')}&body=${encodeURIComponent(`Dear ${currentVendor.full_name || currentVendor.business_name},\n\nThank you for registering your business (${currentVendor.business_name}) for Wodibenuah Fair Lagos 2026.\n\nYour application has been reviewed and approved for your selected booth type (${currentVendor.booth_type}).\n\nPlease complete your booth payment using the secure link below:\n${window.location.origin}/complete-payment?email=${encodeURIComponent(currentVendor.email)}\n\nIf you have any questions, feel free to reply to this email.\n\nBest regards,\nWodibenuah Fair Team`)}`}
+                className="bg-gray-100 text-deep-black border border-gray-300 px-5 py-3 text-xs font-bold uppercase tracking-wider hover:bg-deep-black hover:text-white transition-colors flex items-center gap-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 002-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                Open Mail App
+              </a>
               <button
                 onClick={() => setShowVendorModal(false)}
-                className="bg-deep-black text-white px-8 py-3 text-sm font-bold uppercase tracking-wider hover:bg-gold hover:text-deep-black transition-colors"
+                className="bg-deep-black text-white px-8 py-3 text-xs font-bold uppercase tracking-wider hover:bg-gold hover:text-deep-black transition-colors"
               >
                 Close
               </button>

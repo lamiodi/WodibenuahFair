@@ -78,23 +78,25 @@ router.post('/register', validate([
   body('boothType').trim().notEmpty().escape(),
   body('selectedLocation').trim().notEmpty().escape(),
   body('isPreviousVendor').isBoolean(),
-  body('liveInAbuja').isBoolean(),
+  body('liveInAbuja').optional().isBoolean(),
+  body('liveInLagos').optional().isBoolean(),
   body('categoryAccepted').isBoolean(),
   body('agreeToMarket').isBoolean(),
   body('agreeToWhatsapp').isBoolean(),
   body('agreeToTerms').isBoolean(),
-  body('eventId').optional({ checkFalsy: true }).isInt(),
-  body('boothType').trim().notEmpty().escape(),
-  body('selectedLocation').trim().notEmpty().escape()
+  body('eventId').optional({ checkFalsy: true }).isInt()
 ]), async (req, res, next) => {
   let {
     email, fullName, phoneNumber, whatsappNumber, instagramHandle,
-    businessName, sector, boothType, selectedLocation, isPreviousVendor, liveInAbuja,
+    businessName, sector, boothType, selectedLocation, isPreviousVendor, liveInAbuja, liveInLagos,
     categoryAccepted, agreeToMarket, agreeToWhatsapp, agreeToTerms, eventId
   } = req.body;
 
   // Ensure eventId is null if it's an empty string (to avoid Postgres integer type errors)
   eventId = eventId || null;
+
+  // Handle either liveInLagos or liveInAbuja
+  const isLocalResident = Boolean(liveInLagos !== undefined ? liveInLagos : (liveInAbuja !== undefined ? liveInAbuja : false));
 
   try {
     // Check for existing registration
@@ -118,7 +120,7 @@ router.post('/register', validate([
         `;
         const updateValues = [
           email, fullName, phoneNumber, whatsappNumber, instagramHandle,
-          businessName, sector, boothType, selectedLocation, isPreviousVendor, liveInAbuja,
+          businessName, sector, boothType, selectedLocation, isPreviousVendor, isLocalResident,
           categoryAccepted, agreeToMarket, agreeToWhatsapp, agreeToTerms, eventId
         ];
 
@@ -141,7 +143,7 @@ router.post('/register', validate([
 
     const values = [
       email, fullName, phoneNumber, whatsappNumber, instagramHandle,
-      businessName, sector, boothType, selectedLocation, isPreviousVendor, liveInAbuja,
+      businessName, sector, boothType, selectedLocation, isPreviousVendor, isLocalResident,
       categoryAccepted, agreeToMarket, agreeToWhatsapp, agreeToTerms, eventId
     ];
 
@@ -219,6 +221,46 @@ router.get('/public', async (req, res) => {
   } catch (error) {
     console.error('Error fetching public vendors:', error);
     res.status(500).json({ error: 'Database error' });
+  }
+});
+
+// Protected: Send Payment Link Email to Vendor
+router.post('/:id/send-payment-link', authenticateToken, async (req, res, next) => {
+  const { id } = req.params;
+  try {
+    const result = await pool.query('SELECT * FROM vendors WHERE id = $1', [id]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Vendor not found' });
+    }
+
+    const vendor = result.rows[0];
+    const clientUrl = process.env.CLIENT_URL || req.headers.origin || 'https://wodibenuahfair.org';
+    const paymentLink = `${clientUrl}/complete-payment?email=${encodeURIComponent(vendor.email)}`;
+
+    const content = `
+      <p style="font-size: 16px; line-height: 1.6; color: #555555; margin-bottom: 20px;">Dear <strong style="color: #000000;">${vendor.full_name || vendor.business_name}</strong>,</p>
+      <p style="font-size: 16px; line-height: 1.6; color: #555555; margin-bottom: 20px;">Thank you for registering your business (<strong style="color: #000000;">${vendor.business_name}</strong>) for <strong>Wodibenuah Fair Lagos 2026</strong>.</p>
+      <p style="font-size: 16px; line-height: 1.6; color: #555555; margin-bottom: 20px;">Your registration application has been reviewed and approved for your selected booth type (<strong>${vendor.booth_type}</strong>).</p>
+      <p style="font-size: 16px; line-height: 1.6; color: #555555; margin-bottom: 20px;">Please click the button below to complete your payment securely and lock in your preferred booth space.</p>
+    `;
+
+    const emailResult = await sendProfessionalEmail({
+      to: vendor.email,
+      subject: 'Wodibenuah Fair Lagos 2026 - Official Vendor Payment Link',
+      title: 'Complete Your Booth Payment',
+      content,
+      actionLink: paymentLink,
+      actionText: 'COMPLETE PAYMENT NOW'
+    });
+
+    if (!emailResult.success) {
+      return res.status(500).json({ error: 'Failed to send email. Please check server email settings.' });
+    }
+
+    res.json({ message: 'Payment link email sent successfully', email: vendor.email });
+  } catch (error) {
+    console.error('Error sending payment link email:', error);
+    next(error);
   }
 });
 

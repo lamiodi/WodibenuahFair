@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import PaystackPop from '@paystack/inline-js';
 import Navigation from '../components/Navigation';
 import Footer from '../components/Footer';
 import { apiRequest } from '../services/api';
@@ -98,64 +97,6 @@ const Register = () => {
     }));
   };
 
-  const handlePayment = (vendorId) => {
-    // Paystack expects amount in kobo
-    const amountToCharge = (boothPrices[formData.boothType] || 190000) * 100;
-
-    const paystack = new PaystackPop();
-    paystack.newTransaction({
-      key: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY,
-      email: formData.email,
-      amount: amountToCharge,
-      metadata: {
-        vendorId: vendorId,
-        custom_fields: [
-          { display_name: "Booth Type", variable_name: "booth_type", value: formData.boothType },
-          { display_name: "Location", variable_name: "location", value: formData.selectedLocation }
-        ]
-      },
-      onSuccess: (transaction) => {
-        setStatus('verifying');
-        // Verify payment on backend
-        apiRequest('/vendors/verify-payment', {
-          method: 'POST',
-          body: {
-            reference: transaction.reference,
-            vendorId: vendorId
-          }
-        })
-          .then(data => {
-            if (data.status === 'success') {
-              toast.success('Payment successful!', { id: 'payment-toast' });
-              setStatus('success');
-              setErrorMessage('');
-              // Redirect to Thank You page with reference and location
-              navigate(`/thank-you?reference=${transaction.reference}&location=${encodeURIComponent(formData.selectedLocation || 'Lagos')}`);
-            } else {
-              const msg = data.message || 'Payment verification failed. Please contact support if money was deducted.';
-              toast.error(msg, { id: 'payment-toast' });
-              setErrorMessage(msg);
-              setStatus('error');
-              if (errorRef.current) errorRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
-          })
-          .catch(err => {
-            console.error(err);
-            const msg = err.message || 'Error verifying payment. Please contact support with your Paystack reference.';
-            toast.error(msg, { id: 'payment-toast' });
-            setErrorMessage(msg);
-            setStatus('error');
-            if (errorRef.current) errorRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          });
-      },
-      onCancel: () => {
-        setStatus('idle');
-        setErrorMessage('');
-        toast.error('Payment cancelled');
-      }
-    });
-  };
-
   const validateForm = () => {
     const errors = [];
 
@@ -205,9 +146,9 @@ const Register = () => {
       });
 
       if (data.vendor) {
-        toast.success('Registration successful! Proceeding to payment...', { id: 'register-toast' });
-        // Trigger Paystack Payment
-        handlePayment(data.vendor.id);
+        toast.success('Registration submitted successfully!', { id: 'register-toast' });
+        setStatus('success');
+        setErrorMessage('');
       } else {
         const msg = data.error || 'Registration failed. Please try again.';
         toast.error(msg, { id: 'register-toast' });
@@ -236,8 +177,8 @@ const Register = () => {
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-deep-black/90 backdrop-blur-md">
         <div className="text-center text-white">
           <div className="w-16 h-16 border-4 border-gold border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
-          <h2 className="text-3xl font-heading font-bold uppercase tracking-widest mb-2">Verifying Payment</h2>
-          <p className="text-gray-400 text-sm tracking-wider uppercase">Please do not close this window</p>
+          <h2 className="text-3xl font-heading font-bold uppercase tracking-widest mb-2">Verifying Registration</h2>
+          <p className="text-gray-400 text-sm tracking-wider uppercase">Please wait a moment...</p>
         </div>
       </div>
     );
@@ -246,32 +187,84 @@ const Register = () => {
   if (status === 'success') {
     return (
       <div className="min-h-screen bg-cream text-deep-black font-body flex flex-col">
+        <SEO 
+          title="Registration Received" 
+          description="Your vendor registration for Wodibenuah Fair Lagos 2026 has been received."
+          url="/register"
+        />
         <div className="w-full px-2 md:px-8 py-3 md:py-6 border-b border-deep-black">
           <div className="relative w-full max-w-[1920px] mx-auto text-center">
             <h1 className="text-4xl md:text-6xl font-heading font-bold tracking-tighter text-deep-black uppercase">
-              Registration
+              Registration Received
             </h1>
           </div>
         </div>
         <Navigation activeItem="Register" />
 
-        <div className="flex-grow flex items-center justify-center px-4 py-20">
-          <div className="bg-white p-12 md:p-16 border border-deep-black max-w-2xl text-center relative overflow-hidden">
+        <div className="flex-grow flex items-center justify-center px-4 py-16 md:py-24">
+          <div className="bg-white p-8 md:p-16 border border-deep-black max-w-3xl text-center relative overflow-hidden shadow-2xl">
             <div className="absolute top-0 left-0 w-full h-2 bg-deep-black"></div>
-            <h2 className="text-3xl md:text-5xl font-heading font-normal uppercase text-deep-black mb-6 leading-none">
-              Registration<br />Successful
+            
+            <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6 text-green-700">
+              <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+
+            <span className="text-xs font-bold tracking-[0.25em] uppercase text-gold bg-deep-black px-4 py-1.5 inline-block mb-4">
+              Application Submitted
+            </span>
+
+            <h2 className="text-3xl md:text-5xl font-heading font-bold uppercase text-deep-black mb-4 leading-tight">
+              Thank You For Registering!
             </h2>
-            <div className="w-20 h-[2px] bg-deep-black mx-auto mb-8"></div>
-            <p className="text-lg text-gray-600 mb-10 leading-relaxed">
-              Thank you for registering for Wodibenuah Fair Lagos 2026.
-              Your payment is being processed. You will receive a confirmation email shortly.
+            <div className="w-20 h-[2px] bg-gold mx-auto mb-6"></div>
+
+            <p className="text-base md:text-lg text-gray-700 mb-8 leading-relaxed font-body">
+              Your vendor registration application for <strong className="text-deep-black">Wodibenuah Fair Lagos 2026</strong> has been received successfully.
             </p>
-            <button
-              onClick={resetForm}
-              className="bg-deep-black text-white px-10 py-4 text-xs font-bold uppercase tracking-[0.2em] hover:bg-white hover:text-deep-black border border-deep-black transition-all duration-300"
-            >
-              Submit Another
-            </button>
+
+            {/* Next Steps Box */}
+            <div className="bg-cream/70 border border-deep-black p-6 text-left mb-8 space-y-4">
+              <h3 className="text-sm font-bold uppercase tracking-widest text-deep-black flex items-center gap-2 border-b border-gray-300 pb-3">
+                <svg className="w-5 h-5 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                What Happens Next?
+              </h3>
+              
+              <div className="space-y-3 text-sm text-gray-700">
+                <div className="flex items-start gap-3">
+                  <span className="w-6 h-6 rounded-full bg-deep-black text-white text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">1</span>
+                  <p><strong className="text-deep-black">Application Review:</strong> Our team is reviewing your details for booth selection and category confirmation.</p>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <span className="w-6 h-6 rounded-full bg-deep-black text-white text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">2</span>
+                  <p><strong className="text-deep-black">Payment Link via Email:</strong> You will receive an email with your official payment link at <span className="underline font-bold text-deep-black">{formData.email || 'your registered email'}</span> within <strong>24 hours</strong>.</p>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <span className="w-6 h-6 rounded-full bg-deep-black text-white text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">3</span>
+                  <p><strong className="text-deep-black">Secure Your Booth:</strong> Complete payment via your email link to lock in your preferred slot!</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <button
+                onClick={resetForm}
+                className="bg-deep-black text-white px-8 py-4 text-xs font-bold uppercase tracking-[0.2em] hover:bg-white hover:text-deep-black border border-deep-black transition-all duration-300"
+              >
+                Register Another Vendor
+              </button>
+              <button
+                onClick={() => navigate('/')}
+                className="bg-transparent text-deep-black px-8 py-4 text-xs font-bold uppercase tracking-[0.2em] hover:bg-deep-black hover:text-white border border-deep-black transition-all duration-300"
+              >
+                Return to Home
+              </button>
+            </div>
           </div>
         </div>
         <Footer />
@@ -308,7 +301,7 @@ const Register = () => {
       <div className="flex-grow w-full px-2 md:px-8 py-8 md:py-16">
         <div className="max-w-5xl mx-auto mb-8 bg-gold/10 border border-gold p-4 text-center">
           <p className="text-sm md:text-base font-bold text-deep-black uppercase tracking-wider">
-            Already registered but haven&apos;t paid? <a href="/complete-payment" className="underline hover:text-gold transition-colors">Click here to complete your payment</a>
+            Received your payment link or completing an existing booking? <a href="/complete-payment" className="underline hover:text-gold transition-colors">Click here to complete your payment</a>
           </p>
         </div>
 
@@ -546,36 +539,94 @@ const Register = () => {
               </div>
             </div>
 
-            {/* Section 3: Terms & Submit */}
+            {/* Section 3: Terms & Conditions & Submission */}
             <div className="border-t border-deep-black pt-12">
-              <div className="bg-gray-100 p-8 border border-gray-200 mb-8">
-                <p className="text-sm text-gray-500 mb-6 leading-relaxed">
-                  By submitting this form, you acknowledge that you have read attentively and responded truthfully to all inquiries.
-                </p>
-                <label className="flex items-center gap-4 cursor-pointer group">
-                  <div className="relative flex items-center">
-                    <input
-                      required type="checkbox" name="agreeToTerms" checked={formData.agreeToTerms} onChange={handleChange}
-                      className="peer h-6 w-6 cursor-pointer appearance-none border border-deep-black transition-all checked:bg-deep-black"
-                    />
-                    <svg className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 text-white opacity-0 peer-checked:opacity-100 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+              <div className="flex items-center gap-4 mb-6">
+                <span className="text-xs font-bold tracking-[0.2em] uppercase bg-deep-black text-white px-3 py-1">Step 03</span>
+                <h3 className="text-2xl font-heading font-bold uppercase text-deep-black">Terms & Conditions</h3>
+              </div>
+
+              {/* Visible Terms & Conditions Box */}
+              <div className="bg-gray-50 border border-deep-black p-6 md:p-8 mb-6">
+                <div className="flex items-center justify-between mb-4 border-b border-gray-300 pb-3">
+                  <h4 className="text-sm font-bold uppercase tracking-wider text-deep-black flex items-center gap-2">
+                    <svg className="w-5 h-5 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    Wodibenuah Fair Vendor Terms & Rules
+                  </h4>
+                  <a href="/terms" target="_blank" rel="noopener noreferrer" className="text-xs font-bold text-gold uppercase tracking-wider hover:underline flex items-center gap-1">
+                    Full Document
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+                  </a>
+                </div>
+
+                <div className="max-h-60 overflow-y-auto pr-2 space-y-4 text-xs md:text-sm text-gray-700 font-body leading-relaxed border border-gray-200 p-4 bg-white">
+                  <div>
+                    <h5 className="font-bold text-deep-black uppercase tracking-wider mb-1">1. Respect & Professional Conduct</h5>
+                    <p>All vendors must engage respectfully and professionally with fair team members and fellow vendors. Hostile or rude behavior will result in immediate disqualification.</p>
                   </div>
-                  <span className="text-sm font-bold uppercase tracking-wider text-deep-black">I agree to Wodibenuah fair Terms & Conditions *</span>
-                </label>
+
+                  <div>
+                    <h5 className="font-bold text-deep-black uppercase tracking-wider mb-1">2. Non-Refundable Policy</h5>
+                    <p>All vendor payments for Wodibenuah Fair are non-refundable once made. Slots can only be carried over or transferred if written notification is received at least 30 days prior to the fair.</p>
+                  </div>
+
+                  <div>
+                    <h5 className="font-bold text-deep-black uppercase tracking-wider mb-1">3. Active Brand Marketing</h5>
+                    <p>Vendors are required to actively market their brand before and during the fair via social media, word-of-mouth, and booth branding to drive engagement.</p>
+                  </div>
+
+                  <div>
+                    <h5 className="font-bold text-deep-black uppercase tracking-wider mb-1">4. Product Category Rules</h5>
+                    <p>Vendors may not combine more than two product categories at their booth. Food vendors serving drinks must ensure drinks do not exceed 30% of total offering.</p>
+                  </div>
+
+                  <div>
+                    <h5 className="font-bold text-deep-black uppercase tracking-wider mb-1">5. Safety, Security & Legality</h5>
+                    <p>Vendors are fully responsible for the safety and security of their goods. Counterfeit, illegal, or prohibited items are strictly forbidden.</p>
+                  </div>
+                </div>
+
+                <div className="mt-6 pt-4 border-t border-gray-200">
+                  <label className="flex items-start gap-4 cursor-pointer group">
+                    <div className="relative flex items-center mt-0.5">
+                      <input
+                        required type="checkbox" name="agreeToTerms" checked={formData.agreeToTerms} onChange={handleChange}
+                        className="peer h-6 w-6 cursor-pointer appearance-none border border-deep-black transition-all checked:bg-deep-black"
+                      />
+                      <svg className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 text-white opacity-0 peer-checked:opacity-100 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                    </div>
+                    <span className="text-sm font-bold uppercase tracking-wider text-deep-black">
+                      I have read, understood, and agree to the Wodibenuah Fair Terms & Conditions *
+                    </span>
+                  </label>
+                </div>
+              </div>
+
+              {/* Email Payment Notice */}
+              <div className="bg-gold/10 border border-gold p-4 mb-8 flex items-start gap-3">
+                <svg className="w-6 h-6 text-deep-black flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 002-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                <div className="text-xs md:text-sm text-deep-black font-medium leading-normal">
+                  <strong className="uppercase tracking-wider block font-bold mb-0.5">Note on Payment:</strong>
+                  After submitting your registration, our team will review your application and send your official payment link via email within <strong>24 hours</strong>.
+                </div>
               </div>
 
               <div className="text-center">
                 <button
                   type="submit"
                   disabled={status === 'submitting'}
-                  className="bg-deep-black text-white px-12 py-5 text-sm font-bold uppercase tracking-[0.25em] hover:bg-white hover:text-deep-black border border-deep-black transition-all duration-300 shadow-lg hover:shadow-xl w-full md:w-auto disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-4 mx-auto"
+                  className="bg-deep-black text-white px-12 py-5 text-sm font-bold uppercase tracking-[0.25em] hover:bg-gold hover:text-deep-black border border-deep-black transition-all duration-300 shadow-lg hover:shadow-xl w-full md:w-auto disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-4 mx-auto"
                 >
                   {status === 'submitting' ? (
-                    <>Processing...</>
+                    <>Submitting Application...</>
                   ) : (
                     <>
-                      Register & Pay
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                      Submit Vendor Application
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
                     </>
                   )}
                 </button>
