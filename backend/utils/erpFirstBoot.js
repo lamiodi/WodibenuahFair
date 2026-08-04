@@ -40,7 +40,7 @@ const generateStrongPin = () => {
 export const rotateFirstLoginCredentials = async () => {
   try {
     const flagged = await pool.query(
-      `SELECT id, name, email, role, pin
+      `SELECT id, name, email, role
        FROM erp.users
        WHERE must_change_password = TRUE AND is_active = TRUE`
     );
