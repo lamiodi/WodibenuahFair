@@ -231,7 +231,7 @@ import { motion, AnimatePresence } from 'framer-motion';
             <div className="group border border-deep-black p-8 hover:bg-deep-black hover:text-white transition-all duration-300 flex flex-col items-center text-center">
               <h3 className="text-3xl font-heading font-bold uppercase mb-2">Lagos</h3>
               <p className="text-sm font-bold tracking-[0.2em] uppercase mb-2 opacity-70">December 13, 2026</p>
-              <p className="text-xs text-gold font-bold tracking-[0.2em] uppercase mb-8">Five Palms Event Center</p>
+              <p className="text-xs text-gold font-bold tracking-[0.2em] uppercase mb-8">The Five Palm Oniru</p>
               <Link 
                 to="/register" 
                 className="mt-auto inline-block px-8 py-3 border border-current text-xs font-bold uppercase tracking-[0.2em] hover:bg-white hover:text-deep-black transition-colors"

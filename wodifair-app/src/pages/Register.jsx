@@ -32,19 +32,21 @@ const Register = () => {
   const errorRef = React.useRef(null);
 
   const [formData, setFormData] = useState(INITIAL_FORM_DATA);
+  const [fieldErrors, setFieldErrors] = useState({});
 
   const [status, setStatus] = useState('idle'); // idle, submitting, success, error
   const [errorMessage, setErrorMessage] = useState('');
 
   const resetForm = () => {
     setFormData({ ...INITIAL_FORM_DATA });
+    setFieldErrors({});
     // Re-fetch eventId for Lagos after reset
     apiRequest('/events').then(data => {
       if (data) {
         const eventsList = Array.isArray(data) ? data : [data];
         const lagosEvent = eventsList.find(e =>
           e.location?.toLowerCase().includes('lagos')
-        );
+        ) || eventsList[0];
         if (lagosEvent) {
           setFormData(prev => ({ ...prev, eventId: lagosEvent.id }));
         }
@@ -75,68 +77,142 @@ const Register = () => {
       }
     }).catch(err => console.error('Failed to load prices', err));
 
-    // Fetch events and auto-select Lagos
+    // Fetch events and auto-select Lagos or first available event
     apiRequest('/events').then(data => {
       if (data) {
         const eventsList = Array.isArray(data) ? data : [data];
         const lagosEvent = eventsList.find(e =>
           e.location?.toLowerCase().includes('lagos')
-        );
+        ) || eventsList[0];
         if (lagosEvent) {
           setFormData(prev => ({ ...prev, eventId: lagosEvent.id }));
         }
       }
-    }).catch(err => console.error(err));
+    }).catch(err => console.error('Failed to fetch events:', err));
   }, []);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
+    const val = type === 'checkbox' ? checked : value;
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: val
     }));
+
+    if (fieldErrors[name]) {
+      setFieldErrors(prev => {
+        const next = { ...prev };
+        delete next[name];
+        return next;
+      });
+    }
   };
 
   const validateForm = () => {
-    const errors = [];
+    const errors = {};
+    const errorList = [];
 
-    if (!formData.eventId) {
-      errors.push('Event not loaded. Please refresh the page and try again.');
-    }
-
-    if (!formData.boothType) {
-      errors.push('Please select a booth type.');
+    if (!formData.fullName.trim()) {
+      errors.fullName = 'Full Name is required.';
+      errorList.push('Full Name is missing.');
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.email)) {
-      errors.push('Please enter a valid email address.');
+    if (!formData.email.trim()) {
+      errors.email = 'Email address is required.';
+      errorList.push('Email address is missing.');
+    } else if (!emailRegex.test(formData.email.trim())) {
+      errors.email = 'Please enter a valid email address (e.g. name@example.com).';
+      errorList.push('Email address format is invalid.');
     }
 
     const phoneRegex = /^\+?[0-9]{10,15}$/;
-    if (!phoneRegex.test(formData.phoneNumber.replace(/\s/g, ''))) {
-      errors.push('Please enter a valid phone number (10-15 digits).');
-    }
-    if (!phoneRegex.test(formData.whatsappNumber.replace(/\s/g, ''))) {
-      errors.push('Please enter a valid WhatsApp number (10-15 digits).');
+    const phoneClean = formData.phoneNumber.replace(/\s/g, '');
+    if (!formData.phoneNumber.trim()) {
+      errors.phoneNumber = 'Phone number is required.';
+      errorList.push('Phone number is missing.');
+    } else if (!phoneRegex.test(phoneClean)) {
+      errors.phoneNumber = 'Please enter a valid phone number (10-15 digits).';
+      errorList.push('Phone number must be between 10 and 15 digits.');
     }
 
-    return errors;
+    const whatsappClean = formData.whatsappNumber.replace(/\s/g, '');
+    if (!formData.whatsappNumber.trim()) {
+      errors.whatsappNumber = 'WhatsApp number is required.';
+      errorList.push('WhatsApp number is missing.');
+    } else if (!phoneRegex.test(whatsappClean)) {
+      errors.whatsappNumber = 'Please enter a valid WhatsApp number (10-15 digits).';
+      errorList.push('WhatsApp number must be between 10 and 15 digits.');
+    }
+
+    if (!formData.instagramHandle.trim()) {
+      errors.instagramHandle = 'Instagram handle is required.';
+      errorList.push('Instagram handle is missing.');
+    }
+
+    if (!formData.businessName.trim()) {
+      errors.businessName = 'Business Name is required.';
+      errorList.push('Business Name is missing.');
+    }
+
+    if (!formData.sector) {
+      errors.sector = 'Please select a business sector.';
+      errorList.push('Business Sector selection is required.');
+    }
+
+    if (!formData.boothType) {
+      errors.boothType = 'Please select a booth type.';
+      errorList.push('Booth Type selection is required.');
+    }
+
+    if (!formData.liveInLagos) {
+      errors.liveInLagos = 'You must confirm availability to exhibit in Lagos.';
+      errorList.push('Lagos exhibition availability confirmation required.');
+    }
+
+    if (!formData.categoryAccepted) {
+      errors.categoryAccepted = 'You must confirm your business category is accepted.';
+      errorList.push('Business category acceptance confirmation required.');
+    }
+
+    if (!formData.agreeToMarket) {
+      errors.agreeToMarket = 'You must agree to actively market your business.';
+      errorList.push('Marketing commitment agreement required.');
+    }
+
+    if (!formData.agreeToWhatsapp) {
+      errors.agreeToWhatsapp = 'You must agree to join the official WhatsApp group.';
+      errorList.push('WhatsApp group participation agreement required.');
+    }
+
+    if (!formData.agreeToTerms) {
+      errors.agreeToTerms = 'You must accept the Wodibenuah Fair Terms & Conditions.';
+      errorList.push('Terms & Conditions agreement required.');
+    }
+
+    return { errors, errorList };
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const validationErrors = validateForm();
-    if (validationErrors.length > 0) {
-      setErrorMessage(validationErrors.join('\n'));
+    const { errors, errorList } = validateForm();
+    if (errorList.length > 0) {
+      setFieldErrors(errors);
+      setErrorMessage(errorList.join('\n'));
       setStatus('error');
-      if (errorRef.current) errorRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      
+      const firstErrorKey = Object.keys(errors)[0];
+      const element = document.getElementById(`field-${firstErrorKey}`) || errorRef.current;
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
       return;
     }
 
     setStatus('submitting');
     setErrorMessage('');
+    setFieldErrors({});
     toast.loading('Registering vendor...', { id: 'register-toast' });
 
     try {
@@ -149,6 +225,7 @@ const Register = () => {
         toast.success('Registration submitted successfully!', { id: 'register-toast' });
         setStatus('success');
         setErrorMessage('');
+        setFieldErrors({});
       } else {
         const msg = data.error || 'Registration failed. Please try again.';
         toast.error(msg, { id: 'register-toast' });
@@ -160,7 +237,6 @@ const Register = () => {
       console.error(err);
       let msg = err.message || 'Network error. Please check your connection and try again.';
 
-      // Enhance error messages
       if (msg.includes('already registered')) {
         msg = 'This email is already registered. Please check your email for previous confirmation or contact support.';
       }
@@ -333,34 +409,40 @@ const Register = () => {
           </div>
 
           {/* Form Section */}
-          <form onSubmit={handleSubmit} className="p-8 md:p-16 space-y-12">
+          <form onSubmit={handleSubmit} noValidate className="p-8 md:p-16 space-y-12">
 
             {/* Error Message Display */}
             {status === 'error' && (
-              <div ref={errorRef} className="bg-red-50 border-l-4 border-red-500 p-6 mb-8 animate-pulse">
-                <div className="flex">
-                  <div className="flex-shrink-0">
-                    <svg className="h-6 w-6 text-red-500" viewBox="0 0 20 20" fill="currentColor">
+              <div ref={errorRef} className="bg-red-50 border-2 border-red-500 p-6 mb-8 shadow-sm">
+                <div className="flex items-start">
+                  <div className="flex-shrink-0 mt-0.5">
+                    <svg className="h-6 w-6 text-red-600" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                     </svg>
                   </div>
-                  <div className="ml-4">
-                    <h3 className="text-lg leading-6 font-medium text-red-800 uppercase tracking-wider">
-                      Submission Error
+                  <div className="ml-4 flex-1">
+                    <h3 className="text-lg leading-6 font-bold text-red-800 uppercase tracking-wider">
+                      Please Check Required Information
                     </h3>
-                    <div className="mt-2 text-sm text-red-700">
-                      <div className="pl-2 border-l-2 border-red-300 mb-4">
-                        {errorMessage.split('\n').map((msg, i) => (
-                          <p key={i} className="font-bold mb-1">• {msg}</p>
-                        ))}
+                    <p className="mt-1 text-sm text-red-700 font-medium">
+                      {Object.keys(fieldErrors).length > 0
+                        ? `We found ${Object.keys(fieldErrors).length} missing or invalid item(s). Please check the highlighted field(s) below:`
+                        : 'Please correct the issue(s) below and try again:'}
+                    </p>
+                    <ul className="mt-3 space-y-1.5 list-disc list-inside text-sm font-semibold text-red-800 bg-red-100/70 p-3 border border-red-200">
+                      {errorMessage.split('\n').map((msg, i) => (
+                        <li key={i}>{msg}</li>
+                      ))}
+                    </ul>
+                    <p className="mt-3 text-xs uppercase tracking-widest font-bold text-red-700">
+                      Scroll down to view highlighted fields on the page.
+                    </p>
+                    {errorMessage.toLowerCase().includes('already registered') && (
+                      <div className="mt-3 p-3 bg-red-100 border-l-4 border-red-600 text-sm">
+                        This email is already registered. If you need to complete payment or require assistance, please{' '}
+                        <a href="/contact" className="text-red-900 underline font-bold hover:text-red-700">Contact Support</a>.
                       </div>
-                      <p className="mt-2 text-xs uppercase tracking-widest font-bold">Please correct the issue(s) above and try again.</p>
-                      {errorMessage.toLowerCase().includes('already registered') && (
-                        <div className="mt-3">
-                          <a href="/contact" className="text-red-900 underline font-bold hover:text-red-700">Contact Support</a> if you need assistance.
-                        </div>
-                      )}
-                    </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -385,68 +467,158 @@ const Register = () => {
                   <input type="hidden" name="selectedLocation" value={formData.selectedLocation} />
                 </div>
 
-                <div className="md:col-span-2 group">
-                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-2 group-focus-within:text-deep-black transition-colors">Full Name *</label>
+                <div className="md:col-span-2 group" id="field-fullName">
+                  <label className={`block text-xs font-bold uppercase tracking-wider mb-2 transition-colors ${fieldErrors.fullName ? 'text-red-600' : 'text-gray-500 group-focus-within:text-deep-black'}`}>
+                    Full Name *
+                  </label>
                   <input
                     required type="text" name="fullName" value={formData.fullName} onChange={handleChange}
-                    className="w-full px-0 py-3 border-b border-gray-300 focus:border-deep-black bg-transparent outline-none transition-colors text-lg font-body placeholder-gray-300"
+                    className={`w-full px-0 py-3 border-b bg-transparent outline-none transition-colors text-lg font-body placeholder-gray-300 ${
+                      fieldErrors.fullName
+                        ? 'border-red-500 text-red-900 focus:border-red-600 bg-red-50/20'
+                        : 'border-gray-300 focus:border-deep-black'
+                    }`}
                     placeholder="ENTER YOUR FULL NAME"
                   />
+                  {fieldErrors.fullName && (
+                    <p className="text-xs text-red-600 font-semibold mt-1.5 flex items-center gap-1">
+                      <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                      </svg>
+                      {fieldErrors.fullName}
+                    </p>
+                  )}
                 </div>
 
-                <div className="group">
-                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-2 group-focus-within:text-deep-black transition-colors">Email Address *</label>
+                <div className="group" id="field-email">
+                  <label className={`block text-xs font-bold uppercase tracking-wider mb-2 transition-colors ${fieldErrors.email ? 'text-red-600' : 'text-gray-500 group-focus-within:text-deep-black'}`}>
+                    Email Address *
+                  </label>
                   <input
                     required type="email" name="email" value={formData.email} onChange={handleChange}
-                    className="w-full px-0 py-3 border-b border-gray-300 focus:border-deep-black bg-transparent outline-none transition-colors text-lg font-body placeholder-gray-300"
+                    className={`w-full px-0 py-3 border-b bg-transparent outline-none transition-colors text-lg font-body placeholder-gray-300 ${
+                      fieldErrors.email
+                        ? 'border-red-500 text-red-900 focus:border-red-600 bg-red-50/20'
+                        : 'border-gray-300 focus:border-deep-black'
+                    }`}
                     placeholder="EMAIL@ADDRESS.COM"
                   />
+                  {fieldErrors.email && (
+                    <p className="text-xs text-red-600 font-semibold mt-1.5 flex items-center gap-1">
+                      <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                      </svg>
+                      {fieldErrors.email}
+                    </p>
+                  )}
                 </div>
 
-                <div className="group">
-                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-2 group-focus-within:text-deep-black transition-colors">Phone Number *</label>
+                <div className="group" id="field-phoneNumber">
+                  <label className={`block text-xs font-bold uppercase tracking-wider mb-2 transition-colors ${fieldErrors.phoneNumber ? 'text-red-600' : 'text-gray-500 group-focus-within:text-deep-black'}`}>
+                    Phone Number *
+                  </label>
                   <input
                     required type="tel" name="phoneNumber" value={formData.phoneNumber} onChange={handleChange}
-                    className="w-full px-0 py-3 border-b border-gray-300 focus:border-deep-black bg-transparent outline-none transition-colors text-lg font-body placeholder-gray-300"
+                    className={`w-full px-0 py-3 border-b bg-transparent outline-none transition-colors text-lg font-body placeholder-gray-300 ${
+                      fieldErrors.phoneNumber
+                        ? 'border-red-500 text-red-900 focus:border-red-600 bg-red-50/20'
+                        : 'border-gray-300 focus:border-deep-black'
+                    }`}
                     placeholder="+234..."
                   />
+                  {fieldErrors.phoneNumber && (
+                    <p className="text-xs text-red-600 font-semibold mt-1.5 flex items-center gap-1">
+                      <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                      </svg>
+                      {fieldErrors.phoneNumber}
+                    </p>
+                  )}
                 </div>
 
-                <div className="group">
-                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1 group-focus-within:text-deep-black transition-colors">WhatsApp Number *</label>
+                <div className="group" id="field-whatsappNumber">
+                  <label className={`block text-xs font-bold uppercase tracking-wider mb-1 transition-colors ${fieldErrors.whatsappNumber ? 'text-red-600' : 'text-gray-500 group-focus-within:text-deep-black'}`}>
+                    WhatsApp Number *
+                  </label>
                   <p className="text-[10px] text-gray-400 mb-2 uppercase tracking-wide">Must be an active number for vendor group communication</p>
                   <input
                     required type="tel" name="whatsappNumber" value={formData.whatsappNumber} onChange={handleChange}
-                    className="w-full px-0 py-3 border-b border-gray-300 focus:border-deep-black bg-transparent outline-none transition-colors text-lg font-body placeholder-gray-300"
+                    className={`w-full px-0 py-3 border-b bg-transparent outline-none transition-colors text-lg font-body placeholder-gray-300 ${
+                      fieldErrors.whatsappNumber
+                        ? 'border-red-500 text-red-900 focus:border-red-600 bg-red-50/20'
+                        : 'border-gray-300 focus:border-deep-black'
+                    }`}
                     placeholder="+234..."
                   />
+                  {fieldErrors.whatsappNumber && (
+                    <p className="text-xs text-red-600 font-semibold mt-1.5 flex items-center gap-1">
+                      <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                      </svg>
+                      {fieldErrors.whatsappNumber}
+                    </p>
+                  )}
                 </div>
 
-                <div className="group">
-                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1 group-focus-within:text-deep-black transition-colors">Instagram Handle *</label>
+                <div className="group" id="field-instagramHandle">
+                  <label className={`block text-xs font-bold uppercase tracking-wider mb-1 transition-colors ${fieldErrors.instagramHandle ? 'text-red-600' : 'text-gray-500 group-focus-within:text-deep-black'}`}>
+                    Instagram Handle *
+                  </label>
                   <p className="text-[10px] text-gray-400 mb-2 uppercase tracking-wide">Your primary business social media account</p>
                   <input
                     required type="text" name="instagramHandle" value={formData.instagramHandle} onChange={handleChange}
-                    className="w-full px-0 py-3 border-b border-gray-300 focus:border-deep-black bg-transparent outline-none transition-colors text-lg font-body placeholder-gray-300"
+                    className={`w-full px-0 py-3 border-b bg-transparent outline-none transition-colors text-lg font-body placeholder-gray-300 ${
+                      fieldErrors.instagramHandle
+                        ? 'border-red-500 text-red-900 focus:border-red-600 bg-red-50/20'
+                        : 'border-gray-300 focus:border-deep-black'
+                    }`}
                     placeholder="@YOURHANDLE"
                   />
+                  {fieldErrors.instagramHandle && (
+                    <p className="text-xs text-red-600 font-semibold mt-1.5 flex items-center gap-1">
+                      <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                      </svg>
+                      {fieldErrors.instagramHandle}
+                    </p>
+                  )}
                 </div>
 
-                <div className="md:col-span-2 group">
-                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-2 group-focus-within:text-deep-black transition-colors">Business Name *</label>
+                <div className="md:col-span-2 group" id="field-businessName">
+                  <label className={`block text-xs font-bold uppercase tracking-wider mb-2 transition-colors ${fieldErrors.businessName ? 'text-red-600' : 'text-gray-500 group-focus-within:text-deep-black'}`}>
+                    Business Name *
+                  </label>
                   <input
                     required type="text" name="businessName" value={formData.businessName} onChange={handleChange}
-                    className="w-full px-0 py-3 border-b border-gray-300 focus:border-deep-black bg-transparent outline-none transition-colors text-lg font-body placeholder-gray-300"
+                    className={`w-full px-0 py-3 border-b bg-transparent outline-none transition-colors text-lg font-body placeholder-gray-300 ${
+                      fieldErrors.businessName
+                        ? 'border-red-500 text-red-900 focus:border-red-600 bg-red-50/20'
+                        : 'border-gray-300 focus:border-deep-black'
+                    }`}
                     placeholder="YOUR BUSINESS NAME"
                   />
+                  {fieldErrors.businessName && (
+                    <p className="text-xs text-red-600 font-semibold mt-1.5 flex items-center gap-1">
+                      <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                      </svg>
+                      {fieldErrors.businessName}
+                    </p>
+                  )}
                 </div>
 
-                <div className="md:col-span-2 group">
-                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1 group-focus-within:text-deep-black transition-colors">Business Sector *</label>
+                <div className="md:col-span-2 group" id="field-sector">
+                  <label className={`block text-xs font-bold uppercase tracking-wider mb-1 transition-colors ${fieldErrors.sector ? 'text-red-600' : 'text-gray-500 group-focus-within:text-deep-black'}`}>
+                    Business Sector *
+                  </label>
                   <p className="text-[10px] text-gray-400 mb-2 uppercase tracking-wide">Choose the category that best fits your products or services</p>
                   <select
                     required name="sector" value={formData.sector} onChange={handleChange}
-                    className="w-full px-0 py-3 border-b border-gray-300 focus:border-deep-black bg-transparent outline-none transition-colors text-lg font-body cursor-pointer"
+                    className={`w-full px-0 py-3 border-b bg-transparent outline-none transition-colors text-lg font-body cursor-pointer ${
+                      fieldErrors.sector
+                        ? 'border-red-500 text-red-900 focus:border-red-600 bg-red-50/20'
+                        : 'border-gray-300 focus:border-deep-black'
+                    }`}
                   >
                     <option value="">SELECT A SECTOR</option>
                     <option value="Fashion & Apparel">Fashion & Apparel</option>
@@ -461,14 +633,28 @@ const Register = () => {
                     <option value="Services & Consultancy">Services & Consultancy</option>
                     <option value="Other">Other</option>
                   </select>
+                  {fieldErrors.sector && (
+                    <p className="text-xs text-red-600 font-semibold mt-1.5 flex items-center gap-1">
+                      <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                      </svg>
+                      {fieldErrors.sector}
+                    </p>
+                  )}
                 </div>
 
-                <div className="md:col-span-2 group">
-                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1 group-focus-within:text-deep-black transition-colors">Booth Type *</label>
+                <div className="md:col-span-2 group" id="field-boothType">
+                  <label className={`block text-xs font-bold uppercase tracking-wider mb-1 transition-colors ${fieldErrors.boothType ? 'text-red-600' : 'text-gray-500 group-focus-within:text-deep-black'}`}>
+                    Booth Type *
+                  </label>
                   <p className="text-[10px] text-gray-400 mb-2 uppercase tracking-wide">Select the size and type of booth you require.</p>
                   <select
                     required name="boothType" value={formData.boothType} onChange={handleChange}
-                    className="w-full px-0 py-3 border-b border-gray-300 focus:border-deep-black bg-transparent outline-none transition-colors text-lg font-body cursor-pointer"
+                    className={`w-full px-0 py-3 border-b bg-transparent outline-none transition-colors text-lg font-body cursor-pointer ${
+                      fieldErrors.boothType
+                        ? 'border-red-500 text-red-900 focus:border-red-600 bg-red-50/20'
+                        : 'border-gray-300 focus:border-deep-black'
+                    }`}
                   >
                     <option value="">SELECT A BOOTH TYPE</option>
                     {Object.entries(boothPrices).map(([type, price]) => (
@@ -477,6 +663,14 @@ const Register = () => {
                       </option>
                     ))}
                   </select>
+                  {fieldErrors.boothType && (
+                    <p className="text-xs text-red-600 font-semibold mt-1.5 flex items-center gap-1">
+                      <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                      </svg>
+                      {fieldErrors.boothType}
+                    </p>
+                  )}
 
                   {/* Vendor Slot Amenities */}
                   <div className="mt-8 bg-gray-50 border border-gray-200 p-6 md:p-8">
@@ -521,20 +715,35 @@ const Register = () => {
                   { name: 'agreeToMarket', label: 'I agree to ACTIVELY Market my business and contribute to the Fair *' },
                   { name: 'agreeToWhatsapp', label: 'I agree to JOIN & REMAIN ACTIVE in the assigned WhatsApp group *' }
                 ].map((item) => (
-                  <label key={item.name} className="flex items-start gap-4 cursor-pointer group">
-                    <div className="relative flex items-center">
-                      <input
-                        type="checkbox"
-                        name={item.name}
-                        required={item.name !== 'isPreviousVendor'}
-                        checked={formData[item.name]}
-                        onChange={handleChange}
-                        className="peer h-6 w-6 cursor-pointer appearance-none border border-deep-black transition-all checked:bg-deep-black"
-                      />
-                      <svg className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 text-white opacity-0 peer-checked:opacity-100 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
-                    </div>
-                    <span className="text-sm md:text-base text-gray-600 group-hover:text-deep-black transition-colors pt-0.5">{item.label}</span>
-                  </label>
+                  <div key={item.name} id={`field-${item.name}`} className={`p-3 rounded transition-colors ${fieldErrors[item.name] ? 'bg-red-50 border border-red-300' : ''}`}>
+                    <label className="flex items-start gap-4 cursor-pointer group">
+                      <div className="relative flex items-center mt-0.5">
+                        <input
+                          type="checkbox"
+                          name={item.name}
+                          checked={formData[item.name]}
+                          onChange={handleChange}
+                          className={`peer h-6 w-6 cursor-pointer appearance-none border transition-all checked:bg-deep-black ${
+                            fieldErrors[item.name] ? 'border-red-500 ring-2 ring-red-200' : 'border-deep-black'
+                          }`}
+                        />
+                        <svg className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 text-white opacity-0 peer-checked:opacity-100 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                      </div>
+                      <div className="flex-1">
+                        <span className={`text-sm md:text-base transition-colors ${fieldErrors[item.name] ? 'text-red-800 font-bold' : 'text-gray-600 group-hover:text-deep-black'}`}>
+                          {item.label}
+                        </span>
+                        {fieldErrors[item.name] && (
+                          <p className="text-xs text-red-600 font-semibold mt-1 flex items-center gap-1">
+                            <svg className="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                            </svg>
+                            {fieldErrors[item.name]}
+                          </p>
+                        )}
+                      </div>
+                    </label>
+                  </div>
                 ))}
               </div>
             </div>
@@ -588,18 +797,30 @@ const Register = () => {
                   </div>
                 </div>
 
-                <div className="mt-6 pt-4 border-t border-gray-200">
+                <div className={`mt-6 pt-4 border-t border-gray-200 p-3 rounded transition-colors ${fieldErrors.agreeToTerms ? 'bg-red-50 border border-red-300' : ''}`} id="field-agreeToTerms">
                   <label className="flex items-start gap-4 cursor-pointer group">
                     <div className="relative flex items-center mt-0.5">
                       <input
-                        required type="checkbox" name="agreeToTerms" checked={formData.agreeToTerms} onChange={handleChange}
-                        className="peer h-6 w-6 cursor-pointer appearance-none border border-deep-black transition-all checked:bg-deep-black"
+                        type="checkbox" name="agreeToTerms" checked={formData.agreeToTerms} onChange={handleChange}
+                        className={`peer h-6 w-6 cursor-pointer appearance-none border transition-all checked:bg-deep-black ${
+                          fieldErrors.agreeToTerms ? 'border-red-500 ring-2 ring-red-200' : 'border-deep-black'
+                        }`}
                       />
                       <svg className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 text-white opacity-0 peer-checked:opacity-100 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
                     </div>
-                    <span className="text-sm font-bold uppercase tracking-wider text-deep-black">
-                      I have read, understood, and agree to the Wodibenuah Fair Terms & Conditions *
-                    </span>
+                    <div className="flex-1">
+                      <span className={`text-sm font-bold uppercase tracking-wider ${fieldErrors.agreeToTerms ? 'text-red-800' : 'text-deep-black'}`}>
+                        I have read, understood, and agree to the Wodibenuah Fair Terms & Conditions *
+                      </span>
+                      {fieldErrors.agreeToTerms && (
+                        <p className="text-xs text-red-600 font-semibold mt-1 flex items-center gap-1">
+                          <svg className="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                          </svg>
+                          {fieldErrors.agreeToTerms}
+                        </p>
+                      )}
+                    </div>
                   </label>
                 </div>
               </div>

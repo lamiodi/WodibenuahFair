@@ -85,7 +85,7 @@ const HomePopup = () => {
             {/* Text Section (Right) */}
             <div className="w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-center bg-cream relative">
               <div className="mb-2">
-                <span className="text-xs font-bold text-gray-500 uppercase tracking-[0.2em]">Venue TBD, Lagos</span>
+                <span className="text-xs font-bold text-gray-500 uppercase tracking-[0.2em]">The Five Palm Oniru, Lagos</span>
               </div>
               
               <h2 className="text-4xl md:text-5xl font-heading font-medium text-deep-black uppercase leading-none mb-6">
@@ -93,7 +93,7 @@ const HomePopup = () => {
               </h2>
               
               <p className="text-gray-600 text-sm leading-relaxed mb-8">
-                Join over 200+ premium vendors at the Lagos edition this December. Secure your prime booth location before they sell out.
+                Join over 200+ premium vendors at the Lagos edition on December 13th, 2026. Secure your prime booth location before they sell out.
               </p>
 
               <div className="flex flex-col gap-3">
@@ -115,7 +115,7 @@ const HomePopup = () => {
 
               {/* Bottom Info */}
               <div className="mt-8 pt-8 border-t border-gray-200 text-xs text-gray-400 flex items-center justify-between">
-                <span>December 12th, 2026 • Lagos</span>
+                <span>December 13th, 2026 • The Five Palm Oniru</span>
                 <span className="flex items-center gap-1">
                   <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                   Registration Closes Soon

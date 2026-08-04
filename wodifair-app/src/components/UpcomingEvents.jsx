@@ -9,15 +9,15 @@ const UpcomingEvents = ({ title = "Upcoming Events" }) => {
   const events = [
     {
       id: 1,
-      date: "DECEMBER 2026",
+      date: "DECEMBER 13, 2026",
       title: "LAGOS",
       subtitle: "Holiday Edition",
       category: "Exhibition",
-      location: "Venue TBD, Lagos",
+      location: "The Five Palm Oniru, Lagos",
       city: "Lagos",
       image: "https://res.cloudinary.com/dwmz4youk/image/upload/v1779310067/wodifair/Lagosdecember12thedition.png",
-      mapUrl: "https://maps.google.com/maps?q=Lagos&t=&z=11&ie=UTF8&iwloc=&output=embed",
-      directionsUrl: "https://www.google.com/maps/dir/?api=1&destination=Lagos"
+      mapUrl: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d209927.16994260912!2d3.3535174980813856!3d6.520877071059808!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x103bf57f27da3ee1%3A0x3a690cd5fd98ed0e!2sThe%20Five%20Palm%20Oniru!5e1!3m2!1sen!2sng!4v1785822446153!5m2!1sen!2sng",
+      directionsUrl: "https://maps.google.com/?q=The+Five+Palm+Oniru"
     }
   ];
 

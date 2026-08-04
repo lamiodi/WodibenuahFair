@@ -6,7 +6,7 @@ const NEXT_EVENT_DATA = {
   title: "Wodibenuah Fair Lagos 2026",
   start_date: "2026-12-13T10:00:00",
   location: "Lagos, Nigeria",
-  venue: "Five Palms Event Center",
+  venue: "The Five Palm Oniru",
   is_registration_open: true
 };
 

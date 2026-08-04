@@ -233,33 +233,8 @@ const EventInfo = () => {
       {/* ============================================
           INTERACTIVE MAP SECTION
           ============================================ */}
-      <div className="w-full border-t border-deep-black">
-        <div className="flex flex-col lg:flex-row">
-          <div className="lg:w-1/3 bg-deep-black text-white p-12 md:p-16 flex flex-col justify-center">
-            <span className="text-gold text-xs font-bold tracking-[0.2em] uppercase mb-4">Location</span>
-            <h2 className="text-4xl md:text-5xl font-heading font-medium uppercase mb-8 leading-none">
-              Find Your<br/>Way
-            </h2>
-            <p className="text-gray-400 text-sm md:text-base leading-relaxed mb-12">
-              Located in Lagos, our venue offers world-class facilities, 
-              ample parking, and easy accessibility for all our guests.
-            </p>
-            <div className="space-y-6 border-t border-gray-800 pt-8">
-               <div>
-                 <h4 className="text-sm font-bold uppercase tracking-wider mb-2">Location</h4>
-                 <p className="text-gray-400 text-sm">Venue TBD, Lagos</p>
-               </div>
-               <div>
-                 <h4 className="text-sm font-bold uppercase tracking-wider mb-2">Hours</h4>
-                 <p className="text-gray-400 text-sm">Doors Open: 10:00 AM</p>
-                 <p className="text-gray-400 text-sm">Close: 10:00 PM</p>
-               </div>
-            </div>
-          </div>
-          <div className="lg:w-2/3">
-             <VenueMap />
-          </div>
-        </div>
+      <div className="w-full border-t border-deep-black bg-cream py-8 px-4 md:px-8">
+        <VenueMap />
       </div>
 
       <UpcomingEvents title="All Events" />
