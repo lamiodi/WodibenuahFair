@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import Navigation from '../components/Navigation';
@@ -9,17 +9,15 @@ const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const navigate = useNavigate();
 
-  const [stats, setStats] = useState({ vendors: 0, blogs: 0, events: 0, highlights: 0 });
+  const [stats, setStats] = useState({ vendors: 0, blogs: 0, events: 0, highlights: 0, messages: 0 });
   const [vendors, setVendors] = useState([]);
   const [blogs, setBlogs] = useState([]);
   const [events, setEvents] = useState([]);
   const [highlights, setHighlights] = useState([]);
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showEventModal, setShowEventModal] = useState(false);
-  const [currentEvent, setCurrentEvent] = useState(null);
 
-  // Pagination State
+  // Pagination State (Vendors)
   const [vendorPage, setVendorPage] = useState(1);
   const [vendorTotalPages, setVendorTotalPages] = useState(1);
   const vendorLimit = 20;
@@ -28,23 +26,6 @@ const AdminDashboard = () => {
   const [showVendorModal, setShowVendorModal] = useState(false);
   const [currentVendor, setCurrentVendor] = useState(null);
   const [sendingEmailId, setSendingEmailId] = useState(null);
-
-  const handleSendEmailLink = async (vendor) => {
-    if (!vendor || !vendor.id) return;
-    setSendingEmailId(vendor.id);
-    toast.loading(`Sending payment link email to ${vendor.email}...`, { id: 'email-link-toast' });
-    try {
-      await apiRequest(`/vendors/${vendor.id}/send-payment-link`, {
-        method: 'POST'
-      });
-      toast.success(`Payment link email sent successfully to ${vendor.email}!`, { id: 'email-link-toast' });
-    } catch (err) {
-      console.error(err);
-      toast.error(err.message || 'Failed to send email. Please check server email settings.', { id: 'email-link-toast' });
-    } finally {
-      setSendingEmailId(null);
-    }
-  };
 
   // Blog Modal State
   const [showBlogModal, setShowBlogModal] = useState(false);
@@ -70,6 +51,9 @@ const AdminDashboard = () => {
     displayOrder: 0
   });
 
+  // Event Modal State
+  const [showEventModal, setShowEventModal] = useState(false);
+  const [currentEvent, setCurrentEvent] = useState(null);
   const [eventForm, setEventForm] = useState({
     title: '',
     location: '',
@@ -82,19 +66,348 @@ const AdminDashboard = () => {
     isFeatured: false
   });
 
-  const [searchTerm, setSearchTerm] = useState('');
+  // ==========================================
+  // FILTER & SEARCH STATES ACROSS SECTIONS
+  // ==========================================
 
-  const filteredVendors = vendors.filter(vendor =>
-    vendor.business_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    vendor.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    vendor.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    vendor.payment_reference?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // 1. Vendors Section Filter States
+  const [vendorSearch, setVendorSearch] = useState('');
+  const [vendorStatusFilter, setVendorStatusFilter] = useState('all');
+  const [vendorLocationFilter, setVendorLocationFilter] = useState('all');
+  const [vendorBoothFilter, setVendorBoothFilter] = useState('all');
+  const [vendorSectorFilter, setVendorSectorFilter] = useState('all');
+  const [vendorSort, setVendorSort] = useState('newest');
 
+  // 2. Registrations Section Filter States
+  const [regSearch, setRegSearch] = useState('');
+  const [regStatusFilter, setRegStatusFilter] = useState('all');
+  const [regLocationFilter, setRegLocationFilter] = useState('all');
+  const [regBoothFilter, setRegBoothFilter] = useState('all');
+  const [regSort, setRegSort] = useState('newest');
+
+  // 3. Events Section Filter States
+  const [eventSearch, setEventSearch] = useState('');
+  const [eventStatusFilter, setEventStatusFilter] = useState('all');
+  const [eventRegFilter, setEventRegFilter] = useState('all');
+  const [eventSort, setEventSort] = useState('date_desc');
+
+  // 4. Blog Posts Section Filter States
+  const [blogSearch, setBlogSearch] = useState('');
+  const [blogCategoryFilter, setBlogCategoryFilter] = useState('all');
+  const [blogStatusFilter, setBlogStatusFilter] = useState('all');
+  const [blogSort, setBlogSort] = useState('newest');
+
+  // 5. Highlights Section Filter States
+  const [highlightSearch, setHighlightSearch] = useState('');
+  const [highlightBadgeFilter, setHighlightBadgeFilter] = useState('all');
+  const [highlightSort, setHighlightSort] = useState('order_asc');
+
+  // 6. Messages Section Filter States
+  const [messageSearch, setMessageSearch] = useState('');
+  const [messageTypeFilter, setMessageTypeFilter] = useState('all');
+  const [messageSort, setMessageSort] = useState('newest');
+
+  // ==========================================
+  // DYNAMIC OPTION LISTS FOR DROPDOWNS
+  // ==========================================
+  const uniqueVendorLocations = useMemo(() => {
+    return Array.from(new Set(vendors.map(v => v.selected_location).filter(Boolean))).sort();
+  }, [vendors]);
+
+  const uniqueVendorBooths = useMemo(() => {
+    return Array.from(new Set(vendors.map(v => v.booth_type).filter(Boolean))).sort();
+  }, [vendors]);
+
+  const uniqueVendorSectors = useMemo(() => {
+    return Array.from(new Set(vendors.map(v => v.sector).filter(Boolean))).sort();
+  }, [vendors]);
+
+  const uniqueBlogCategories = useMemo(() => {
+    return Array.from(new Set(blogs.map(b => b.category).filter(Boolean))).sort();
+  }, [blogs]);
+
+  const uniqueHighlightBadges = useMemo(() => {
+    return Array.from(new Set(highlights.map(h => h.badge).filter(Boolean))).sort();
+  }, [highlights]);
+
+  const uniqueMessageTypes = useMemo(() => {
+    return Array.from(new Set(messages.map(m => m.inquiry_type).filter(Boolean))).sort();
+  }, [messages]);
+
+  // ==========================================
+  // FILTERED & SORTED DATA COMPUTATIONS
+  // ==========================================
+
+  // Filtered Vendors
+  const filteredVendors = useMemo(() => {
+    return vendors
+      .filter(vendor => {
+        const matchesSearch = !vendorSearch.trim() || [
+          vendor.business_name,
+          vendor.full_name,
+          vendor.email,
+          vendor.phone_number,
+          vendor.instagram_handle,
+          vendor.payment_reference,
+          vendor.sector,
+          vendor.selected_location,
+          vendor.booth_type
+        ].some(val => val && String(val).toLowerCase().includes(vendorSearch.toLowerCase().trim()));
+
+        const matchesStatus =
+          vendorStatusFilter === 'all' ||
+          String(vendor.payment_status || '').toLowerCase() === vendorStatusFilter.toLowerCase();
+
+        const matchesLocation =
+          vendorLocationFilter === 'all' ||
+          String(vendor.selected_location || '').toLowerCase() === vendorLocationFilter.toLowerCase();
+
+        const matchesBooth =
+          vendorBoothFilter === 'all' ||
+          String(vendor.booth_type || '').toLowerCase() === vendorBoothFilter.toLowerCase();
+
+        const matchesSector =
+          vendorSectorFilter === 'all' ||
+          String(vendor.sector || '').toLowerCase() === vendorSectorFilter.toLowerCase();
+
+        return matchesSearch && matchesStatus && matchesLocation && matchesBooth && matchesSector;
+      })
+      .sort((a, b) => {
+        if (vendorSort === 'oldest') return new Date(a.created_at) - new Date(b.created_at);
+        if (vendorSort === 'amount_desc') return (Number(b.amount_paid) || 0) - (Number(a.amount_paid) || 0);
+        if (vendorSort === 'amount_asc') return (Number(a.amount_paid) || 0) - (Number(b.amount_paid) || 0);
+        if (vendorSort === 'name_asc') return (a.business_name || '').localeCompare(b.business_name || '');
+        return new Date(b.created_at) - new Date(a.created_at); // default newest
+      });
+  }, [vendors, vendorSearch, vendorStatusFilter, vendorLocationFilter, vendorBoothFilter, vendorSectorFilter, vendorSort]);
+
+  // Filtered Registrations
+  const filteredRegistrations = useMemo(() => {
+    return vendors
+      .filter(vendor => {
+        const matchesSearch = !regSearch.trim() || [
+          vendor.business_name,
+          vendor.full_name,
+          vendor.email,
+          vendor.phone_number,
+          vendor.instagram_handle,
+          vendor.payment_reference,
+          vendor.selected_location,
+          vendor.booth_type
+        ].some(val => val && String(val).toLowerCase().includes(regSearch.toLowerCase().trim()));
+
+        const matchesStatus =
+          regStatusFilter === 'all' ||
+          String(vendor.payment_status || '').toLowerCase() === regStatusFilter.toLowerCase();
+
+        const matchesLocation =
+          regLocationFilter === 'all' ||
+          String(vendor.selected_location || '').toLowerCase() === regLocationFilter.toLowerCase();
+
+        const matchesBooth =
+          regBoothFilter === 'all' ||
+          String(vendor.booth_type || '').toLowerCase() === regBoothFilter.toLowerCase();
+
+        return matchesSearch && matchesStatus && matchesLocation && matchesBooth;
+      })
+      .sort((a, b) => {
+        if (regSort === 'oldest') return new Date(a.created_at) - new Date(b.created_at);
+        if (regSort === 'amount_desc') return (Number(b.amount_paid) || 0) - (Number(a.amount_paid) || 0);
+        if (regSort === 'name_asc') return (a.business_name || '').localeCompare(b.business_name || '');
+        return new Date(b.created_at) - new Date(a.created_at);
+      });
+  }, [vendors, regSearch, regStatusFilter, regLocationFilter, regBoothFilter, regSort]);
+
+  // Filtered Events
+  const filteredEvents = useMemo(() => {
+    const now = new Date();
+    return events
+      .filter(event => {
+        const matchesSearch = !eventSearch.trim() || [
+          event.title,
+          event.location,
+          event.description,
+          event.status
+        ].some(val => val && String(val).toLowerCase().includes(eventSearch.toLowerCase().trim()));
+
+        let matchesStatus = true;
+        if (eventStatusFilter === 'upcoming') {
+          matchesStatus = event.start_date ? new Date(event.start_date) >= now : true;
+        } else if (eventStatusFilter === 'past') {
+          matchesStatus = event.start_date ? new Date(event.start_date) < now : false;
+        } else if (eventStatusFilter === 'featured') {
+          matchesStatus = Boolean(event.is_featured);
+        }
+
+        let matchesReg = true;
+        if (eventRegFilter === 'open') {
+          matchesReg = Boolean(event.is_registration_open);
+        } else if (eventRegFilter === 'closed') {
+          matchesReg = !event.is_registration_open;
+        }
+
+        return matchesSearch && matchesStatus && matchesReg;
+      })
+      .sort((a, b) => {
+        if (eventSort === 'date_asc') return new Date(a.start_date || 0) - new Date(b.start_date || 0);
+        if (eventSort === 'date_desc') return new Date(b.start_date || 0) - new Date(a.start_date || 0);
+        if (eventSort === 'title_asc') return (a.title || '').localeCompare(b.title || '');
+        return 0;
+      });
+  }, [events, eventSearch, eventStatusFilter, eventRegFilter, eventSort]);
+
+  // Filtered Blogs
+  const filteredBlogs = useMemo(() => {
+    return blogs
+      .filter(blog => {
+        const matchesSearch = !blogSearch.trim() || [
+          blog.title,
+          blog.slug,
+          blog.excerpt,
+          blog.category,
+          blog.content
+        ].some(val => val && String(val).toLowerCase().includes(blogSearch.toLowerCase().trim()));
+
+        const matchesCategory =
+          blogCategoryFilter === 'all' ||
+          String(blog.category || '').toLowerCase() === blogCategoryFilter.toLowerCase();
+
+        let matchesStatus = true;
+        if (blogStatusFilter === 'published') {
+          matchesStatus = Boolean(blog.is_published);
+        } else if (blogStatusFilter === 'draft') {
+          matchesStatus = !blog.is_published;
+        }
+
+        return matchesSearch && matchesCategory && matchesStatus;
+      })
+      .sort((a, b) => {
+        if (blogSort === 'oldest') return new Date(a.published_at || a.created_at || 0) - new Date(b.published_at || b.created_at || 0);
+        if (blogSort === 'title_asc') return (a.title || '').localeCompare(b.title || '');
+        return new Date(b.published_at || b.created_at || 0) - new Date(a.published_at || a.created_at || 0);
+      });
+  }, [blogs, blogSearch, blogCategoryFilter, blogStatusFilter, blogSort]);
+
+  // Filtered Highlights
+  const filteredHighlights = useMemo(() => {
+    return highlights
+      .filter(highlight => {
+        const matchesSearch = !highlightSearch.trim() || [
+          highlight.title,
+          highlight.description,
+          highlight.badge
+        ].some(val => val && String(val).toLowerCase().includes(highlightSearch.toLowerCase().trim()));
+
+        const matchesBadge =
+          highlightBadgeFilter === 'all' ||
+          String(highlight.badge || '').toLowerCase() === highlightBadgeFilter.toLowerCase();
+
+        return matchesSearch && matchesBadge;
+      })
+      .sort((a, b) => {
+        if (highlightSort === 'order_asc') return (Number(a.display_order) || 0) - (Number(b.display_order) || 0);
+        if (highlightSort === 'order_desc') return (Number(b.display_order) || 0) - (Number(a.display_order) || 0);
+        if (highlightSort === 'title_asc') return (a.title || '').localeCompare(b.title || '');
+        return 0;
+      });
+  }, [highlights, highlightSearch, highlightBadgeFilter, highlightSort]);
+
+  // Filtered Messages
+  const filteredMessages = useMemo(() => {
+    return messages
+      .filter(msg => {
+        const matchesSearch = !messageSearch.trim() || [
+          msg.name,
+          msg.email,
+          msg.inquiry_type,
+          msg.message
+        ].some(val => val && String(val).toLowerCase().includes(messageSearch.toLowerCase().trim()));
+
+        const matchesType =
+          messageTypeFilter === 'all' ||
+          String(msg.inquiry_type || '').toLowerCase() === messageTypeFilter.toLowerCase();
+
+        return matchesSearch && matchesType;
+      })
+      .sort((a, b) => {
+        if (messageSort === 'oldest') return new Date(a.created_at || 0) - new Date(b.created_at || 0);
+        return new Date(b.created_at || 0) - new Date(a.created_at || 0);
+      });
+  }, [messages, messageSearch, messageTypeFilter, messageSort]);
+
+  // Helpers to detect active filter states
+  const isVendorFilterActive = vendorSearch || vendorStatusFilter !== 'all' || vendorLocationFilter !== 'all' || vendorBoothFilter !== 'all' || vendorSectorFilter !== 'all' || vendorSort !== 'newest';
+  const isRegFilterActive = regSearch || regStatusFilter !== 'all' || regLocationFilter !== 'all' || regBoothFilter !== 'all' || regSort !== 'newest';
+  const isEventFilterActive = eventSearch || eventStatusFilter !== 'all' || eventRegFilter !== 'all' || eventSort !== 'date_desc';
+  const isBlogFilterActive = blogSearch || blogCategoryFilter !== 'all' || blogStatusFilter !== 'all' || blogSort !== 'newest';
+  const isHighlightFilterActive = highlightSearch || highlightBadgeFilter !== 'all' || highlightSort !== 'order_asc';
+  const isMessageFilterActive = messageSearch || messageTypeFilter !== 'all' || messageSort !== 'newest';
+
+  const resetVendorFilters = () => {
+    setVendorSearch('');
+    setVendorStatusFilter('all');
+    setVendorLocationFilter('all');
+    setVendorBoothFilter('all');
+    setVendorSectorFilter('all');
+    setVendorSort('newest');
+  };
+
+  const resetRegFilters = () => {
+    setRegSearch('');
+    setRegStatusFilter('all');
+    setRegLocationFilter('all');
+    setRegBoothFilter('all');
+    setRegSort('newest');
+  };
+
+  const resetEventFilters = () => {
+    setEventSearch('');
+    setEventStatusFilter('all');
+    setEventRegFilter('all');
+    setEventSort('date_desc');
+  };
+
+  const resetBlogFilters = () => {
+    setBlogSearch('');
+    setBlogCategoryFilter('all');
+    setBlogStatusFilter('all');
+    setBlogSort('newest');
+  };
+
+  const resetHighlightFilters = () => {
+    setHighlightSearch('');
+    setHighlightBadgeFilter('all');
+    setHighlightSort('order_asc');
+  };
+
+  const resetMessageFilters = () => {
+    setMessageSearch('');
+    setMessageTypeFilter('all');
+    setMessageSort('newest');
+  };
+
+  // Vendor Email Link Handler
+  const handleSendEmailLink = async (vendor) => {
+    if (!vendor || !vendor.id) return;
+    setSendingEmailId(vendor.id);
+    toast.loading(`Sending payment link email to ${vendor.email}...`, { id: 'email-link-toast' });
+    try {
+      await apiRequest(`/vendors/${vendor.id}/send-payment-link`, {
+        method: 'POST'
+      });
+      toast.success(`Payment link email sent successfully to ${vendor.email}!`, { id: 'email-link-toast' });
+    } catch (err) {
+      console.error(err);
+      toast.error(err.message || 'Failed to send email. Please check server email settings.', { id: 'email-link-toast' });
+    } finally {
+      setSendingEmailId(null);
+    }
+  };
+
+  // Export CSV Handler
   const handleExportCSV = async () => {
     try {
       toast.loading('Preparing export...', { id: 'export-toast' });
-      // Fetch all vendors for export (no limit)
       const data = await apiRequest('/vendors?limit=10000');
       const allVendors = data.vendors || [];
 
@@ -107,18 +420,18 @@ const AdminDashboard = () => {
       const csvContent = [
         headers.join(','),
         ...allVendors.map(v => [
-          `"${v.business_name}"`,
-          `"${v.full_name}"`,
-          `"${v.email}"`,
-          `"${v.phone_number}"`,
-          `"${v.instagram_handle}"`,
-          `"${v.booth_type}"`,
-          `"${v.selected_location}"`,
-          `"${v.sector}"`,
-          v.payment_status,
+          `"${v.business_name || ''}"`,
+          `"${v.full_name || ''}"`,
+          `"${v.email || ''}"`,
+          `"${v.phone_number || ''}"`,
+          `"${v.instagram_handle || ''}"`,
+          `"${v.booth_type || ''}"`,
+          `"${v.selected_location || ''}"`,
+          `"${v.sector || ''}"`,
+          v.payment_status || 'pending',
           v.amount_paid || 0,
           v.payment_reference || '',
-          new Date(v.created_at).toLocaleDateString()
+          v.created_at ? new Date(v.created_at).toLocaleDateString() : ''
         ].join(','))
       ].join('\n');
 
@@ -137,6 +450,7 @@ const AdminDashboard = () => {
     }
   };
 
+  // Fetch Dashboard Data
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
@@ -155,7 +469,6 @@ const AdminDashboard = () => {
           apiRequest('/contact')
         ]);
 
-        // Helper to extract value if fulfilled, fallback to default
         const getValue = (result, defaultValue = []) =>
           result.status === 'fulfilled' ? (result.value || defaultValue) : defaultValue;
 
@@ -176,14 +489,13 @@ const AdminDashboard = () => {
         setMessages(Array.isArray(messagesData) ? messagesData : []);
 
         setStats({
-          vendors: vendorsData.pagination?.total || 0,
+          vendors: vendorsData.pagination?.total || (vendorsData.vendors ? vendorsData.vendors.length : 0),
           blogs: Array.isArray(blogsData) ? blogsData.length : 0,
           events: Array.isArray(eventsData) ? eventsData.length : 0,
           highlights: Array.isArray(highlightsData) ? highlightsData.length : 0,
           messages: Array.isArray(messagesData) ? messagesData.length : 0
         });
 
-        // Show warnings if some datasets failed to load
         const failures = results.map((r, i) => r.status === 'rejected' ? ['Vendors', 'Blogs', 'Events', 'Highlights', 'Messages'][i] : null).filter(Boolean);
         if (failures.length > 0) {
           toast.error(`Some data failed to load: ${failures.join(', ')}`, { icon: '⚠️' });
@@ -230,7 +542,6 @@ const AdminDashboard = () => {
       setEventForm({
         title: '',
         location: '',
-        mapLink: '',
         startDate: '',
         endDate: '',
         description: '',
@@ -296,9 +607,7 @@ const AdminDashboard = () => {
   const handleSaveEvent = async (e) => {
     e.preventDefault();
     const method = currentEvent ? 'PUT' : 'POST';
-    const endpoint = currentEvent
-      ? `/events/${currentEvent.id}`
-      : `/events`;
+    const endpoint = currentEvent ? `/events/${currentEvent.id}` : `/events`;
 
     try {
       const savedEvent = await apiRequest(endpoint, {
@@ -324,9 +633,7 @@ const AdminDashboard = () => {
   const handleSaveBlog = async (e) => {
     e.preventDefault();
     const method = currentBlog ? 'PUT' : 'POST';
-    const endpoint = currentBlog
-      ? `/blog/${currentBlog.id}`
-      : `/blog`;
+    const endpoint = currentBlog ? `/blog/${currentBlog.id}` : `/blog`;
 
     try {
       const savedPost = await apiRequest(endpoint, {
@@ -352,9 +659,7 @@ const AdminDashboard = () => {
   const handleSaveHighlight = async (e) => {
     e.preventDefault();
     const method = currentHighlight ? 'PUT' : 'POST';
-    const endpoint = currentHighlight
-      ? `/highlights/${currentHighlight.id}`
-      : `/highlights`;
+    const endpoint = currentHighlight ? `/highlights/${currentHighlight.id}` : `/highlights`;
 
     try {
       const savedHighlight = await apiRequest(endpoint, {
@@ -380,7 +685,6 @@ const AdminDashboard = () => {
   const handleDelete = async (type, id) => {
     if (!window.confirm('Are you sure you want to delete this item?')) return;
 
-    // Adjust endpoint for highlights
     const endpoint = type === 'highlights' ? `/highlights/${id}` : `/${type}/${id}`;
 
     try {
@@ -407,330 +711,420 @@ const AdminDashboard = () => {
     }
   };
 
-  const renderVendors = () => (
-    <div className="bg-white border border-gray-200 shadow-sm overflow-hidden">
-      <div className="p-6 border-b border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4">
-        <h3 className="text-xl font-heading font-bold uppercase text-deep-black">Registered Vendors</h3>
-        <div className="flex gap-4 w-full md:w-auto">
-          <input
-            type="text"
-            placeholder="Search vendors..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-gold w-full md:w-64"
-          />
-          <button
-            onClick={handleExportCSV}
-            className="text-sm bg-deep-black text-white px-4 py-2 hover:bg-gold hover:text-deep-black transition-colors font-bold uppercase tracking-wider whitespace-nowrap"
-          >
-            Export CSV
-          </button>
+  // ==========================================
+  // RENDER: VENDORS TAB
+  // ==========================================
+  const renderVendors = () => {
+    const paidCount = vendors.filter(v => v.payment_status === 'paid').length;
+    const pendingCount = vendors.filter(v => v.payment_status !== 'paid').length;
+
+    return (
+      <div className="bg-white border border-deep-black shadow-sm overflow-hidden space-y-4">
+        {/* Header & Quick Action */}
+        <div className="p-6 border-b border-gray-200 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 bg-gray-50">
+          <div>
+            <h3 className="text-xl font-heading font-bold uppercase text-deep-black">Registered Vendors</h3>
+            <p className="text-xs text-gray-500 mt-1">Manage vendor applications, verify booth assignments, and filter statuses.</p>
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              onClick={handleExportCSV}
+              className="text-xs bg-deep-black text-white px-4 py-2.5 hover:bg-gold hover:text-deep-black transition-colors font-bold uppercase tracking-wider flex items-center gap-2 shadow-sm"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+              Export CSV
+            </button>
+          </div>
         </div>
-      </div>
-      <div className="overflow-x-auto">
-        <table className="w-full text-left border-collapse">
-          <thead>
-            <tr className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider font-bold border-b border-gray-100">
-              <th className="p-4">Vendor</th>
-              <th className="p-4">Contact</th>
-              <th className="p-4">Booth & Location</th>
-              <th className="p-4">Status</th>
-              <th className="p-4">Date</th>
-              <th className="p-4">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100 text-sm">
-            {filteredVendors.length === 0 ? (
-              <tr>
-                <td colSpan="6" className="p-8 text-center text-gray-400">No vendors found.</td>
+
+        {/* Filter Controls Toolbar */}
+        <div className="p-6 space-y-4">
+          {/* Search and Status Pills */}
+          <div className="flex flex-col md:flex-row gap-4 justify-between items-stretch md:items-center">
+            {/* Search Input */}
+            <div className="relative flex-grow max-w-md">
+              <input
+                type="text"
+                placeholder="Search business, name, email, ref, sector..."
+                value={vendorSearch}
+                onChange={(e) => setVendorSearch(e.target.value)}
+                className="w-full pl-10 pr-4 py-2.5 border border-deep-black text-sm focus:outline-none focus:ring-2 focus:ring-gold bg-white"
+              />
+              <svg className="w-4 h-4 text-gray-400 absolute left-3 top-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+              {vendorSearch && (
+                <button onClick={() => setVendorSearch('')} className="absolute right-3 top-2.5 text-xs text-gray-400 hover:text-deep-black">✕</button>
+              )}
+            </div>
+
+            {/* Quick Status Pill Filters */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setVendorStatusFilter('all')}
+                className={`px-3 py-1.5 text-xs font-bold uppercase tracking-wider border transition-colors ${vendorStatusFilter === 'all' ? 'bg-deep-black text-white border-deep-black' : 'bg-white text-gray-600 border-gray-300 hover:border-deep-black'}`}
+              >
+                All ({vendors.length})
+              </button>
+              <button
+                onClick={() => setVendorStatusFilter('paid')}
+                className={`px-3 py-1.5 text-xs font-bold uppercase tracking-wider border transition-colors ${vendorStatusFilter === 'paid' ? 'bg-green-700 text-white border-green-700' : 'bg-green-50 text-green-800 border-green-200 hover:border-green-600'}`}
+              >
+                Paid ({paidCount})
+              </button>
+              <button
+                onClick={() => setVendorStatusFilter('pending')}
+                className={`px-3 py-1.5 text-xs font-bold uppercase tracking-wider border transition-colors ${vendorStatusFilter === 'pending' ? 'bg-yellow-600 text-white border-yellow-600' : 'bg-yellow-50 text-yellow-800 border-yellow-200 hover:border-yellow-600'}`}
+              >
+                Pending ({pendingCount})
+              </button>
+            </div>
+          </div>
+
+          {/* Secondary Dropdown Filters */}
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3 pt-2 border-t border-gray-100 items-center">
+            <div>
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1">Location</label>
+              <select
+                value={vendorLocationFilter}
+                onChange={(e) => setVendorLocationFilter(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 bg-white text-xs font-medium focus:outline-none focus:border-gold"
+              >
+                <option value="all">All Locations</option>
+                {uniqueVendorLocations.map(loc => (
+                  <option key={loc} value={loc}>{loc}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1">Booth Type</label>
+              <select
+                value={vendorBoothFilter}
+                onChange={(e) => setVendorBoothFilter(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 bg-white text-xs font-medium focus:outline-none focus:border-gold"
+              >
+                <option value="all">All Booths</option>
+                {uniqueVendorBooths.map(b => (
+                  <option key={b} value={b}>{b}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1">Sector</label>
+              <select
+                value={vendorSectorFilter}
+                onChange={(e) => setVendorSectorFilter(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 bg-white text-xs font-medium focus:outline-none focus:border-gold"
+              >
+                <option value="all">All Sectors</option>
+                {uniqueVendorSectors.map(s => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1">Sort By</label>
+              <select
+                value={vendorSort}
+                onChange={(e) => setVendorSort(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 bg-white text-xs font-medium focus:outline-none focus:border-gold"
+              >
+                <option value="newest">Newest First</option>
+                <option value="oldest">Oldest First</option>
+                <option value="amount_desc">Amount (High to Low)</option>
+                <option value="amount_asc">Amount (Low to High)</option>
+                <option value="name_asc">Business Name (A-Z)</option>
+              </select>
+            </div>
+
+            {isVendorFilterActive && (
+              <div className="flex items-end h-full pt-4 md:pt-0">
+                <button
+                  onClick={resetVendorFilters}
+                  className="w-full px-3 py-2 bg-gray-100 hover:bg-gray-200 text-deep-black text-xs font-bold uppercase tracking-wider border border-gray-300 transition-colors"
+                >
+                  Reset Filters
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Results Summary Bar */}
+          <div className="flex justify-between items-center text-xs text-gray-500 pt-2">
+            <span>
+              Showing <strong className="text-deep-black">{filteredVendors.length}</strong> of <strong>{vendors.length}</strong> vendors
+              {isVendorFilterActive && ' (Filtered)'}
+            </span>
+          </div>
+        </div>
+
+        {/* Vendors Table */}
+        <div className="overflow-x-auto border-t border-gray-200">
+          <table className="w-full text-left border-collapse min-w-[700px]">
+            <thead>
+              <tr className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider font-bold border-b border-gray-200">
+                <th className="p-4">Vendor</th>
+                <th className="p-4">Contact</th>
+                <th className="p-4">Booth & Location</th>
+                <th className="p-4">Status</th>
+                <th className="p-4">Date</th>
+                <th className="p-4">Actions</th>
               </tr>
-            ) : (
-              filteredVendors.map((vendor) => (
-                <tr key={vendor.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="p-4">
-                    <div className="font-bold text-deep-black">{vendor.business_name}</div>
-                    <div className="text-gray-500 text-xs">{vendor.full_name}</div>
-                    <div className="text-gray-400 text-xs italic">{vendor.sector}</div>
-                  </td>
-                  <td className="p-4">
-                    <div className="text-gray-600">{vendor.email}</div>
-                    <div className="text-gray-500 text-xs">{vendor.phone_number}</div>
-                    <div className="text-blue-500 text-xs">{vendor.instagram_handle}</div>
-                  </td>
-                  <td className="p-4">
-                    <div className="font-medium text-deep-black">{vendor.booth_type}</div>
-                    <div className="text-gray-500 text-xs">{vendor.selected_location}</div>
-                  </td>
-                  <td className="p-4">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize
-                      ${vendor.payment_status === 'paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
-                      {vendor.payment_status}
-                    </span>
-                    {vendor.payment_status === 'paid' && (
-                      <div className="text-xs text-gray-400 mt-1 font-mono">{vendor.amount_paid ? `₦${Number(vendor.amount_paid).toLocaleString()}` : ''}</div>
+            </thead>
+            <tbody className="divide-y divide-gray-100 text-sm">
+              {filteredVendors.length === 0 ? (
+                <tr>
+                  <td colSpan="6" className="p-12 text-center text-gray-400">
+                    <p className="text-base font-medium text-gray-500">No vendors match the current filter criteria.</p>
+                    {isVendorFilterActive && (
+                      <button
+                        onClick={resetVendorFilters}
+                        className="mt-3 text-xs font-bold uppercase text-gold hover:underline"
+                      >
+                        Clear all filters
+                      </button>
                     )}
                   </td>
-                  <td className="p-4 text-gray-500 text-xs">
-                    {new Date(vendor.created_at).toLocaleDateString()}
-                  </td>
-                  <td className="p-4">
-                    <button onClick={() => openVendorModal(vendor)} className="text-gray-400 hover:text-deep-black transition-colors">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
-                      </svg>
-                    </button>
-                  </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+              ) : (
+                filteredVendors.map((vendor) => (
+                  <tr key={vendor.id} className="hover:bg-gray-50 transition-colors">
+                    <td className="p-4">
+                      <div className="font-bold text-deep-black">{vendor.business_name}</div>
+                      <div className="text-gray-500 text-xs">{vendor.full_name}</div>
+                      <div className="text-gray-400 text-xs italic">{vendor.sector}</div>
+                    </td>
+                    <td className="p-4">
+                      <div className="text-gray-600">{vendor.email}</div>
+                      <div className="text-gray-500 text-xs">{vendor.phone_number}</div>
+                      <div className="text-blue-500 text-xs">{vendor.instagram_handle}</div>
+                    </td>
+                    <td className="p-4">
+                      <div className="font-medium text-deep-black">{vendor.booth_type}</div>
+                      <div className="text-gray-500 text-xs">{vendor.selected_location}</div>
+                    </td>
+                    <td className="p-4">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize
+                        ${vendor.payment_status === 'paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
+                        {vendor.payment_status || 'Pending'}
+                      </span>
+                      {vendor.payment_status === 'paid' && (
+                        <div className="text-xs text-gray-400 mt-1 font-mono">{vendor.amount_paid ? `₦${Number(vendor.amount_paid).toLocaleString()}` : ''}</div>
+                      )}
+                    </td>
+                    <td className="p-4 text-gray-500 text-xs">
+                      {vendor.created_at ? new Date(vendor.created_at).toLocaleDateString() : 'N/A'}
+                    </td>
+                    <td className="p-4">
+                      <button
+                        onClick={() => openVendorModal(vendor)}
+                        className="text-xs font-bold uppercase tracking-wider border border-gray-300 hover:border-deep-black hover:bg-deep-black hover:text-white px-3 py-1.5 transition-colors"
+                      >
+                        Details
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
 
-      {/* Pagination Controls */}
-      {vendorTotalPages > 1 && (
-        <div className="p-4 border-t border-gray-100 flex items-center justify-between bg-gray-50">
-          <p className="text-xs text-gray-500">
-            Page <span className="font-bold">{vendorPage}</span> of <span className="font-bold">{vendorTotalPages}</span>
-          </p>
-          <div className="flex gap-2">
-            <button
-              onClick={() => setVendorPage(prev => Math.max(1, prev - 1))}
-              disabled={vendorPage === 1}
-              className="px-3 py-1 border border-gray-300 rounded text-xs font-bold uppercase transition-colors hover:bg-white disabled:opacity-30 disabled:cursor-not-allowed"
-            >
-              Previous
-            </button>
-            <button
-              onClick={() => setVendorPage(prev => Math.min(vendorTotalPages, prev + 1))}
-              disabled={vendorPage === vendorTotalPages}
-              className="px-3 py-1 border border-gray-300 rounded text-xs font-bold uppercase transition-colors hover:bg-white disabled:opacity-30 disabled:cursor-not-allowed"
-            >
-              Next
-            </button>
+        {/* Pagination Controls */}
+        {vendorTotalPages > 1 && (
+          <div className="p-4 border-t border-gray-200 flex items-center justify-between bg-gray-50">
+            <p className="text-xs text-gray-500">
+              Page <span className="font-bold">{vendorPage}</span> of <span className="font-bold">{vendorTotalPages}</span>
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setVendorPage(prev => Math.max(1, prev - 1))}
+                disabled={vendorPage === 1}
+                className="px-3 py-1 border border-gray-300 rounded text-xs font-bold uppercase transition-colors hover:bg-white disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                Previous
+              </button>
+              <button
+                onClick={() => setVendorPage(prev => Math.min(vendorTotalPages, prev + 1))}
+                disabled={vendorPage === vendorTotalPages}
+                className="px-3 py-1 border border-gray-300 rounded text-xs font-bold uppercase transition-colors hover:bg-white disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // ==========================================
+  // RENDER: REGISTRATIONS TAB (Full Filter Support)
+  // ==========================================
+  const renderRegistrations = () => {
+    const totalFilteredAmount = filteredRegistrations
+      .filter(v => v.payment_status === 'paid')
+      .reduce((sum, v) => sum + (Number(v.amount_paid) || 0), 0);
+
+    const paidCount = filteredRegistrations.filter(v => v.payment_status === 'paid').length;
+    const pendingCount = filteredRegistrations.filter(v => v.payment_status !== 'paid').length;
+
+    return (
+      <div className="space-y-6">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <h2 className="text-3xl font-heading font-bold uppercase">Registrations</h2>
+            <p className="text-xs text-gray-500 mt-1">Review incoming vendor sign-ups, send payment reminders, and track conversion.</p>
           </div>
         </div>
-      )}
-    </div>
-  );
 
-  const renderContent = () => {
-    if (loading) {
-      return <div className="flex justify-center items-center h-64">Loading dashboard data...</div>;
-    }
+        {/* Quick Metrics Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="bg-white border border-deep-black p-4">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Filtered Total</p>
+            <p className="text-2xl font-bold">{filteredRegistrations.length}</p>
+          </div>
+          <div className="bg-white border border-deep-black p-4">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Paid Applications</p>
+            <p className="text-2xl font-bold text-green-700">{paidCount}</p>
+          </div>
+          <div className="bg-white border border-deep-black p-4">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Pending Payment</p>
+            <p className="text-2xl font-bold text-yellow-600">{pendingCount}</p>
+          </div>
+          <div className="bg-white border border-deep-black p-4">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Revenue (Filtered)</p>
+            <p className="text-2xl font-bold font-mono">₦{totalFilteredAmount.toLocaleString()}</p>
+          </div>
+        </div>
 
-    switch (activeTab) {
-      case 'dashboard':
-        return (
-          <div className="space-y-8">
-            <h2 className="text-3xl font-heading font-bold uppercase">Dashboard Overview</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-              <div className="bg-white border border-deep-black p-8">
-                <h3 className="text-xl font-heading font-bold uppercase mb-4">Total Vendors</h3>
-                <p className="text-4xl font-bold">{stats.vendors}</p>
-              </div>
-              <div className="bg-white border border-deep-black p-8">
-                <h3 className="text-xl font-heading font-bold uppercase mb-4">Blog Posts</h3>
-                <p className="text-4xl font-bold">{stats.blogs}</p>
-              </div>
-              <div className="bg-white border border-deep-black p-8">
-                <h3 className="text-xl font-heading font-bold uppercase mb-4">Upcoming Events</h3>
-                <p className="text-4xl font-bold">{stats.events}</p>
-              </div>
-              <div className="bg-white border border-deep-black p-8">
-                <h3 className="text-xl font-heading font-bold uppercase mb-4">Highlights</h3>
-                <p className="text-4xl font-bold">{stats.highlights}</p>
-              </div>
+        {/* Filter Controls */}
+        <div className="bg-white border border-deep-black p-6 space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="md:col-span-2 relative">
+              <input
+                type="text"
+                placeholder="Search business, contact, email, phone, reference..."
+                value={regSearch}
+                onChange={(e) => setRegSearch(e.target.value)}
+                className="w-full pl-10 pr-4 py-2.5 border border-deep-black text-sm focus:outline-none focus:ring-2 focus:ring-gold bg-white"
+              />
+              <svg className="w-4 h-4 text-gray-400 absolute left-3 top-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+              {regSearch && (
+                <button onClick={() => setRegSearch('')} className="absolute right-3 top-2.5 text-xs text-gray-400 hover:text-deep-black">✕</button>
+              )}
+            </div>
+
+            <div>
+              <select
+                value={regStatusFilter}
+                onChange={(e) => setRegStatusFilter(e.target.value)}
+                className="w-full px-3 py-2.5 border border-deep-black bg-white text-xs font-bold uppercase focus:outline-none focus:ring-2 focus:ring-gold"
+              >
+                <option value="all">All Payment Statuses</option>
+                <option value="paid">Paid Only</option>
+                <option value="pending">Pending Only</option>
+              </select>
+            </div>
+
+            <div>
+              <select
+                value={regSort}
+                onChange={(e) => setRegSort(e.target.value)}
+                className="w-full px-3 py-2.5 border border-deep-black bg-white text-xs font-bold uppercase focus:outline-none focus:ring-2 focus:ring-gold"
+              >
+                <option value="newest">Newest First</option>
+                <option value="oldest">Oldest First</option>
+                <option value="amount_desc">Highest Amount</option>
+                <option value="name_asc">Business Name A-Z</option>
+              </select>
             </div>
           </div>
-        );
-      case 'blog':
-        return (
-          <div className="space-y-8">
-            <div className="flex justify-between items-center">
-              <h2 className="text-3xl font-heading font-bold uppercase">Manage Blog Posts</h2>
-              <button onClick={() => openBlogModal()} className="bg-deep-black text-white px-6 py-3 text-sm font-bold uppercase tracking-wider hover:bg-gold hover:text-deep-black transition-colors">
-                Add New Post
+
+          <div className="flex flex-wrap items-center justify-between gap-4 pt-2 border-t border-gray-100 text-xs">
+            <div className="flex flex-wrap items-center gap-3">
+              <span className="text-gray-500 font-bold uppercase text-[10px]">Filter by Location:</span>
+              <select
+                value={regLocationFilter}
+                onChange={(e) => setRegLocationFilter(e.target.value)}
+                className="px-2 py-1 border border-gray-300 bg-white text-xs"
+              >
+                <option value="all">All Locations</option>
+                {uniqueVendorLocations.map(loc => (
+                  <option key={loc} value={loc}>{loc}</option>
+                ))}
+              </select>
+
+              <span className="text-gray-500 font-bold uppercase text-[10px] ml-2">Booth:</span>
+              <select
+                value={regBoothFilter}
+                onChange={(e) => setRegBoothFilter(e.target.value)}
+                className="px-2 py-1 border border-gray-300 bg-white text-xs"
+              >
+                <option value="all">All Booths</option>
+                {uniqueVendorBooths.map(b => (
+                  <option key={b} value={b}>{b}</option>
+                ))}
+              </select>
+            </div>
+
+            {isRegFilterActive && (
+              <button
+                onClick={resetRegFilters}
+                className="text-xs font-bold uppercase text-red-600 hover:underline"
+              >
+                Clear Filters (Showing {filteredRegistrations.length} of {vendors.length})
               </button>
-            </div>
-            <div className="bg-white border border-deep-black p-8 overflow-x-auto">
-              <table className="w-full text-left min-w-[600px]">
-                <thead>
-                  <tr className="border-b border-deep-black">
-                    <th className="pb-4 font-heading font-bold uppercase">Title</th>
-                    <th className="pb-4 font-heading font-bold uppercase">Date</th>
-                    <th className="pb-4 font-heading font-bold uppercase">Category</th>
-                    <th className="pb-4 font-heading font-bold uppercase">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {blogs.length > 0 ? blogs.map(post => (
-                    <tr key={post.id} className="group hover:bg-gray-50">
-                      <td className="py-4 font-medium">{post.title}</td>
-                      <td className="py-4 text-gray-600">
-                        {new Date(post.published_at).toLocaleDateString()}
-                      </td>
-                      <td className="py-4">
-                        <span className="bg-gray-100 text-xs font-bold px-2 py-1 uppercase tracking-wider">
-                          {post.category || 'Uncategorized'}
-                        </span>
-                      </td>
-                      <td className="py-4">
-                        <button onClick={() => openBlogModal(post)} className="text-sm font-bold uppercase tracking-wider text-gray-500 hover:text-deep-black mr-4">Edit</button>
-                        <button onClick={() => handleDelete('blog', post.id)} className="text-sm font-bold uppercase tracking-wider text-red-500 hover:text-red-700">Delete</button>
-                      </td>
-                    </tr>
-                  )) : (
-                    <tr>
-                      <td colSpan="4" className="py-8 text-center text-gray-500 italic">No blog posts found.</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+            )}
           </div>
-        );
-      case 'highlights':
-        return (
-          <div className="space-y-8">
-            <div className="flex justify-between items-center">
-              <h2 className="text-3xl font-heading font-bold uppercase">Manage Highlights</h2>
-              <button onClick={() => openHighlightModal()} className="bg-deep-black text-white px-6 py-3 text-sm font-bold uppercase tracking-wider hover:bg-gold hover:text-deep-black transition-colors">
-                Add New Highlight
-              </button>
-            </div>
-            <div className="bg-white border border-deep-black p-8 overflow-x-auto">
-              <table className="w-full text-left min-w-[600px]">
-                <thead>
-                  <tr className="border-b border-deep-black">
-                    <th className="pb-4 font-heading font-bold uppercase">Title</th>
-                    <th className="pb-4 font-heading font-bold uppercase">Badge</th>
-                    <th className="pb-4 font-heading font-bold uppercase">Order</th>
-                    <th className="pb-4 font-heading font-bold uppercase">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {highlights.length > 0 ? highlights.map(highlight => (
-                    <tr key={highlight.id} className="group hover:bg-gray-50">
-                      <td className="py-4 font-medium">{highlight.title}</td>
-                      <td className="py-4">
-                        <span className="bg-gold text-deep-black text-[10px] font-bold px-2 py-1 uppercase tracking-wider">
-                          {highlight.badge}
-                        </span>
-                      </td>
-                      <td className="py-4 font-medium">{highlight.display_order}</td>
-                      <td className="py-4">
-                        <button onClick={() => openHighlightModal(highlight)} className="text-sm font-bold uppercase tracking-wider text-gray-500 hover:text-deep-black mr-4">Edit</button>
-                        <button onClick={() => handleDelete('highlights', highlight.id)} className="text-sm font-bold uppercase tracking-wider text-red-500 hover:text-red-700">Delete</button>
-                      </td>
-                    </tr>
-                  )) : (
-                    <tr>
-                      <td colSpan="4" className="py-8 text-center text-gray-500 italic">No highlights found.</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        );
-      case 'events':
-        return (
-          <div className="space-y-8">
-            <div className="flex justify-between items-center">
-              <h2 className="text-3xl font-heading font-bold uppercase">Manage Events</h2>
-              <button onClick={() => openEventModal()} className="bg-deep-black text-white px-6 py-3 text-sm font-bold uppercase tracking-wider hover:bg-gold hover:text-deep-black transition-colors">
-                Add New Event
-              </button>
-            </div>
-            <div className="bg-white border border-deep-black p-8 overflow-x-auto">
-              <table className="w-full text-left min-w-[600px]">
-                <thead>
-                  <tr className="border-b border-deep-black">
-                    <th className="pb-4 font-heading font-bold uppercase">Event</th>
-                    <th className="pb-4 font-heading font-bold uppercase">Date</th>
-                    <th className="pb-4 font-heading font-bold uppercase">Status</th>
-                    <th className="pb-4 font-heading font-bold uppercase">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {events.length > 0 ? events.map(event => (
-                    <tr key={event.id} className="group hover:bg-gray-50">
-                      <td className="py-4 font-medium">
-                        {event.title}
-                        {event.is_featured && <span className="ml-2 bg-gold text-deep-black text-[10px] px-2 py-0.5 rounded-full font-bold uppercase">Next</span>}
-                      </td>
-                      <td className="py-4 text-gray-600">
-                        {new Date(event.start_date).toLocaleDateString()}
-                      </td>
-                      <td className="py-4">
-                        <span className={`text-[10px] font-bold uppercase px-2 py-1 rounded ${event.is_registration_open ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                          {event.is_registration_open ? 'Reg Open' : 'Reg Closed'}
-                        </span>
-                      </td>
-                      <td className="py-4">
-                        <button onClick={() => openEventModal(event)} className="text-sm font-bold uppercase tracking-wider text-gray-500 hover:text-deep-black mr-4">Edit</button>
-                        <button onClick={() => handleDelete('events', event.id)} className="text-sm font-bold uppercase tracking-wider text-red-500 hover:text-red-700">Delete</button>
-                      </td>
-                    </tr>
-                  )) : (
-                    <tr>
-                      <td colSpan="4" className="py-8 text-center text-gray-500 italic">No events found.</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        );
-      case 'vendors':
-        return (
-          <div className="space-y-8">
-            {renderVendors()}
-          </div>
-        );
-      case 'register':
-        return (
-          <div className="space-y-8">
-            <h2 className="text-3xl font-heading font-bold uppercase">Registrations</h2>
-            <div className="bg-white border border-deep-black p-8 overflow-x-auto">
-              <table className="w-full text-left min-w-[800px]">
-                <thead>
-                  <tr className="border-b border-deep-black">
-                    <th className="pb-4 font-heading font-bold uppercase">Business</th>
-                    <th className="pb-4 font-heading font-bold uppercase">Contact</th>
-                    <th className="pb-4 font-heading font-bold uppercase">Details</th>
-                    <th className="pb-4 font-heading font-bold uppercase">Payment</th>
-                    <th className="pb-4 font-heading font-bold uppercase">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {vendors.length > 0 ? vendors.map(vendor => (
-                    <tr key={vendor.id} className="group hover:bg-gray-50">
-                      <td className="py-4">
-                        <div className="font-bold">{vendor.business_name}</div>
-                        <div className="text-xs text-gray-500">{vendor.full_name}</div>
-                      </td>
-                      <td className="py-4 text-sm">
-                        <div>{vendor.email}</div>
-                        <div>{vendor.phone_number}</div>
-                      </td>
-                      <td className="py-4 text-sm">
-                        <div className="font-bold">{vendor.booth_type || 'N/A'}</div>
-                        <div className="text-xs text-gray-500">{vendor.selected_location || 'N/A'}</div>
-                        <div className="text-xs text-gray-400">{vendor.sector}</div>
-                      </td>
-                      <td className="py-4">
-                        <span className={`text-xs font-bold px-2 py-1 uppercase tracking-wider ${vendor.payment_status === 'paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                          }`}>
-                          {vendor.payment_status}
-                        </span>
-                        {vendor.amount_paid > 0 && (
-                          <div className="text-xs mt-1 font-mono">₦{Number(vendor.amount_paid).toLocaleString()}</div>
-                        )}
-                      </td>
-                      <td className="py-4 flex items-center gap-2">
-                        <button onClick={() => openVendorModal(vendor)} className="text-xs font-bold uppercase tracking-wider text-gray-700 hover:text-deep-black border border-gray-300 px-3 py-1.5 bg-white hover:bg-gray-100 transition-colors">
+        </div>
+
+        {/* Table */}
+        <div className="bg-white border border-deep-black overflow-x-auto shadow-sm">
+          <table className="w-full text-left min-w-[850px]">
+            <thead>
+              <tr className="border-b border-deep-black bg-gray-50 text-xs font-bold uppercase tracking-wider text-gray-600">
+                <th className="p-4">Business</th>
+                <th className="p-4">Contact</th>
+                <th className="p-4">Details</th>
+                <th className="p-4">Payment</th>
+                <th className="p-4">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200 text-sm">
+              {filteredRegistrations.length > 0 ? (
+                filteredRegistrations.map(vendor => (
+                  <tr key={vendor.id} className="group hover:bg-gray-50 transition-colors">
+                    <td className="p-4">
+                      <div className="font-bold text-deep-black">{vendor.business_name}</div>
+                      <div className="text-xs text-gray-500">{vendor.full_name}</div>
+                      <div className="text-xs text-gray-400 italic">{vendor.sector}</div>
+                    </td>
+                    <td className="p-4 text-sm">
+                      <div>{vendor.email}</div>
+                      <div className="text-xs text-gray-500">{vendor.phone_number}</div>
+                    </td>
+                    <td className="p-4 text-sm">
+                      <div className="font-bold text-deep-black">{vendor.booth_type || 'N/A'}</div>
+                      <div className="text-xs text-gray-500">{vendor.selected_location || 'N/A'}</div>
+                    </td>
+                    <td className="p-4">
+                      <span className={`text-xs font-bold px-2.5 py-1 rounded-full uppercase tracking-wider ${
+                        vendor.payment_status === 'paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {vendor.payment_status || 'Pending'}
+                      </span>
+                      {vendor.amount_paid > 0 && (
+                        <div className="text-xs mt-1 font-mono text-gray-600">₦{Number(vendor.amount_paid).toLocaleString()}</div>
+                      )}
+                    </td>
+                    <td className="p-4">
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => openVendorModal(vendor)}
+                          className="text-xs font-bold uppercase tracking-wider text-gray-700 hover:text-deep-black border border-gray-300 px-3 py-1.5 bg-white hover:bg-gray-100 transition-colors"
+                        >
                           Details
                         </button>
                         {vendor.payment_status !== 'paid' && (
@@ -744,88 +1138,652 @@ const AdminDashboard = () => {
                             {sendingEmailId === vendor.id ? 'Sending...' : 'Send Link'}
                           </button>
                         )}
-                      </td>
-                    </tr>
-                  )) : (
-                    <tr>
-                      <td colSpan="5" className="py-8 text-center text-gray-500 italic">No registrations found.</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-
-              {/* Pagination Controls */}
-              {vendorTotalPages > 1 && (
-                <div className="mt-8 pt-8 border-t border-deep-black flex items-center justify-between">
-                  <p className="text-xs font-bold uppercase tracking-widest">
-                    Page <span className="text-gold">{vendorPage}</span> / {vendorTotalPages}
-                  </p>
-                  <div className="flex gap-4">
-                    <button
-                      onClick={() => setVendorPage(prev => Math.max(1, prev - 1))}
-                      disabled={vendorPage === 1}
-                      className="px-6 py-2 border border-deep-black text-xs font-bold uppercase tracking-widest transition-all hover:bg-deep-black hover:text-white disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-deep-black"
-                    >
-                      Prev
-                    </button>
-                    <button
-                      onClick={() => setVendorPage(prev => Math.min(vendorTotalPages, prev + 1))}
-                      disabled={vendorPage === vendorTotalPages}
-                      className="px-6 py-2 border border-deep-black text-xs font-bold uppercase tracking-widest transition-all hover:bg-deep-black hover:text-white disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-deep-black"
-                    >
-                      Next
-                    </button>
-                  </div>
-                </div>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="5" className="p-12 text-center text-gray-500 italic">
+                    <p className="text-base font-medium">No registrations match your search and filter criteria.</p>
+                    {isRegFilterActive && (
+                      <button onClick={resetRegFilters} className="mt-2 text-xs font-bold uppercase text-gold hover:underline">
+                        Reset Filters
+                      </button>
+                    )}
+                  </td>
+                </tr>
               )}
+            </tbody>
+          </table>
+
+          {/* Pagination Controls */}
+          {vendorTotalPages > 1 && (
+            <div className="p-4 border-t border-deep-black flex items-center justify-between bg-gray-50">
+              <p className="text-xs font-bold uppercase tracking-widest">
+                Page <span className="text-gold">{vendorPage}</span> / {vendorTotalPages}
+              </p>
+              <div className="flex gap-4">
+                <button
+                  onClick={() => setVendorPage(prev => Math.max(1, prev - 1))}
+                  disabled={vendorPage === 1}
+                  className="px-4 py-1.5 border border-deep-black text-xs font-bold uppercase tracking-widest transition-all hover:bg-deep-black hover:text-white disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-deep-black"
+                >
+                  Prev
+                </button>
+                <button
+                  onClick={() => setVendorPage(prev => Math.min(vendorTotalPages, prev + 1))}
+                  disabled={vendorPage === vendorTotalPages}
+                  className="px-4 py-1.5 border border-deep-black text-xs font-bold uppercase tracking-widest transition-all hover:bg-deep-black hover:text-white disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-deep-black"
+                >
+                  Next
+                </button>
+              </div>
             </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  // ==========================================
+  // RENDER: EVENTS TAB
+  // ==========================================
+  const renderEvents = () => (
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h2 className="text-3xl font-heading font-bold uppercase">Manage Events</h2>
+          <p className="text-xs text-gray-500 mt-1">Schedule fairs, set the active countdown event, and manage registrations.</p>
+        </div>
+        <button
+          onClick={() => openEventModal()}
+          className="bg-deep-black text-white px-6 py-3 text-sm font-bold uppercase tracking-wider hover:bg-gold hover:text-deep-black transition-colors flex items-center gap-2 shadow-sm"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+          Add New Event
+        </button>
+      </div>
+
+      {/* Filter Toolbar */}
+      <div className="bg-white border border-deep-black p-4 space-y-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Search events, locations..."
+              value={eventSearch}
+              onChange={(e) => setEventSearch(e.target.value)}
+              className="w-full pl-9 pr-3 py-2 border border-gray-300 text-xs focus:outline-none focus:border-gold"
+            />
+            <svg className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
           </div>
-        );
-      case 'messages':
+
+          <div>
+            <select
+              value={eventStatusFilter}
+              onChange={(e) => setEventStatusFilter(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 bg-white text-xs focus:outline-none focus:border-gold"
+            >
+              <option value="all">All Dates / Status</option>
+              <option value="upcoming">Upcoming Events</option>
+              <option value="past">Past Events</option>
+              <option value="featured">Featured Next Event</option>
+            </select>
+          </div>
+
+          <div>
+            <select
+              value={eventRegFilter}
+              onChange={(e) => setEventRegFilter(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 bg-white text-xs focus:outline-none focus:border-gold"
+            >
+              <option value="all">All Registration Status</option>
+              <option value="open">Registration Open</option>
+              <option value="closed">Registration Closed</option>
+            </select>
+          </div>
+
+          <div>
+            <select
+              value={eventSort}
+              onChange={(e) => setEventSort(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 bg-white text-xs focus:outline-none focus:border-gold"
+            >
+              <option value="date_desc">Start Date (Latest First)</option>
+              <option value="date_asc">Start Date (Earliest First)</option>
+              <option value="title_asc">Title (A-Z)</option>
+            </select>
+          </div>
+        </div>
+
+        {isEventFilterActive && (
+          <div className="flex justify-between items-center pt-2 border-t border-gray-100 text-xs text-gray-500">
+            <span>Showing <strong>{filteredEvents.length}</strong> of <strong>{events.length}</strong> events</span>
+            <button onClick={resetEventFilters} className="text-red-600 font-bold uppercase text-[10px] hover:underline">
+              Clear Filters
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Events Table */}
+      <div className="bg-white border border-deep-black p-6 overflow-x-auto shadow-sm">
+        <table className="w-full text-left min-w-[650px]">
+          <thead>
+            <tr className="border-b border-deep-black text-xs uppercase tracking-wider font-bold text-gray-600">
+              <th className="pb-4">Event</th>
+              <th className="pb-4">Location</th>
+              <th className="pb-4">Date</th>
+              <th className="pb-4">Status</th>
+              <th className="pb-4">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200 text-sm">
+            {filteredEvents.length > 0 ? (
+              filteredEvents.map(event => (
+                <tr key={event.id} className="group hover:bg-gray-50">
+                  <td className="py-4 font-medium">
+                    <div className="font-bold text-deep-black">{event.title}</div>
+                    {event.is_featured && (
+                      <span className="mt-1 inline-block bg-gold text-deep-black text-[10px] px-2 py-0.5 rounded-full font-bold uppercase">
+                        Next Event Countdown
+                      </span>
+                    )}
+                  </td>
+                  <td className="py-4 text-gray-600 text-xs">{event.location}</td>
+                  <td className="py-4 text-gray-600 text-xs">
+                    {event.start_date ? new Date(event.start_date).toLocaleDateString() : 'TBD'}
+                  </td>
+                  <td className="py-4">
+                    <span className={`text-[10px] font-bold uppercase px-2.5 py-1 rounded-full ${
+                      event.is_registration_open ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                    }`}>
+                      {event.is_registration_open ? 'Reg Open' : 'Reg Closed'}
+                    </span>
+                  </td>
+                  <td className="py-4">
+                    <button onClick={() => openEventModal(event)} className="text-xs font-bold uppercase tracking-wider text-gray-600 hover:text-deep-black mr-4">Edit</button>
+                    <button onClick={() => handleDelete('events', event.id)} className="text-xs font-bold uppercase tracking-wider text-red-500 hover:text-red-700">Delete</button>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="5" className="py-12 text-center text-gray-500 italic">
+                  No events match the current filter.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+
+  // ==========================================
+  // RENDER: BLOG POSTS TAB
+  // ==========================================
+  const renderBlogs = () => (
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h2 className="text-3xl font-heading font-bold uppercase">Manage Blog Posts</h2>
+          <p className="text-xs text-gray-500 mt-1">Publish editorial articles, exhibitor features, and announcements.</p>
+        </div>
+        <button
+          onClick={() => openBlogModal()}
+          className="bg-deep-black text-white px-6 py-3 text-sm font-bold uppercase tracking-wider hover:bg-gold hover:text-deep-black transition-colors flex items-center gap-2 shadow-sm"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+          Add New Post
+        </button>
+      </div>
+
+      {/* Filter Toolbar */}
+      <div className="bg-white border border-deep-black p-4 space-y-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Search post titles, content..."
+              value={blogSearch}
+              onChange={(e) => setBlogSearch(e.target.value)}
+              className="w-full pl-9 pr-3 py-2 border border-gray-300 text-xs focus:outline-none focus:border-gold"
+            />
+            <svg className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+          </div>
+
+          <div>
+            <select
+              value={blogCategoryFilter}
+              onChange={(e) => setBlogCategoryFilter(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 bg-white text-xs focus:outline-none focus:border-gold"
+            >
+              <option value="all">All Categories</option>
+              {uniqueBlogCategories.map(cat => (
+                <option key={cat} value={cat}>{cat}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <select
+              value={blogStatusFilter}
+              onChange={(e) => setBlogStatusFilter(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 bg-white text-xs focus:outline-none focus:border-gold"
+            >
+              <option value="all">All Statuses</option>
+              <option value="published">Published</option>
+              <option value="draft">Drafts</option>
+            </select>
+          </div>
+
+          <div>
+            <select
+              value={blogSort}
+              onChange={(e) => setBlogSort(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 bg-white text-xs focus:outline-none focus:border-gold"
+            >
+              <option value="newest">Newest First</option>
+              <option value="oldest">Oldest First</option>
+              <option value="title_asc">Title (A-Z)</option>
+            </select>
+          </div>
+        </div>
+
+        {isBlogFilterActive && (
+          <div className="flex justify-between items-center pt-2 border-t border-gray-100 text-xs text-gray-500">
+            <span>Showing <strong>{filteredBlogs.length}</strong> of <strong>{blogs.length}</strong> posts</span>
+            <button onClick={resetBlogFilters} className="text-red-600 font-bold uppercase text-[10px] hover:underline">
+              Clear Filters
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Blog Table */}
+      <div className="bg-white border border-deep-black p-6 overflow-x-auto shadow-sm">
+        <table className="w-full text-left min-w-[650px]">
+          <thead>
+            <tr className="border-b border-deep-black text-xs uppercase tracking-wider font-bold text-gray-600">
+              <th className="pb-4">Title</th>
+              <th className="pb-4">Date</th>
+              <th className="pb-4">Category</th>
+              <th className="pb-4">Status</th>
+              <th className="pb-4">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200 text-sm">
+            {filteredBlogs.length > 0 ? (
+              filteredBlogs.map(post => (
+                <tr key={post.id} className="group hover:bg-gray-50">
+                  <td className="py-4 font-medium">
+                    <div className="font-bold text-deep-black">{post.title}</div>
+                    <div className="text-xs text-gray-400 font-mono">/{post.slug}</div>
+                  </td>
+                  <td className="py-4 text-gray-600 text-xs">
+                    {post.published_at ? new Date(post.published_at).toLocaleDateString() : 'Draft'}
+                  </td>
+                  <td className="py-4">
+                    <span className="bg-gray-100 text-[10px] font-bold px-2 py-1 uppercase tracking-wider">
+                      {post.category || 'General'}
+                    </span>
+                  </td>
+                  <td className="py-4">
+                    <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded ${
+                      post.is_published ? 'bg-green-100 text-green-800' : 'bg-gray-200 text-gray-700'
+                    }`}>
+                      {post.is_published ? 'Published' : 'Draft'}
+                    </span>
+                  </td>
+                  <td className="py-4">
+                    <button onClick={() => openBlogModal(post)} className="text-xs font-bold uppercase tracking-wider text-gray-500 hover:text-deep-black mr-4">Edit</button>
+                    <button onClick={() => handleDelete('blog', post.id)} className="text-xs font-bold uppercase tracking-wider text-red-500 hover:text-red-700">Delete</button>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="5" className="py-12 text-center text-gray-500 italic">
+                  No blog posts match your filter.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+
+  // ==========================================
+  // RENDER: HIGHLIGHTS TAB
+  // ==========================================
+  const renderHighlights = () => (
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h2 className="text-3xl font-heading font-bold uppercase">Manage Highlights</h2>
+          <p className="text-xs text-gray-500 mt-1">Curate gallery highlights, exhibition features, and badge overlays.</p>
+        </div>
+        <button
+          onClick={() => openHighlightModal()}
+          className="bg-deep-black text-white px-6 py-3 text-sm font-bold uppercase tracking-wider hover:bg-gold hover:text-deep-black transition-colors flex items-center gap-2 shadow-sm"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+          Add New Highlight
+        </button>
+      </div>
+
+      {/* Filter Toolbar */}
+      <div className="bg-white border border-deep-black p-4 space-y-3">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Search highlights, badges..."
+              value={highlightSearch}
+              onChange={(e) => setHighlightSearch(e.target.value)}
+              className="w-full pl-9 pr-3 py-2 border border-gray-300 text-xs focus:outline-none focus:border-gold"
+            />
+            <svg className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+          </div>
+
+          <div>
+            <select
+              value={highlightBadgeFilter}
+              onChange={(e) => setHighlightBadgeFilter(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 bg-white text-xs focus:outline-none focus:border-gold"
+            >
+              <option value="all">All Badges</option>
+              {uniqueHighlightBadges.map(b => (
+                <option key={b} value={b}>{b}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <select
+              value={highlightSort}
+              onChange={(e) => setHighlightSort(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 bg-white text-xs focus:outline-none focus:border-gold"
+            >
+              <option value="order_asc">Display Order (1 to 10)</option>
+              <option value="order_desc">Display Order (Highest First)</option>
+              <option value="title_asc">Title (A-Z)</option>
+            </select>
+          </div>
+        </div>
+
+        {isHighlightFilterActive && (
+          <div className="flex justify-between items-center pt-2 border-t border-gray-100 text-xs text-gray-500">
+            <span>Showing <strong>{filteredHighlights.length}</strong> of <strong>{highlights.length}</strong> highlights</span>
+            <button onClick={resetHighlightFilters} className="text-red-600 font-bold uppercase text-[10px] hover:underline">
+              Clear Filters
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Highlights Table */}
+      <div className="bg-white border border-deep-black p-6 overflow-x-auto shadow-sm">
+        <table className="w-full text-left min-w-[600px]">
+          <thead>
+            <tr className="border-b border-deep-black text-xs uppercase tracking-wider font-bold text-gray-600">
+              <th className="pb-4">Title</th>
+              <th className="pb-4">Badge</th>
+              <th className="pb-4">Order</th>
+              <th className="pb-4">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200 text-sm">
+            {filteredHighlights.length > 0 ? (
+              filteredHighlights.map(highlight => (
+                <tr key={highlight.id} className="group hover:bg-gray-50">
+                  <td className="py-4 font-medium">
+                    <div className="font-bold text-deep-black">{highlight.title}</div>
+                    <div className="text-xs text-gray-500 line-clamp-1">{highlight.description}</div>
+                  </td>
+                  <td className="py-4">
+                    {highlight.badge ? (
+                      <span className="bg-gold text-deep-black text-[10px] font-bold px-2 py-1 uppercase tracking-wider">
+                        {highlight.badge}
+                      </span>
+                    ) : (
+                      <span className="text-xs text-gray-400">-</span>
+                    )}
+                  </td>
+                  <td className="py-4 font-mono font-medium">{highlight.display_order}</td>
+                  <td className="py-4">
+                    <button onClick={() => openHighlightModal(highlight)} className="text-xs font-bold uppercase tracking-wider text-gray-500 hover:text-deep-black mr-4">Edit</button>
+                    <button onClick={() => handleDelete('highlights', highlight.id)} className="text-xs font-bold uppercase tracking-wider text-red-500 hover:text-red-700">Delete</button>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="4" className="py-12 text-center text-gray-500 italic">
+                  No highlights found matching filters.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+
+  // ==========================================
+  // RENDER: MESSAGES / CONTACT TAB
+  // ==========================================
+  const renderMessages = () => (
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h2 className="text-3xl font-heading font-bold uppercase">Messages & Inquiries</h2>
+          <p className="text-xs text-gray-500 mt-1">Review contact form submissions and partnership requests.</p>
+        </div>
+      </div>
+
+      {/* Filter Toolbar */}
+      <div className="bg-white border border-deep-black p-4 space-y-3">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Search sender name, email, message..."
+              value={messageSearch}
+              onChange={(e) => setMessageSearch(e.target.value)}
+              className="w-full pl-9 pr-3 py-2 border border-gray-300 text-xs focus:outline-none focus:border-gold"
+            />
+            <svg className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+          </div>
+
+          <div>
+            <select
+              value={messageTypeFilter}
+              onChange={(e) => setMessageTypeFilter(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 bg-white text-xs focus:outline-none focus:border-gold"
+            >
+              <option value="all">All Inquiry Types</option>
+              {uniqueMessageTypes.map(t => (
+                <option key={t} value={t}>{t}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <select
+              value={messageSort}
+              onChange={(e) => setMessageSort(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 bg-white text-xs focus:outline-none focus:border-gold"
+            >
+              <option value="newest">Newest First</option>
+              <option value="oldest">Oldest First</option>
+            </select>
+          </div>
+        </div>
+
+        {isMessageFilterActive && (
+          <div className="flex justify-between items-center pt-2 border-t border-gray-100 text-xs text-gray-500">
+            <span>Showing <strong>{filteredMessages.length}</strong> of <strong>{messages.length}</strong> inquiries</span>
+            <button onClick={resetMessageFilters} className="text-red-600 font-bold uppercase text-[10px] hover:underline">
+              Clear Filters
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Messages Table */}
+      <div className="bg-white border border-deep-black p-6 overflow-x-auto shadow-sm">
+        <table className="w-full text-left min-w-[700px]">
+          <thead>
+            <tr className="border-b border-deep-black text-xs uppercase tracking-wider font-bold text-gray-600">
+              <th className="pb-4">Date</th>
+              <th className="pb-4">Sender</th>
+              <th className="pb-4">Email</th>
+              <th className="pb-4">Inquiry Type</th>
+              <th className="pb-4">Message</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200 text-sm">
+            {filteredMessages.length > 0 ? (
+              filteredMessages.map(msg => (
+                <tr key={msg.id} className="group hover:bg-gray-50">
+                  <td className="py-4 text-gray-600 text-xs whitespace-nowrap">
+                    {msg.created_at ? new Date(msg.created_at).toLocaleDateString() : 'N/A'}
+                  </td>
+                  <td className="py-4 font-bold text-deep-black">{msg.name}</td>
+                  <td className="py-4 text-sm text-gray-700">{msg.email}</td>
+                  <td className="py-4">
+                    <span className="bg-gray-100 text-[10px] font-bold px-2 py-1 uppercase tracking-wider">
+                      {msg.inquiry_type || 'General'}
+                    </span>
+                  </td>
+                  <td className="py-4 text-xs text-gray-600 max-w-sm">
+                    <p className="line-clamp-2">{msg.message}</p>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="5" className="py-12 text-center text-gray-500 italic">
+                  No messages found matching criteria.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+
+  // ==========================================
+  // TAB ROUTER
+  // ==========================================
+  const renderContent = () => {
+    if (loading) {
+      return (
+        <div className="flex flex-col justify-center items-center h-64 space-y-4">
+          <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-deep-black"></div>
+          <p className="text-sm font-bold uppercase tracking-wider text-gray-500">Loading dashboard data...</p>
+        </div>
+      );
+    }
+
+    switch (activeTab) {
+      case 'dashboard':
         return (
           <div className="space-y-8">
-            <h2 className="text-3xl font-heading font-bold uppercase">Messages</h2>
-            <div className="bg-white border border-deep-black p-8 overflow-x-auto">
-              <table className="w-full text-left min-w-[600px]">
-                <thead>
-                  <tr className="border-b border-deep-black">
-                    <th className="pb-4 font-heading font-bold uppercase">Date</th>
-                    <th className="pb-4 font-heading font-bold uppercase">Name</th>
-                    <th className="pb-4 font-heading font-bold uppercase">Email</th>
-                    <th className="pb-4 font-heading font-bold uppercase">Type</th>
-                    <th className="pb-4 font-heading font-bold uppercase">Message</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {messages.length > 0 ? messages.map(msg => (
-                    <tr key={msg.id} className="group hover:bg-gray-50">
-                      <td className="py-4 text-gray-600 text-sm">{new Date(msg.created_at).toLocaleDateString()}</td>
-                      <td className="py-4 font-medium">{msg.name}</td>
-                      <td className="py-4 text-sm">{msg.email}</td>
-                      <td className="py-4">
-                        <span className="bg-gray-100 text-xs font-bold px-2 py-1 uppercase tracking-wider">
-                          {msg.inquiry_type}
-                        </span>
-                      </td>
-                      <td className="py-4 text-sm text-gray-600 max-w-xs truncate">{msg.message}</td>
-                    </tr>
-                  )) : (
-                    <tr>
-                      <td colSpan="5" className="py-8 text-center text-gray-500 italic">No messages found.</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+            <h2 className="text-3xl font-heading font-bold uppercase">Dashboard Overview</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div
+                onClick={() => setActiveTab('vendors')}
+                className="bg-white border border-deep-black p-6 hover:border-gold hover:shadow-md transition-all cursor-pointer group"
+              >
+                <div className="flex justify-between items-start">
+                  <h3 className="text-xs font-heading font-bold uppercase text-gray-500 tracking-wider">Total Vendors</h3>
+                  <span className="text-xs text-gold font-bold group-hover:translate-x-1 transition-transform">→</span>
+                </div>
+                <p className="text-4xl font-bold mt-3 text-deep-black">{stats.vendors}</p>
+                <p className="text-[10px] text-gray-400 uppercase tracking-wider mt-2">Click to view & filter</p>
+              </div>
+
+              <div
+                onClick={() => setActiveTab('blog')}
+                className="bg-white border border-deep-black p-6 hover:border-gold hover:shadow-md transition-all cursor-pointer group"
+              >
+                <div className="flex justify-between items-start">
+                  <h3 className="text-xs font-heading font-bold uppercase text-gray-500 tracking-wider">Blog Posts</h3>
+                  <span className="text-xs text-gold font-bold group-hover:translate-x-1 transition-transform">→</span>
+                </div>
+                <p className="text-4xl font-bold mt-3 text-deep-black">{stats.blogs}</p>
+                <p className="text-[10px] text-gray-400 uppercase tracking-wider mt-2">Manage articles</p>
+              </div>
+
+              <div
+                onClick={() => setActiveTab('events')}
+                className="bg-white border border-deep-black p-6 hover:border-gold hover:shadow-md transition-all cursor-pointer group"
+              >
+                <div className="flex justify-between items-start">
+                  <h3 className="text-xs font-heading font-bold uppercase text-gray-500 tracking-wider">Events Scheduled</h3>
+                  <span className="text-xs text-gold font-bold group-hover:translate-x-1 transition-transform">→</span>
+                </div>
+                <p className="text-4xl font-bold mt-3 text-deep-black">{stats.events}</p>
+                <p className="text-[10px] text-gray-400 uppercase tracking-wider mt-2">View timeline</p>
+              </div>
+
+              <div
+                onClick={() => setActiveTab('messages')}
+                className="bg-white border border-deep-black p-6 hover:border-gold hover:shadow-md transition-all cursor-pointer group"
+              >
+                <div className="flex justify-between items-start">
+                  <h3 className="text-xs font-heading font-bold uppercase text-gray-500 tracking-wider">Inquiries</h3>
+                  <span className="text-xs text-gold font-bold group-hover:translate-x-1 transition-transform">→</span>
+                </div>
+                <p className="text-4xl font-bold mt-3 text-deep-black">{stats.messages}</p>
+                <p className="text-[10px] text-gray-400 uppercase tracking-wider mt-2">Read messages</p>
+              </div>
+            </div>
+
+            {/* Quick Vendors Table in Overview */}
+            <div className="mt-8">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-xl font-heading font-bold uppercase text-deep-black">Recent Vendor Applications</h3>
+                <button
+                  onClick={() => setActiveTab('vendors')}
+                  className="text-xs font-bold uppercase tracking-wider text-gold hover:text-deep-black"
+                >
+                  View All With Filters →
+                </button>
+              </div>
+              {renderVendors()}
             </div>
           </div>
         );
+
+      case 'vendors':
+        return renderVendors();
+
+      case 'register':
+        return renderRegistrations();
+
+      case 'events':
+        return renderEvents();
+
+      case 'blog':
+        return renderBlogs();
+
+      case 'highlights':
+        return renderHighlights();
+
+      case 'messages':
+        return renderMessages();
+
       default:
         return (
           <div className="bg-white border border-deep-black p-8 text-center max-w-2xl mx-auto">
-            <h2 className="text-3xl font-heading font-bold uppercase mb-6">Coming Soon</h2>
-            <p className="text-gray-600 mb-8">
-              We are working on this feature. Please check back later.
-            </p>
+            <h2 className="text-3xl font-heading font-bold uppercase mb-6">Overview</h2>
             <button onClick={() => setActiveTab('dashboard')} className="text-sm font-bold uppercase tracking-wider text-gold hover:text-deep-black">
               Back to Dashboard
             </button>
@@ -839,9 +1797,14 @@ const AdminDashboard = () => {
       {/* Title Banner */}
       <div className="w-full px-2 md:px-8 py-3 md:py-6 border-b border-deep-black bg-deep-black text-white">
         <div className="relative w-full max-w-[1920px] mx-auto flex justify-between items-center">
-          <h1 className="text-2xl md:text-3xl font-heading font-bold tracking-tighter uppercase">
-            Admin Dashboard
-          </h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-xl md:text-3xl font-heading font-bold tracking-tighter uppercase">
+              Admin Dashboard
+            </h1>
+            <span className="hidden sm:inline-block bg-gold text-deep-black text-[10px] font-bold px-2 py-0.5 uppercase tracking-wider">
+              Control Panel
+            </span>
+          </div>
           <button
             onClick={handleLogout}
             className="text-xs font-bold uppercase tracking-widest border border-white px-4 py-2 hover:bg-white hover:text-deep-black transition-colors"
@@ -855,55 +1818,55 @@ const AdminDashboard = () => {
 
       <div className="flex flex-col md:flex-row flex-grow min-h-[600px]">
         {/* Sidebar */}
-        <div className="w-full md:w-64 bg-white border-b md:border-b-0 md:border-r border-deep-black">
-          <div className="flex flex-col">
+        <div className="w-full md:w-64 bg-white border-b md:border-b-0 md:border-r border-deep-black flex-shrink-0">
+          <div className="flex flex-row md:flex-col overflow-x-auto md:overflow-visible">
             <button
               onClick={() => setActiveTab('dashboard')}
-              className={`text-left px-8 py-6 text-sm font-bold uppercase tracking-wider border-b border-gray-100 hover:bg-gray-50 transition-colors ${activeTab === 'dashboard' ? 'bg-deep-black text-white hover:bg-deep-black' : ''}`}
+              className={`text-left px-6 py-4 md:py-6 text-xs md:text-sm font-bold uppercase tracking-wider border-b border-r md:border-r-0 border-gray-100 hover:bg-gray-50 transition-colors whitespace-nowrap ${activeTab === 'dashboard' ? 'bg-deep-black text-white hover:bg-deep-black' : ''}`}
             >
-              Home
-            </button>
-            <button
-              onClick={() => setActiveTab('events')}
-              className={`text-left px-8 py-6 text-sm font-bold uppercase tracking-wider border-b border-gray-100 hover:bg-gray-50 transition-colors ${activeTab === 'events' ? 'bg-deep-black text-white hover:bg-deep-black' : ''}`}
-            >
-              Event Info
+              Dashboard
             </button>
             <button
               onClick={() => setActiveTab('vendors')}
-              className={`text-left px-8 py-6 text-sm font-bold uppercase tracking-wider border-b border-gray-100 hover:bg-gray-50 transition-colors ${activeTab === 'vendors' ? 'bg-deep-black text-white hover:bg-deep-black' : ''}`}
+              className={`text-left px-6 py-4 md:py-6 text-xs md:text-sm font-bold uppercase tracking-wider border-b border-r md:border-r-0 border-gray-100 hover:bg-gray-50 transition-colors whitespace-nowrap ${activeTab === 'vendors' ? 'bg-deep-black text-white hover:bg-deep-black' : ''}`}
             >
-              Vendors
-            </button>
-            <button
-              onClick={() => setActiveTab('blog')}
-              className={`text-left px-8 py-6 text-sm font-bold uppercase tracking-wider border-b border-gray-100 hover:bg-gray-50 transition-colors ${activeTab === 'blog' ? 'bg-deep-black text-white hover:bg-deep-black' : ''}`}
-            >
-              Blog
+              Vendors ({vendors.length})
             </button>
             <button
               onClick={() => setActiveTab('register')}
-              className={`text-left px-8 py-6 text-sm font-bold uppercase tracking-wider border-b border-gray-100 hover:bg-gray-50 transition-colors ${activeTab === 'register' ? 'bg-deep-black text-white hover:bg-deep-black' : ''}`}
+              className={`text-left px-6 py-4 md:py-6 text-xs md:text-sm font-bold uppercase tracking-wider border-b border-r md:border-r-0 border-gray-100 hover:bg-gray-50 transition-colors whitespace-nowrap ${activeTab === 'register' ? 'bg-deep-black text-white hover:bg-deep-black' : ''}`}
             >
-              Register
+              Registrations
             </button>
             <button
-              onClick={() => setActiveTab('messages')}
-              className={`text-left px-8 py-6 text-sm font-bold uppercase tracking-wider border-b border-gray-100 hover:bg-gray-50 transition-colors ${activeTab === 'messages' ? 'bg-deep-black text-white hover:bg-deep-black' : ''}`}
+              onClick={() => setActiveTab('events')}
+              className={`text-left px-6 py-4 md:py-6 text-xs md:text-sm font-bold uppercase tracking-wider border-b border-r md:border-r-0 border-gray-100 hover:bg-gray-50 transition-colors whitespace-nowrap ${activeTab === 'events' ? 'bg-deep-black text-white hover:bg-deep-black' : ''}`}
             >
-              Contact
+              Events ({events.length})
+            </button>
+            <button
+              onClick={() => setActiveTab('blog')}
+              className={`text-left px-6 py-4 md:py-6 text-xs md:text-sm font-bold uppercase tracking-wider border-b border-r md:border-r-0 border-gray-100 hover:bg-gray-50 transition-colors whitespace-nowrap ${activeTab === 'blog' ? 'bg-deep-black text-white hover:bg-deep-black' : ''}`}
+            >
+              Blog ({blogs.length})
             </button>
             <button
               onClick={() => setActiveTab('highlights')}
-              className={`text-left px-8 py-6 text-sm font-bold uppercase tracking-wider border-b border-gray-100 hover:bg-gray-50 transition-colors ${activeTab === 'highlights' ? 'bg-deep-black text-white hover:bg-deep-black' : ''}`}
+              className={`text-left px-6 py-4 md:py-6 text-xs md:text-sm font-bold uppercase tracking-wider border-b border-r md:border-r-0 border-gray-100 hover:bg-gray-50 transition-colors whitespace-nowrap ${activeTab === 'highlights' ? 'bg-deep-black text-white hover:bg-deep-black' : ''}`}
             >
-              Highlights
+              Highlights ({highlights.length})
+            </button>
+            <button
+              onClick={() => setActiveTab('messages')}
+              className={`text-left px-6 py-4 md:py-6 text-xs md:text-sm font-bold uppercase tracking-wider border-b border-gray-100 hover:bg-gray-50 transition-colors whitespace-nowrap ${activeTab === 'messages' ? 'bg-deep-black text-white hover:bg-deep-black' : ''}`}
+            >
+              Contact ({messages.length})
             </button>
           </div>
         </div>
 
         {/* Content Area */}
-        <div className="flex-grow p-8 md:p-12 bg-cream">
+        <div className="flex-grow p-6 md:p-10 bg-cream max-w-full overflow-x-hidden">
           {renderContent()}
         </div>
       </div>
