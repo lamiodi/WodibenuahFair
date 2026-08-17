@@ -10,11 +10,12 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
-    "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest"
+    "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --runInBand"
   },
   "jest": {
     "transform": {},
-    "testEnvironment": "node"
+    "testEnvironment": "node",
+    "testTimeout": 20000
   },
   "keywords": [],
   "author": "",

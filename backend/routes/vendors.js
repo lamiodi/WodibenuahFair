@@ -187,7 +187,7 @@ router.post('/verify-payment', validate([
         });
       } catch (err) {
         console.error('Error processing payment via service:', err);
-        res.status(500).json({ status: 'error', message: 'Error processing payment record' });
+        res.status(400).json({ status: 'error', message: err.message || 'Error processing payment record' });
       }
     } else {
       res.status(400).json({ status: 'error', message: 'Payment verification failed' });
@@ -257,9 +257,60 @@ router.post('/:id/send-payment-link', authenticateToken, async (req, res, next) 
       return res.status(500).json({ error: 'Failed to send email. Please check server email settings.' });
     }
 
-    res.json({ message: 'Payment link email sent successfully', email: vendor.email });
+    // Record the timestamp and count of link dispatch & mark approved
+    await pool.query(
+      `UPDATE vendors 
+       SET payment_link_sent_at = NOW(), 
+           payment_link_sent_count = COALESCE(payment_link_sent_count, 0) + 1, 
+           is_approved = TRUE,
+           approval_status = 'approved',
+           updated_at = NOW() 
+       WHERE id = $1`,
+      [vendor.id]
+    );
+
+    res.json({
+      message: 'Payment link email sent successfully',
+      email: vendor.email,
+      payment_link_sent_at: new Date().toISOString(),
+      is_approved: true,
+      approval_status: 'approved'
+    });
   } catch (error) {
     console.error('Error sending payment link email:', error);
+    next(error);
+  }
+});
+
+// Protected: Update Vendor Approval Status (Approve / Reject / Reset)
+router.patch('/:id/status', authenticateToken, validate([
+  body('approvalStatus').isIn(['approved', 'rejected', 'pending'])
+]), async (req, res, next) => {
+  const { id } = req.params;
+  const { approvalStatus } = req.body;
+  const isApproved = approvalStatus === 'approved';
+
+  try {
+    const result = await pool.query(
+      `UPDATE vendors 
+       SET approval_status = $1,
+           is_approved = $2,
+           updated_at = NOW()
+       WHERE id = $3
+       RETURNING *`,
+      [approvalStatus, isApproved, id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Vendor not found' });
+    }
+
+    res.json({
+      message: `Vendor status updated to ${approvalStatus}`,
+      vendor: result.rows[0]
+    });
+  } catch (error) {
+    console.error('Error updating vendor approval status:', error);
     next(error);
   }
 });

@@ -19,7 +19,7 @@ export const generateInvoice = (vendor, paymentDetails) => {
       .text('Wodibenuah Fair 2026', 110, 57)
       .fontSize(10)
       .text('Wodibenuah Fair Ltd.', 200, 65, { align: 'right' })
-      .text('Abuja, Nigeria', 200, 80, { align: 'right' })
+      .text('Lagos, Nigeria', 200, 80, { align: 'right' })
       .moveDown();
 
     // Invoice Title

@@ -56,20 +56,25 @@ export const processSuccessfulPayment = async (reference, amountPaid, vendorIdOr
     // Validate Payment Amount
     // Determine price based on location
     const location = vendor.selected_location || 'Default';
-    const priceConfig = BOOTH_PRICES[location] || BOOTH_PRICES['Default'];
+    const priceConfig = BOOTH_PRICES[location] || BOOTH_PRICES['Default'] || {};
+    const defaultPrices = BOOTH_PRICES['Default'] || {};
 
-    if (!priceConfig) {
-      console.error(`Pricing configuration not found for location: ${location}`);
-      // Proceed with caution or throw error?
-      // If we can't determine price, we can't validate amount.
-      // But if we throw, we block payment processing.
-      // Let's log error and assume 0 (which bypasses the check below if expectedAmount is 0/falsy)
+    let expectedAmount = Number(priceConfig[vendor.booth_type]) || Number(defaultPrices[vendor.booth_type]);
+
+    // Fallback: check case-insensitive match or default to 190,000 (minimum standard slot)
+    if (!expectedAmount) {
+      const matchKey = Object.keys(priceConfig).find(k => k.toLowerCase() === String(vendor.booth_type).toLowerCase()) ||
+                       Object.keys(defaultPrices).find(k => k.toLowerCase() === String(vendor.booth_type).toLowerCase());
+      if (matchKey) {
+        expectedAmount = Number(priceConfig[matchKey] || defaultPrices[matchKey]);
+      } else {
+        expectedAmount = 190000;
+      }
     }
 
-    const expectedAmount = priceConfig ? Number(priceConfig[vendor.booth_type]) : 0;
     const paidAmount = Number(amountPaid);
 
-    if (expectedAmount && paidAmount < expectedAmount) {
+    if (paidAmount < expectedAmount) {
       console.warn(`Insufficient payment attempt for ${vendor.email}. Expected: ${expectedAmount}, Paid: ${paidAmount}`);
       await client.query('ROLLBACK');
       throw new Error(`Insufficient payment. Expected ₦${expectedAmount.toLocaleString()}, but received ₦${paidAmount.toLocaleString()}.`);
@@ -79,6 +84,8 @@ export const processSuccessfulPayment = async (reference, amountPaid, vendorIdOr
     const updateQuery = `
       UPDATE vendors
       SET payment_status = 'paid',
+          is_approved = TRUE,
+          approval_status = 'approved',
           payment_reference = $1,
           amount_paid = $2,
           updated_at = NOW()

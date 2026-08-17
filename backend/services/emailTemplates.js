@@ -56,7 +56,7 @@ const emailTemplate = (title, content, actionLink = null, actionText = null) => 
             <a href="${CLIENT_URL}" style="${styles.link}">Website</a> | 
             <a href="${CLIENT_URL}/contact" style="${styles.link}">Contact Support</a>
           </p>
-          <p style="margin-top: 10px;">Abuja, Nigeria</p>
+          <p style="margin-top: 10px;">Lagos, Nigeria</p>
         </div>
       </div>
     </body>

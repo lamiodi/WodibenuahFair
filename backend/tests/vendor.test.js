@@ -173,14 +173,33 @@ describe('Vendor Registration & Payment Flow', () => {
     // I will expect it to FAIL for now if I assume it should block.
     // If it succeeds, then we have a security issue (paying 5k for 80k booth).
     
-    // I will cleanup cheapId
     await pool.query('DELETE FROM vendors WHERE id = $1', [cheapId]);
-    
-    // If the code allows it, `payment_status` will be 'paid'. 
-    // I want to assert that it is NOT paid or returns error.
-    // But since I suspect the bug exists, I'll comment out the assertion or expect it to fail (TDD).
-    // Actually, I'll write the test to EXPECT failure (400), and if it gets 200, the test fails, highlighting the bug.
-    
     expect(res.statusCode).not.toEqual(200); 
+  });
+
+  it('should update vendor approval status via PATCH /api/vendors/:id/status', async () => {
+    // Import jwt to sign an admin token
+    const jwt = (await import('jsonwebtoken')).default;
+    const token = jwt.sign({ id: 'admin1', role: 'admin' }, process.env.JWT_SECRET || '7f8a9b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0');
+
+    // 1. Reject vendor
+    const rejectRes = await request(app)
+      .patch(`/api/vendors/${vendorId}/status`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ approvalStatus: 'rejected' });
+
+    expect(rejectRes.statusCode).toEqual(200);
+    expect(rejectRes.body.vendor.approval_status).toEqual('rejected');
+    expect(rejectRes.body.vendor.is_approved).toEqual(false);
+
+    // 2. Approve vendor
+    const approveRes = await request(app)
+      .patch(`/api/vendors/${vendorId}/status`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ approvalStatus: 'approved' });
+
+    expect(approveRes.statusCode).toEqual(200);
+    expect(approveRes.body.vendor.approval_status).toEqual('approved');
+    expect(approveRes.body.vendor.is_approved).toEqual(true);
   });
 });

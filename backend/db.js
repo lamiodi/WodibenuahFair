@@ -55,7 +55,7 @@ export const initDb = async () => {
             await client.query('BEGIN');
             try {
               await client.query(migrationSql);
-              await client.query('INSERT INTO migrations (name) VALUES ($1)', [file]);
+              await client.query('INSERT INTO migrations (name) VALUES ($1) ON CONFLICT (name) DO NOTHING', [file]);
               await client.query('COMMIT');
               console.log(`Migration ${file} completed`);
             } catch (migErr) {

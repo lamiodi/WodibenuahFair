@@ -72,14 +72,17 @@ const AdminDashboard = () => {
 
   // 1. Vendors Section Filter States
   const [vendorSearch, setVendorSearch] = useState('');
+  const [vendorApprovalFilter, setVendorApprovalFilter] = useState('all');
   const [vendorStatusFilter, setVendorStatusFilter] = useState('all');
   const [vendorLocationFilter, setVendorLocationFilter] = useState('all');
   const [vendorBoothFilter, setVendorBoothFilter] = useState('all');
   const [vendorSectorFilter, setVendorSectorFilter] = useState('all');
   const [vendorSort, setVendorSort] = useState('newest');
+  const [updatingStatusId, setUpdatingStatusId] = useState(null);
 
   // 2. Registrations Section Filter States
   const [regSearch, setRegSearch] = useState('');
+  const [regApprovalFilter, setRegApprovalFilter] = useState('all');
   const [regStatusFilter, setRegStatusFilter] = useState('all');
   const [regLocationFilter, setRegLocationFilter] = useState('all');
   const [regBoothFilter, setRegBoothFilter] = useState('all');
@@ -154,6 +157,12 @@ const AdminDashboard = () => {
           vendor.booth_type
         ].some(val => val && String(val).toLowerCase().includes(vendorSearch.toLowerCase().trim()));
 
+        const matchesApproval =
+          vendorApprovalFilter === 'all' ||
+          (vendorApprovalFilter === 'approved' && (vendor.is_approved || vendor.approval_status === 'approved' || vendor.payment_status === 'paid')) ||
+          (vendorApprovalFilter === 'pending' && (!vendor.is_approved && vendor.approval_status !== 'rejected' && vendor.payment_status !== 'paid')) ||
+          (vendorApprovalFilter === 'rejected' && vendor.approval_status === 'rejected');
+
         const matchesStatus =
           vendorStatusFilter === 'all' ||
           String(vendor.payment_status || '').toLowerCase() === vendorStatusFilter.toLowerCase();
@@ -170,7 +179,7 @@ const AdminDashboard = () => {
           vendorSectorFilter === 'all' ||
           String(vendor.sector || '').toLowerCase() === vendorSectorFilter.toLowerCase();
 
-        return matchesSearch && matchesStatus && matchesLocation && matchesBooth && matchesSector;
+        return matchesSearch && matchesApproval && matchesStatus && matchesLocation && matchesBooth && matchesSector;
       })
       .sort((a, b) => {
         if (vendorSort === 'oldest') return new Date(a.created_at) - new Date(b.created_at);
@@ -179,7 +188,7 @@ const AdminDashboard = () => {
         if (vendorSort === 'name_asc') return (a.business_name || '').localeCompare(b.business_name || '');
         return new Date(b.created_at) - new Date(a.created_at); // default newest
       });
-  }, [vendors, vendorSearch, vendorStatusFilter, vendorLocationFilter, vendorBoothFilter, vendorSectorFilter, vendorSort]);
+  }, [vendors, vendorSearch, vendorApprovalFilter, vendorStatusFilter, vendorLocationFilter, vendorBoothFilter, vendorSectorFilter, vendorSort]);
 
   // Filtered Registrations
   const filteredRegistrations = useMemo(() => {
@@ -196,6 +205,12 @@ const AdminDashboard = () => {
           vendor.booth_type
         ].some(val => val && String(val).toLowerCase().includes(regSearch.toLowerCase().trim()));
 
+        const matchesApproval =
+          regApprovalFilter === 'all' ||
+          (regApprovalFilter === 'approved' && (vendor.is_approved || vendor.approval_status === 'approved' || vendor.payment_status === 'paid')) ||
+          (regApprovalFilter === 'pending' && (!vendor.is_approved && vendor.approval_status !== 'rejected' && vendor.payment_status !== 'paid')) ||
+          (regApprovalFilter === 'rejected' && vendor.approval_status === 'rejected');
+
         const matchesStatus =
           regStatusFilter === 'all' ||
           String(vendor.payment_status || '').toLowerCase() === regStatusFilter.toLowerCase();
@@ -208,7 +223,7 @@ const AdminDashboard = () => {
           regBoothFilter === 'all' ||
           String(vendor.booth_type || '').toLowerCase() === regBoothFilter.toLowerCase();
 
-        return matchesSearch && matchesStatus && matchesLocation && matchesBooth;
+        return matchesSearch && matchesApproval && matchesStatus && matchesLocation && matchesBooth;
       })
       .sort((a, b) => {
         if (regSort === 'oldest') return new Date(a.created_at) - new Date(b.created_at);
@@ -216,7 +231,7 @@ const AdminDashboard = () => {
         if (regSort === 'name_asc') return (a.business_name || '').localeCompare(b.business_name || '');
         return new Date(b.created_at) - new Date(a.created_at);
       });
-  }, [vendors, regSearch, regStatusFilter, regLocationFilter, regBoothFilter, regSort]);
+  }, [vendors, regSearch, regApprovalFilter, regStatusFilter, regLocationFilter, regBoothFilter, regSort]);
 
   // Filtered Events
   const filteredEvents = useMemo(() => {
@@ -336,8 +351,8 @@ const AdminDashboard = () => {
   }, [messages, messageSearch, messageTypeFilter, messageSort]);
 
   // Helpers to detect active filter states
-  const isVendorFilterActive = vendorSearch || vendorStatusFilter !== 'all' || vendorLocationFilter !== 'all' || vendorBoothFilter !== 'all' || vendorSectorFilter !== 'all' || vendorSort !== 'newest';
-  const isRegFilterActive = regSearch || regStatusFilter !== 'all' || regLocationFilter !== 'all' || regBoothFilter !== 'all' || regSort !== 'newest';
+  const isVendorFilterActive = vendorSearch || vendorApprovalFilter !== 'all' || vendorStatusFilter !== 'all' || vendorLocationFilter !== 'all' || vendorBoothFilter !== 'all' || vendorSectorFilter !== 'all' || vendorSort !== 'newest';
+  const isRegFilterActive = regSearch || regApprovalFilter !== 'all' || regStatusFilter !== 'all' || regLocationFilter !== 'all' || regBoothFilter !== 'all' || regSort !== 'newest';
   const isEventFilterActive = eventSearch || eventStatusFilter !== 'all' || eventRegFilter !== 'all' || eventSort !== 'date_desc';
   const isBlogFilterActive = blogSearch || blogCategoryFilter !== 'all' || blogStatusFilter !== 'all' || blogSort !== 'newest';
   const isHighlightFilterActive = highlightSearch || highlightBadgeFilter !== 'all' || highlightSort !== 'order_asc';
@@ -345,6 +360,7 @@ const AdminDashboard = () => {
 
   const resetVendorFilters = () => {
     setVendorSearch('');
+    setVendorApprovalFilter('all');
     setVendorStatusFilter('all');
     setVendorLocationFilter('all');
     setVendorBoothFilter('all');
@@ -354,10 +370,35 @@ const AdminDashboard = () => {
 
   const resetRegFilters = () => {
     setRegSearch('');
+    setRegApprovalFilter('all');
     setRegStatusFilter('all');
     setRegLocationFilter('all');
     setRegBoothFilter('all');
     setRegSort('newest');
+  };
+
+  // Vendor Approval Status Handler
+  const handleUpdateVendorStatus = async (vendorId, newStatus) => {
+    if (!vendorId) return;
+    setUpdatingStatusId(vendorId);
+    toast.loading(`Updating vendor status to ${newStatus}...`, { id: 'status-toast' });
+    try {
+      const res = await apiRequest(`/vendors/${vendorId}/status`, {
+        method: 'PATCH',
+        body: { approvalStatus: newStatus }
+      });
+      const updated = res.vendor;
+      setVendors(prev => prev.map(v => v.id === vendorId ? { ...v, ...updated } : v));
+      if (currentVendor && currentVendor.id === vendorId) {
+        setCurrentVendor(prev => ({ ...prev, ...updated }));
+      }
+      toast.success(`Vendor marked as ${newStatus}!`, { id: 'status-toast' });
+    } catch (err) {
+      console.error(err);
+      toast.error(err.message || 'Failed to update vendor status', { id: 'status-toast' });
+    } finally {
+      setUpdatingStatusId(null);
+    }
   };
 
   const resetEventFilters = () => {
@@ -392,9 +433,22 @@ const AdminDashboard = () => {
     setSendingEmailId(vendor.id);
     toast.loading(`Sending payment link email to ${vendor.email}...`, { id: 'email-link-toast' });
     try {
-      await apiRequest(`/vendors/${vendor.id}/send-payment-link`, {
+      const res = await apiRequest(`/vendors/${vendor.id}/send-payment-link`, {
         method: 'POST'
       });
+      const sentTime = res.payment_link_sent_at || new Date().toISOString();
+      setVendors(prev => prev.map(v => v.id === vendor.id ? {
+        ...v,
+        payment_link_sent_at: sentTime,
+        payment_link_sent_count: (v.payment_link_sent_count || 0) + 1
+      } : v));
+      if (currentVendor && currentVendor.id === vendor.id) {
+        setCurrentVendor(prev => ({
+          ...prev,
+          payment_link_sent_at: sentTime,
+          payment_link_sent_count: (prev.payment_link_sent_count || 0) + 1
+        }));
+      }
       toast.success(`Payment link email sent successfully to ${vendor.email}!`, { id: 'email-link-toast' });
     } catch (err) {
       console.error(err);
@@ -715,8 +769,10 @@ const AdminDashboard = () => {
   // RENDER: VENDORS TAB
   // ==========================================
   const renderVendors = () => {
+    const approvedCount = vendors.filter(v => v.is_approved || v.approval_status === 'approved' || v.payment_status === 'paid').length;
+    const pendingReviewCount = vendors.filter(v => !v.is_approved && v.approval_status !== 'rejected' && v.payment_status !== 'paid').length;
+    const rejectedCount = vendors.filter(v => v.approval_status === 'rejected').length;
     const paidCount = vendors.filter(v => v.payment_status === 'paid').length;
-    const pendingCount = vendors.filter(v => v.payment_status !== 'paid').length;
 
     return (
       <div className="bg-white border border-deep-black shadow-sm overflow-hidden space-y-4">
@@ -724,7 +780,7 @@ const AdminDashboard = () => {
         <div className="p-6 border-b border-gray-200 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 bg-gray-50">
           <div>
             <h3 className="text-xl font-heading font-bold uppercase text-deep-black">Registered Vendors</h3>
-            <p className="text-xs text-gray-500 mt-1">Manage vendor applications, verify booth assignments, and filter statuses.</p>
+            <p className="text-xs text-gray-500 mt-1">Review applications, approve or reject waitlist vendors, and send payment links.</p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <button
@@ -757,30 +813,69 @@ const AdminDashboard = () => {
             </div>
 
             {/* Quick Status Pill Filters */}
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <button
-                onClick={() => setVendorStatusFilter('all')}
-                className={`px-3 py-1.5 text-xs font-bold uppercase tracking-wider border transition-colors ${vendorStatusFilter === 'all' ? 'bg-deep-black text-white border-deep-black' : 'bg-white text-gray-600 border-gray-300 hover:border-deep-black'}`}
+                onClick={() => { setVendorApprovalFilter('all'); setVendorStatusFilter('all'); }}
+                className={`px-3 py-1.5 text-xs font-bold uppercase tracking-wider border transition-colors ${vendorApprovalFilter === 'all' && vendorStatusFilter === 'all' ? 'bg-deep-black text-white border-deep-black' : 'bg-white text-gray-600 border-gray-300 hover:border-deep-black'}`}
               >
                 All ({vendors.length})
               </button>
               <button
-                onClick={() => setVendorStatusFilter('paid')}
+                onClick={() => { setVendorApprovalFilter('approved'); setVendorStatusFilter('all'); }}
+                className={`px-3 py-1.5 text-xs font-bold uppercase tracking-wider border transition-colors ${vendorApprovalFilter === 'approved' ? 'bg-emerald-700 text-white border-emerald-700' : 'bg-emerald-50 text-emerald-800 border-emerald-200 hover:border-emerald-600'}`}
+              >
+                Approved ({approvedCount})
+              </button>
+              <button
+                onClick={() => { setVendorApprovalFilter('pending'); setVendorStatusFilter('all'); }}
+                className={`px-3 py-1.5 text-xs font-bold uppercase tracking-wider border transition-colors ${vendorApprovalFilter === 'pending' ? 'bg-amber-600 text-white border-amber-600' : 'bg-amber-50 text-amber-800 border-amber-200 hover:border-amber-600'}`}
+              >
+                Pending Review ({pendingReviewCount})
+              </button>
+              <button
+                onClick={() => { setVendorApprovalFilter('rejected'); setVendorStatusFilter('all'); }}
+                className={`px-3 py-1.5 text-xs font-bold uppercase tracking-wider border transition-colors ${vendorApprovalFilter === 'rejected' ? 'bg-rose-700 text-white border-rose-700' : 'bg-rose-50 text-rose-800 border-rose-200 hover:border-rose-600'}`}
+              >
+                Rejected ({rejectedCount})
+              </button>
+              <button
+                onClick={() => { setVendorStatusFilter('paid'); setVendorApprovalFilter('all'); }}
                 className={`px-3 py-1.5 text-xs font-bold uppercase tracking-wider border transition-colors ${vendorStatusFilter === 'paid' ? 'bg-green-700 text-white border-green-700' : 'bg-green-50 text-green-800 border-green-200 hover:border-green-600'}`}
               >
                 Paid ({paidCount})
-              </button>
-              <button
-                onClick={() => setVendorStatusFilter('pending')}
-                className={`px-3 py-1.5 text-xs font-bold uppercase tracking-wider border transition-colors ${vendorStatusFilter === 'pending' ? 'bg-yellow-600 text-white border-yellow-600' : 'bg-yellow-50 text-yellow-800 border-yellow-200 hover:border-yellow-600'}`}
-              >
-                Pending ({pendingCount})
               </button>
             </div>
           </div>
 
           {/* Secondary Dropdown Filters */}
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3 pt-2 border-t border-gray-100 items-center">
+          <div className="grid grid-cols-2 md:grid-cols-5 lg:grid-cols-6 gap-3 pt-2 border-t border-gray-100 items-center">
+            <div>
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1">Approval</label>
+              <select
+                value={vendorApprovalFilter}
+                onChange={(e) => setVendorApprovalFilter(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 bg-white text-xs font-medium focus:outline-none focus:border-gold"
+              >
+                <option value="all">All Approvals</option>
+                <option value="approved">Approved Only</option>
+                <option value="pending">Pending Review</option>
+                <option value="rejected">Rejected Only</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1">Payment</label>
+              <select
+                value={vendorStatusFilter}
+                onChange={(e) => setVendorStatusFilter(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 bg-white text-xs font-medium focus:outline-none focus:border-gold"
+              >
+                <option value="all">All Payment</option>
+                <option value="paid">Paid</option>
+                <option value="pending">Pending</option>
+              </select>
+            </div>
+
             <div>
               <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1">Location</label>
               <select
@@ -805,20 +900,6 @@ const AdminDashboard = () => {
                 <option value="all">All Booths</option>
                 {uniqueVendorBooths.map(b => (
                   <option key={b} value={b}>{b}</option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1">Sector</label>
-              <select
-                value={vendorSectorFilter}
-                onChange={(e) => setVendorSectorFilter(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 bg-white text-xs font-medium focus:outline-none focus:border-gold"
-              >
-                <option value="all">All Sectors</option>
-                {uniqueVendorSectors.map(s => (
-                  <option key={s} value={s}>{s}</option>
                 ))}
               </select>
             </div>
@@ -861,14 +942,14 @@ const AdminDashboard = () => {
 
         {/* Vendors Table */}
         <div className="overflow-x-auto border-t border-gray-200">
-          <table className="w-full text-left border-collapse min-w-[700px]">
+          <table className="w-full text-left border-collapse min-w-[850px]">
             <thead>
               <tr className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider font-bold border-b border-gray-200">
                 <th className="p-4">Vendor</th>
                 <th className="p-4">Contact</th>
                 <th className="p-4">Booth & Location</th>
-                <th className="p-4">Status</th>
-                <th className="p-4">Date</th>
+                <th className="p-4">Approval Status</th>
+                <th className="p-4">Payment</th>
                 <th className="p-4">Actions</th>
               </tr>
             </thead>
@@ -888,44 +969,106 @@ const AdminDashboard = () => {
                   </td>
                 </tr>
               ) : (
-                filteredVendors.map((vendor) => (
-                  <tr key={vendor.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="p-4">
-                      <div className="font-bold text-deep-black">{vendor.business_name}</div>
-                      <div className="text-gray-500 text-xs">{vendor.full_name}</div>
-                      <div className="text-gray-400 text-xs italic">{vendor.sector}</div>
-                    </td>
-                    <td className="p-4">
-                      <div className="text-gray-600">{vendor.email}</div>
-                      <div className="text-gray-500 text-xs">{vendor.phone_number}</div>
-                      <div className="text-blue-500 text-xs">{vendor.instagram_handle}</div>
-                    </td>
-                    <td className="p-4">
-                      <div className="font-medium text-deep-black">{vendor.booth_type}</div>
-                      <div className="text-gray-500 text-xs">{vendor.selected_location}</div>
-                    </td>
-                    <td className="p-4">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize
-                        ${vendor.payment_status === 'paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
-                        {vendor.payment_status || 'Pending'}
-                      </span>
-                      {vendor.payment_status === 'paid' && (
-                        <div className="text-xs text-gray-400 mt-1 font-mono">{vendor.amount_paid ? `₦${Number(vendor.amount_paid).toLocaleString()}` : ''}</div>
-                      )}
-                    </td>
-                    <td className="p-4 text-gray-500 text-xs">
-                      {vendor.created_at ? new Date(vendor.created_at).toLocaleDateString() : 'N/A'}
-                    </td>
-                    <td className="p-4">
-                      <button
-                        onClick={() => openVendorModal(vendor)}
-                        className="text-xs font-bold uppercase tracking-wider border border-gray-300 hover:border-deep-black hover:bg-deep-black hover:text-white px-3 py-1.5 transition-colors"
-                      >
-                        Details
-                      </button>
-                    </td>
-                  </tr>
-                ))
+                filteredVendors.map((vendor) => {
+                  const isApproved = vendor.is_approved || vendor.approval_status === 'approved' || vendor.payment_status === 'paid';
+                  const isRejected = vendor.approval_status === 'rejected';
+
+                  return (
+                    <tr key={vendor.id} className="hover:bg-gray-50 transition-colors">
+                      <td className="p-4">
+                        <div className="font-bold text-deep-black">{vendor.business_name}</div>
+                        <div className="text-gray-500 text-xs">{vendor.full_name}</div>
+                        <div className="text-gray-400 text-xs italic">{vendor.sector}</div>
+                      </td>
+                      <td className="p-4">
+                        <div className="text-gray-600">{vendor.email}</div>
+                        <div className="text-gray-500 text-xs">{vendor.phone_number}</div>
+                        <div className="text-blue-500 text-xs">{vendor.instagram_handle}</div>
+                      </td>
+                      <td className="p-4">
+                        <div className="font-medium text-deep-black">{vendor.booth_type}</div>
+                        <div className="text-gray-500 text-xs">{vendor.selected_location}</div>
+                      </td>
+                      <td className="p-4">
+                        {isApproved ? (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800">
+                            <span>✓</span> Approved
+                          </span>
+                        ) : isRejected ? (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-rose-100 text-rose-800">
+                            <span>✕</span> Rejected
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-amber-100 text-amber-800">
+                            <span>⏳</span> Pending Review
+                          </span>
+                        )}
+                      </td>
+                      <td className="p-4">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize
+                          ${vendor.payment_status === 'paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
+                          {vendor.payment_status || 'Pending'}
+                        </span>
+                        {vendor.payment_status === 'paid' && (
+                          <div className="text-xs text-gray-500 mt-1 font-mono font-bold">{vendor.amount_paid ? `₦${Number(vendor.amount_paid).toLocaleString()}` : ''}</div>
+                        )}
+                        {vendor.payment_status !== 'paid' && vendor.payment_link_sent_at && (
+                          <div className="text-[10px] text-blue-700 font-bold mt-1">✓ Link Sent</div>
+                        )}
+                      </td>
+                      <td className="p-4">
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          {!isApproved && !isRejected && (
+                            <>
+                              <button
+                                onClick={() => handleUpdateVendorStatus(vendor.id, 'approved')}
+                                disabled={updatingStatusId === vendor.id}
+                                className="text-xs font-bold uppercase tracking-wider bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1.5 transition-colors disabled:opacity-50"
+                                title="Approve this vendor"
+                              >
+                                Approve
+                              </button>
+                              <button
+                                onClick={() => handleUpdateVendorStatus(vendor.id, 'rejected')}
+                                disabled={updatingStatusId === vendor.id}
+                                className="text-xs font-bold uppercase tracking-wider bg-rose-50 hover:bg-rose-600 text-rose-700 hover:text-white border border-rose-300 px-2.5 py-1.5 transition-colors disabled:opacity-50"
+                                title="Reject this vendor"
+                              >
+                                Reject
+                              </button>
+                            </>
+                          )}
+                          {isApproved && vendor.payment_status !== 'paid' && (
+                            <button
+                              onClick={() => handleSendEmailLink(vendor)}
+                              disabled={sendingEmailId === vendor.id}
+                              className="text-xs font-bold uppercase tracking-wider bg-gold text-deep-black hover:bg-black hover:text-white px-2.5 py-1.5 transition-colors disabled:opacity-50"
+                              title="Send payment link email"
+                            >
+                              {sendingEmailId === vendor.id ? 'Sending...' : 'Send Link'}
+                            </button>
+                          )}
+                          {isRejected && (
+                            <button
+                              onClick={() => handleUpdateVendorStatus(vendor.id, 'approved')}
+                              disabled={updatingStatusId === vendor.id}
+                              className="text-xs font-bold uppercase tracking-wider bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1.5 transition-colors disabled:opacity-50"
+                              title="Re-approve this vendor"
+                            >
+                              Re-Approve
+                            </button>
+                          )}
+                          <button
+                            onClick={() => openVendorModal(vendor)}
+                            className="text-xs font-bold uppercase tracking-wider border border-gray-300 hover:border-deep-black hover:bg-deep-black hover:text-white px-2.5 py-1.5 transition-colors"
+                          >
+                            Details
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
@@ -967,41 +1110,47 @@ const AdminDashboard = () => {
       .filter(v => v.payment_status === 'paid')
       .reduce((sum, v) => sum + (Number(v.amount_paid) || 0), 0);
 
+    const approvedCount = filteredRegistrations.filter(v => v.is_approved || v.approval_status === 'approved' || v.payment_status === 'paid').length;
+    const pendingReviewCount = filteredRegistrations.filter(v => !v.is_approved && v.approval_status !== 'rejected' && v.payment_status !== 'paid').length;
+    const rejectedCount = filteredRegistrations.filter(v => v.approval_status === 'rejected').length;
     const paidCount = filteredRegistrations.filter(v => v.payment_status === 'paid').length;
-    const pendingCount = filteredRegistrations.filter(v => v.payment_status !== 'paid').length;
 
     return (
       <div className="space-y-6">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
             <h2 className="text-3xl font-heading font-bold uppercase">Registrations</h2>
-            <p className="text-xs text-gray-500 mt-1">Review incoming vendor sign-ups, send payment reminders, and track conversion.</p>
+            <p className="text-xs text-gray-500 mt-1">Review incoming vendor sign-ups, approve/reject waitlist applicants, and send payment links.</p>
           </div>
         </div>
 
         {/* Quick Metrics Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
           <div className="bg-white border border-deep-black p-4">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Filtered Total</p>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Total Applicants</p>
             <p className="text-2xl font-bold">{filteredRegistrations.length}</p>
           </div>
           <div className="bg-white border border-deep-black p-4">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Paid Applications</p>
-            <p className="text-2xl font-bold text-green-700">{paidCount}</p>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-700">Approved</p>
+            <p className="text-2xl font-bold text-emerald-700">{approvedCount}</p>
           </div>
           <div className="bg-white border border-deep-black p-4">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Pending Payment</p>
-            <p className="text-2xl font-bold text-yellow-600">{pendingCount}</p>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-amber-700">Pending Review</p>
+            <p className="text-2xl font-bold text-amber-600">{pendingReviewCount}</p>
           </div>
           <div className="bg-white border border-deep-black p-4">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Revenue (Filtered)</p>
-            <p className="text-2xl font-bold font-mono">₦{totalFilteredAmount.toLocaleString()}</p>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-rose-700">Rejected</p>
+            <p className="text-2xl font-bold text-rose-700">{rejectedCount}</p>
+          </div>
+          <div className="bg-white border border-deep-black p-4">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Revenue (Paid)</p>
+            <p className="text-2xl font-bold font-mono text-green-700">₦{totalFilteredAmount.toLocaleString()}</p>
           </div>
         </div>
 
         {/* Filter Controls */}
         <div className="bg-white border border-deep-black p-6 space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
             <div className="md:col-span-2 relative">
               <input
                 type="text"
@@ -1014,6 +1163,19 @@ const AdminDashboard = () => {
               {regSearch && (
                 <button onClick={() => setRegSearch('')} className="absolute right-3 top-2.5 text-xs text-gray-400 hover:text-deep-black">✕</button>
               )}
+            </div>
+
+            <div>
+              <select
+                value={regApprovalFilter}
+                onChange={(e) => setRegApprovalFilter(e.target.value)}
+                className="w-full px-3 py-2.5 border border-deep-black bg-white text-xs font-bold uppercase focus:outline-none focus:ring-2 focus:ring-gold"
+              >
+                <option value="all">All Approvals</option>
+                <option value="approved">Approved</option>
+                <option value="pending">Pending Review</option>
+                <option value="rejected">Rejected</option>
+              </select>
             </div>
 
             <div>
@@ -1087,64 +1249,120 @@ const AdminDashboard = () => {
               <tr className="border-b border-deep-black bg-gray-50 text-xs font-bold uppercase tracking-wider text-gray-600">
                 <th className="p-4">Business</th>
                 <th className="p-4">Contact</th>
-                <th className="p-4">Details</th>
+                <th className="p-4">Booth & Location</th>
+                <th className="p-4">Approval Status</th>
                 <th className="p-4">Payment</th>
                 <th className="p-4">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 text-sm">
               {filteredRegistrations.length > 0 ? (
-                filteredRegistrations.map(vendor => (
-                  <tr key={vendor.id} className="group hover:bg-gray-50 transition-colors">
-                    <td className="p-4">
-                      <div className="font-bold text-deep-black">{vendor.business_name}</div>
-                      <div className="text-xs text-gray-500">{vendor.full_name}</div>
-                      <div className="text-xs text-gray-400 italic">{vendor.sector}</div>
-                    </td>
-                    <td className="p-4 text-sm">
-                      <div>{vendor.email}</div>
-                      <div className="text-xs text-gray-500">{vendor.phone_number}</div>
-                    </td>
-                    <td className="p-4 text-sm">
-                      <div className="font-bold text-deep-black">{vendor.booth_type || 'N/A'}</div>
-                      <div className="text-xs text-gray-500">{vendor.selected_location || 'N/A'}</div>
-                    </td>
-                    <td className="p-4">
-                      <span className={`text-xs font-bold px-2.5 py-1 rounded-full uppercase tracking-wider ${
-                        vendor.payment_status === 'paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                      }`}>
-                        {vendor.payment_status || 'Pending'}
-                      </span>
-                      {vendor.amount_paid > 0 && (
-                        <div className="text-xs mt-1 font-mono text-gray-600">₦{Number(vendor.amount_paid).toLocaleString()}</div>
-                      )}
-                    </td>
-                    <td className="p-4">
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => openVendorModal(vendor)}
-                          className="text-xs font-bold uppercase tracking-wider text-gray-700 hover:text-deep-black border border-gray-300 px-3 py-1.5 bg-white hover:bg-gray-100 transition-colors"
-                        >
-                          Details
-                        </button>
-                        {vendor.payment_status !== 'paid' && (
-                          <button
-                            onClick={() => handleSendEmailLink(vendor)}
-                            disabled={sendingEmailId === vendor.id}
-                            className="text-xs font-bold uppercase tracking-wider bg-gold text-deep-black hover:bg-black hover:text-white px-3 py-1.5 transition-colors disabled:opacity-50 flex items-center gap-1.5 shadow-sm"
-                            title="Send payment link email to vendor"
-                          >
-                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 002-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
-                            {sendingEmailId === vendor.id ? 'Sending...' : 'Send Link'}
-                          </button>
+                filteredRegistrations.map(vendor => {
+                  const isApproved = vendor.is_approved || vendor.approval_status === 'approved' || vendor.payment_status === 'paid';
+                  const isRejected = vendor.approval_status === 'rejected';
+
+                  return (
+                    <tr key={vendor.id} className="group hover:bg-gray-50 transition-colors">
+                      <td className="p-4">
+                        <div className="font-bold text-deep-black">{vendor.business_name}</div>
+                        <div className="text-xs text-gray-500">{vendor.full_name}</div>
+                        <div className="text-xs text-gray-400 italic">{vendor.sector}</div>
+                      </td>
+                      <td className="p-4 text-sm">
+                        <div>{vendor.email}</div>
+                        <div className="text-xs text-gray-500">{vendor.phone_number}</div>
+                      </td>
+                      <td className="p-4 text-sm">
+                        <div className="font-bold text-deep-black">{vendor.booth_type || 'N/A'}</div>
+                        <div className="text-xs text-gray-500">{vendor.selected_location || 'N/A'}</div>
+                      </td>
+                      <td className="p-4">
+                        {isApproved ? (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800">
+                            <span>✓</span> Approved
+                          </span>
+                        ) : isRejected ? (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-rose-100 text-rose-800">
+                            <span>✕</span> Rejected
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-amber-100 text-amber-800">
+                            <span>⏳</span> Pending Review
+                          </span>
                         )}
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                      </td>
+                      <td className="p-4">
+                        <span className={`text-xs font-bold px-2.5 py-1 rounded-full uppercase tracking-wider ${
+                          vendor.payment_status === 'paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                        }`}>
+                          {vendor.payment_status || 'Pending'}
+                        </span>
+                        {vendor.amount_paid > 0 && (
+                          <div className="text-xs mt-1 font-mono text-gray-600">₦{Number(vendor.amount_paid).toLocaleString()}</div>
+                        )}
+                        {vendor.payment_status !== 'paid' && vendor.payment_link_sent_at && (
+                          <div className="text-[10px] text-blue-700 font-bold mt-1 flex items-center gap-1">
+                            <span>✓ Link Sent</span>
+                          </div>
+                        )}
+                      </td>
+                      <td className="p-4">
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          {!isApproved && !isRejected && (
+                            <>
+                              <button
+                                onClick={() => handleUpdateVendorStatus(vendor.id, 'approved')}
+                                disabled={updatingStatusId === vendor.id}
+                                className="text-xs font-bold uppercase tracking-wider bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1.5 transition-colors disabled:opacity-50"
+                                title="Approve application"
+                              >
+                                Approve
+                              </button>
+                              <button
+                                onClick={() => handleUpdateVendorStatus(vendor.id, 'rejected')}
+                                disabled={updatingStatusId === vendor.id}
+                                className="text-xs font-bold uppercase tracking-wider bg-rose-50 hover:bg-rose-600 text-rose-700 hover:text-white border border-rose-300 px-2.5 py-1.5 transition-colors disabled:opacity-50"
+                                title="Reject application"
+                              >
+                                Reject
+                              </button>
+                            </>
+                          )}
+                          {isApproved && vendor.payment_status !== 'paid' && (
+                            <button
+                              onClick={() => handleSendEmailLink(vendor)}
+                              disabled={sendingEmailId === vendor.id}
+                              className="text-xs font-bold uppercase tracking-wider bg-gold text-deep-black hover:bg-black hover:text-white px-2.5 py-1.5 transition-colors disabled:opacity-50 flex items-center gap-1 shadow-sm"
+                              title="Send payment link email to vendor"
+                            >
+                              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 002-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                              {sendingEmailId === vendor.id ? 'Sending...' : 'Send Link'}
+                            </button>
+                          )}
+                          {isRejected && (
+                            <button
+                              onClick={() => handleUpdateVendorStatus(vendor.id, 'approved')}
+                              disabled={updatingStatusId === vendor.id}
+                              className="text-xs font-bold uppercase tracking-wider bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1.5 transition-colors disabled:opacity-50"
+                              title="Re-approve vendor"
+                            >
+                              Re-Approve
+                            </button>
+                          )}
+                          <button
+                            onClick={() => openVendorModal(vendor)}
+                            className="text-xs font-bold uppercase tracking-wider text-gray-700 hover:text-deep-black border border-gray-300 px-2.5 py-1.5 bg-white hover:bg-gray-100 transition-colors"
+                          >
+                            Details
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
               ) : (
                 <tr>
-                  <td colSpan="5" className="p-12 text-center text-gray-500 italic">
+                  <td colSpan="6" className="p-12 text-center text-gray-500 italic">
                     <p className="text-base font-medium">No registrations match your search and filter criteria.</p>
                     {isRegFilterActive && (
                       <button onClick={resetRegFilters} className="mt-2 text-xs font-bold uppercase text-gold hover:underline">
@@ -1692,13 +1910,17 @@ const AdminDashboard = () => {
     }
 
     switch (activeTab) {
-      case 'dashboard':
+      case 'dashboard': {
+        const approvedVendorsCount = vendors.filter(v => v.is_approved || v.approval_status === 'approved' || v.payment_status === 'paid').length;
+        const pendingVendorsCount = vendors.filter(v => !v.is_approved && v.approval_status !== 'rejected' && v.payment_status !== 'paid').length;
+        const totalRevenue = vendors.filter(v => v.payment_status === 'paid').reduce((sum, v) => sum + (Number(v.amount_paid) || 0), 0);
+
         return (
           <div className="space-y-8">
             <h2 className="text-3xl font-heading font-bold uppercase">Dashboard Overview</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
               <div
-                onClick={() => setActiveTab('vendors')}
+                onClick={() => { setVendorApprovalFilter('all'); setActiveTab('vendors'); }}
                 className="bg-white border border-deep-black p-6 hover:border-gold hover:shadow-md transition-all cursor-pointer group"
               >
                 <div className="flex justify-between items-start">
@@ -1706,43 +1928,43 @@ const AdminDashboard = () => {
                   <span className="text-xs text-gold font-bold group-hover:translate-x-1 transition-transform">→</span>
                 </div>
                 <p className="text-4xl font-bold mt-3 text-deep-black">{stats.vendors}</p>
-                <p className="text-[10px] text-gray-400 uppercase tracking-wider mt-2">Click to view & filter</p>
+                <p className="text-[10px] text-gray-400 uppercase tracking-wider mt-2">All registered</p>
               </div>
 
               <div
-                onClick={() => setActiveTab('blog')}
-                className="bg-white border border-deep-black p-6 hover:border-gold hover:shadow-md transition-all cursor-pointer group"
+                onClick={() => { setVendorApprovalFilter('approved'); setActiveTab('vendors'); }}
+                className="bg-white border border-emerald-600 p-6 hover:border-gold hover:shadow-md transition-all cursor-pointer group"
               >
                 <div className="flex justify-between items-start">
-                  <h3 className="text-xs font-heading font-bold uppercase text-gray-500 tracking-wider">Blog Posts</h3>
-                  <span className="text-xs text-gold font-bold group-hover:translate-x-1 transition-transform">→</span>
+                  <h3 className="text-xs font-heading font-bold uppercase text-emerald-700 tracking-wider">Approved Vendors</h3>
+                  <span className="text-xs text-emerald-600 font-bold group-hover:translate-x-1 transition-transform">→</span>
                 </div>
-                <p className="text-4xl font-bold mt-3 text-deep-black">{stats.blogs}</p>
-                <p className="text-[10px] text-gray-400 uppercase tracking-wider mt-2">Manage articles</p>
+                <p className="text-4xl font-bold mt-3 text-emerald-700">{approvedVendorsCount}</p>
+                <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-wider mt-2">Ready / Confirmed</p>
               </div>
 
               <div
-                onClick={() => setActiveTab('events')}
-                className="bg-white border border-deep-black p-6 hover:border-gold hover:shadow-md transition-all cursor-pointer group"
+                onClick={() => { setVendorApprovalFilter('pending'); setActiveTab('vendors'); }}
+                className="bg-white border border-amber-500 p-6 hover:border-gold hover:shadow-md transition-all cursor-pointer group"
               >
                 <div className="flex justify-between items-start">
-                  <h3 className="text-xs font-heading font-bold uppercase text-gray-500 tracking-wider">Events Scheduled</h3>
-                  <span className="text-xs text-gold font-bold group-hover:translate-x-1 transition-transform">→</span>
+                  <h3 className="text-xs font-heading font-bold uppercase text-amber-700 tracking-wider">Pending Review</h3>
+                  <span className="text-xs text-amber-600 font-bold group-hover:translate-x-1 transition-transform">→</span>
                 </div>
-                <p className="text-4xl font-bold mt-3 text-deep-black">{stats.events}</p>
-                <p className="text-[10px] text-gray-400 uppercase tracking-wider mt-2">View timeline</p>
+                <p className="text-4xl font-bold mt-3 text-amber-600">{pendingVendorsCount}</p>
+                <p className="text-[10px] text-amber-600 font-bold uppercase tracking-wider mt-2">Waitlist applicants</p>
               </div>
 
               <div
-                onClick={() => setActiveTab('messages')}
+                onClick={() => { setVendorStatusFilter('paid'); setActiveTab('vendors'); }}
                 className="bg-white border border-deep-black p-6 hover:border-gold hover:shadow-md transition-all cursor-pointer group"
               >
                 <div className="flex justify-between items-start">
-                  <h3 className="text-xs font-heading font-bold uppercase text-gray-500 tracking-wider">Inquiries</h3>
+                  <h3 className="text-xs font-heading font-bold uppercase text-gray-500 tracking-wider">Total Revenue</h3>
                   <span className="text-xs text-gold font-bold group-hover:translate-x-1 transition-transform">→</span>
                 </div>
-                <p className="text-4xl font-bold mt-3 text-deep-black">{stats.messages}</p>
-                <p className="text-[10px] text-gray-400 uppercase tracking-wider mt-2">Read messages</p>
+                <p className="text-3xl font-bold mt-3 font-mono text-green-700">₦{totalRevenue.toLocaleString()}</p>
+                <p className="text-[10px] text-gray-400 uppercase tracking-wider mt-2">Verified payments</p>
               </div>
             </div>
 
@@ -1761,6 +1983,7 @@ const AdminDashboard = () => {
             </div>
           </div>
         );
+      }
 
       case 'vendors':
         return renderVendors();
@@ -2216,9 +2439,69 @@ const AdminDashboard = () => {
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
             </button>
 
-            <h2 className="text-2xl font-heading font-bold uppercase mb-6 border-b border-gray-200 pb-4">
-              Vendor Details
-            </h2>
+            <div className="flex justify-between items-center mb-6 border-b border-gray-200 pb-4">
+              <h2 className="text-2xl font-heading font-bold uppercase text-deep-black">
+                Vendor Application
+              </h2>
+              <div>
+                {(currentVendor.is_approved || currentVendor.approval_status === 'approved' || currentVendor.payment_status === 'paid') ? (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800">
+                    <span>✓</span> Approved
+                  </span>
+                ) : currentVendor.approval_status === 'rejected' ? (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-rose-100 text-rose-800">
+                    <span>✕</span> Rejected
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-amber-100 text-amber-800">
+                    <span>⏳</span> Pending Review
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Approval Action Bar in Modal */}
+            <div className="mb-6 p-4 rounded-lg bg-gray-50 border border-gray-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wider text-deep-black">Review & Approval Decision</p>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  {(currentVendor.is_approved || currentVendor.approval_status === 'approved' || currentVendor.payment_status === 'paid')
+                    ? 'This vendor is approved. You can send payment links or revoke approval.'
+                    : currentVendor.approval_status === 'rejected'
+                    ? 'This vendor application is currently rejected.'
+                    : 'This application is waiting for admin approval before payment link is sent.'}
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                {!(currentVendor.is_approved || currentVendor.approval_status === 'approved' || currentVendor.payment_status === 'paid') && (
+                  <button
+                    onClick={() => handleUpdateVendorStatus(currentVendor.id, 'approved')}
+                    disabled={updatingStatusId === currentVendor.id}
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold uppercase px-3 py-2 transition-colors disabled:opacity-50"
+                  >
+                    ✓ Approve Application
+                  </button>
+                )}
+                {currentVendor.approval_status !== 'rejected' && currentVendor.payment_status !== 'paid' && (
+                  <button
+                    onClick={() => handleUpdateVendorStatus(currentVendor.id, 'rejected')}
+                    disabled={updatingStatusId === currentVendor.id}
+                    className="bg-rose-50 hover:bg-rose-600 text-rose-700 hover:text-white border border-rose-300 text-xs font-bold uppercase px-3 py-2 transition-colors disabled:opacity-50"
+                  >
+                    ✕ Reject Application
+                  </button>
+                )}
+                {currentVendor.approval_status === 'rejected' && (
+                  <button
+                    onClick={() => handleUpdateVendorStatus(currentVendor.id, 'approved')}
+                    disabled={updatingStatusId === currentVendor.id}
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold uppercase px-3 py-2 transition-colors disabled:opacity-50"
+                  >
+                    ✓ Re-Approve Application
+                  </button>
+                )}
+              </div>
+            </div>
 
             <div className="space-y-6">
               <div className="grid grid-cols-2 gap-4">
@@ -2267,8 +2550,23 @@ const AdminDashboard = () => {
                     {currentVendor.payment_status || 'Pending'}
                   </span>
                 </div>
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-wider text-gray-500">Payment Link Status</p>
+                  <p className="text-xs font-medium mt-1">
+                    {currentVendor.payment_status === 'paid' ? (
+                      <span className="text-green-700 font-bold">✓ Paid & Verified</span>
+                    ) : currentVendor.payment_link_sent_at ? (
+                      <span className="text-blue-700 font-bold">
+                        ✓ Sent ({new Date(currentVendor.payment_link_sent_at).toLocaleDateString()})
+                        {currentVendor.payment_link_sent_count > 1 ? ` [${currentVendor.payment_link_sent_count}x]` : ''}
+                      </span>
+                    ) : (
+                      <span className="text-gray-400 italic">Not sent yet</span>
+                    )}
+                  </p>
+                </div>
                 {currentVendor.payment_status === 'paid' && (
-                  <div>
+                  <div className="col-span-2">
                     <p className="text-xs font-bold uppercase tracking-wider text-gray-500">Amount Paid</p>
                     <p className="font-medium font-mono text-deep-black">₦{currentVendor.amount_paid ? Number(currentVendor.amount_paid).toLocaleString() : 0}</p>
                   </div>
