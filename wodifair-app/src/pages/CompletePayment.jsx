@@ -68,7 +68,7 @@ const CompletePayment = () => {
 
         // Check if there are location-specific prices
         const locationPrices = boothPrices[vendorData.selected_location] || boothPrices['Default'] || boothPrices;
-        return locationPrices[vendorData.booth_type] || 190000;
+        return locationPrices[vendorData.booth_type] || 195000;
     };
 
     const handlePayment = () => {

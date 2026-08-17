@@ -61,14 +61,14 @@ export const processSuccessfulPayment = async (reference, amountPaid, vendorIdOr
 
     let expectedAmount = Number(priceConfig[vendor.booth_type]) || Number(defaultPrices[vendor.booth_type]);
 
-    // Fallback: check case-insensitive match or default to 190,000 (minimum standard slot)
+    // Fallback: check case-insensitive match or default to 195,000 (minimum standard slot)
     if (!expectedAmount) {
       const matchKey = Object.keys(priceConfig).find(k => k.toLowerCase() === String(vendor.booth_type).toLowerCase()) ||
                        Object.keys(defaultPrices).find(k => k.toLowerCase() === String(vendor.booth_type).toLowerCase());
       if (matchKey) {
         expectedAmount = Number(priceConfig[matchKey] || defaultPrices[matchKey]);
       } else {
-        expectedAmount = 190000;
+        expectedAmount = 195000;
       }
     }
 

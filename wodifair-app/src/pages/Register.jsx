@@ -59,10 +59,10 @@ const Register = () => {
   // Store all pricing configurations
   const [allPrices, setAllPrices] = useState({
     'Default': {
-      'Royal Booth': 380000,
+      'Royal Booth': 390000,
       'Food Slot': 300000,
       'Drinks': 300000,
-      'Half Booth': 190000
+      'Half Booth': 195000
     }
   });
 
