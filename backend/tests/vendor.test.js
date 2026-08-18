@@ -44,7 +44,7 @@ describe('Vendor Registration & Payment Flow', () => {
         instagramHandle: '@testvendor',
         businessName: 'Test Business',
         sector: 'Fashion',
-        boothType: 'Shared Booth',
+        boothType: 'Half Booth',
         selectedLocation: 'Abuja',
         isPreviousVendor: false,
         liveInAbuja: true,
@@ -71,7 +71,7 @@ describe('Vendor Registration & Payment Flow', () => {
         status: true,
         data: {
           status: 'success',
-          amount: 8000000, // 80,000 * 100 (Shared Booth Price)
+          amount: 19500000, // 195,000 * 100 (Half Booth Price)
           reference: 'TEST_REF_123'
         }
       }
@@ -93,7 +93,7 @@ describe('Vendor Registration & Payment Flow', () => {
     expect(res.body.status).toEqual('success');
     expect(res.body.vendor.payment_status).toEqual('paid');
     // Database returns numeric as string
-    expect(parseFloat(res.body.vendor.amount_paid)).toEqual(80000); 
+    expect(parseFloat(res.body.vendor.amount_paid)).toEqual(195000); 
 
     // Verify Paystack was called
     expect(mockAxios.get).toHaveBeenCalledWith(
@@ -113,7 +113,7 @@ describe('Vendor Registration & Payment Flow', () => {
         instagramHandle: '@cheap',
         businessName: 'Cheap Biz',
         sector: 'Fashion',
-        boothType: 'Shared Booth', // Price is 80,000
+        boothType: 'Half Booth', // Price is 195,000
         selectedLocation: 'Abuja',
         isPreviousVendor: false,
         liveInAbuja: true,
@@ -171,7 +171,7 @@ describe('Vendor Registration & Payment Flow', () => {
     // This is exactly why we test.
     
     // I will expect it to FAIL for now if I assume it should block.
-    // If it succeeds, then we have a security issue (paying 5k for 80k booth).
+    // If it succeeds, then we have a security issue (paying 5k for 195k booth).
     
     await pool.query('DELETE FROM vendors WHERE id = $1', [cheapId]);
     expect(res.statusCode).not.toEqual(200); 

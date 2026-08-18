@@ -44,7 +44,7 @@ const { default: app } = await import('../server.js');
 const { default: pool, initDb } = await import('../db.js');
 
 const PAYSTACK_SECRET = process.env.PAYSTACK_SECRET_KEY || 'test_secret_key';
-const VENDOR_BOOTH_AMOUNT_NAIRA = 80000; // Shared Booth, Abuja — matches BOOTH_PRICES
+const VENDOR_BOOTH_AMOUNT_NAIRA = 195000; // Half Booth, Abuja — matches BOOTH_PRICES
 
 // Build a charge.success event with a known signature.
 function buildSignedEvent(overrides = {}) {
@@ -82,7 +82,7 @@ describe('Paystack webhook hardening', () => {
        RETURNING id`,
       [
         testEmail, 'Webhook Test Vendor', '08000000000', '@webhook',
-        'Webhook Test Biz', 'Fashion', 'Shared Booth', 'Abuja',
+        'Webhook Test Biz', 'Fashion', 'Half Booth', 'Abuja',
         false, true, true, true, true, true,
       ]
     );
@@ -151,7 +151,7 @@ describe('Paystack webhook hardening', () => {
        RETURNING id`,
       [
         email, 'Idempotency Test', '08000000001', '@idemp',
-        'Idempotency Biz', 'Fashion', 'Shared Booth', 'Abuja',
+        'Idempotency Biz', 'Fashion', 'Half Booth', 'Abuja',
         false, true, true, true, true, true,
       ]
     );
@@ -207,13 +207,13 @@ describe('Paystack webhook hardening', () => {
        RETURNING id`,
       [
         email, 'Insufficient Test', '08000000002', '@insuf',
-        'Insufficient Biz', 'Fashion', 'Shared Booth', 'Abuja',
+        'Insufficient Biz', 'Fashion', 'Half Booth', 'Abuja',
         false, true, true, true, true, true,
       ]
     );
     const vendorId = v.rows[0].id;
 
-    // Pay 5,000 naira (50,000 kobo) for an 80,000-naira booth.
+    // Pay 5,000 naira (50,000 kobo) for a 195,000-naira booth.
     const { raw, sig } = buildSignedEvent({ vendorId, amount: 5000 * 100 });
 
     const res = await request(app)
