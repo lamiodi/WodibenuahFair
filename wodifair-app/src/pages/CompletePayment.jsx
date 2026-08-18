@@ -67,8 +67,19 @@ const CompletePayment = () => {
         if (!vendorData) return 0;
 
         // Check if there are location-specific prices
-        const locationPrices = boothPrices[vendorData.selected_location] || boothPrices['Default'] || boothPrices;
-        return locationPrices[vendorData.booth_type] || 195000;
+        const locationPrices = boothPrices[vendorData.selected_location] || boothPrices['Default'] || boothPrices || {};
+        if (locationPrices[vendorData.booth_type]) {
+            return locationPrices[vendorData.booth_type];
+        }
+
+        // Case-insensitive lookup fallback
+        const targetType = String(vendorData.booth_type || '').trim().toLowerCase();
+        const matchKey = Object.keys(locationPrices).find(k => k.trim().toLowerCase() === targetType);
+        if (matchKey && locationPrices[matchKey]) {
+            return locationPrices[matchKey];
+        }
+
+        return 195000;
     };
 
     const handlePayment = () => {

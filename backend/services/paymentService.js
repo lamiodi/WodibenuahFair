@@ -130,8 +130,10 @@ export const processSuccessfulPayment = async (reference, amountPaid, vendorIdOr
         <p style="font-size: 16px; line-height: 1.6; margin-bottom: 20px; color: #555555;">Best regards,<br/>The Wodibenuah Fair Team</p>
       `;
 
+      const adminEmail = process.env.ADMIN_EMAIL || 'Wodibenuah@yahoo.com';
+
       await sendWithAttachments({
-        to: [updatedVendor.email, 'bukolabc@gmail.com'],
+        to: [updatedVendor.email, adminEmail, 'bukolabc@gmail.com'],
         subject: 'Payment Receipt & Invoice - Wodibenuah Fair 2026',
         title: 'Payment Confirmed',
         content: emailContent,
@@ -145,7 +147,6 @@ export const processSuccessfulPayment = async (reference, amountPaid, vendorIdOr
 
       // Send Notification to Admin
       try {
-        const adminEmail = process.env.ADMIN_EMAIL || 'Wodibenuah@yahoo.com';
         const adminContent = `
           <p style="font-size: 16px; line-height: 1.6; margin-bottom: 20px; color: #555555;">A new vendor has completed their registration and payment.</p>
 
