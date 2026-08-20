@@ -13,6 +13,7 @@ const CompletePayment = () => {
     const [status, setStatus] = useState('idle'); // idle, checking, found, paying, verifying, success, error
     const [errorMessage, setErrorMessage] = useState('');
     const [boothPrices, setBoothPrices] = useState({});
+    const [pricesLoading, setPricesLoading] = useState(true);
     const navigate = useNavigate();
 
     const performLookup = async (targetEmail) => {
@@ -40,11 +41,16 @@ const CompletePayment = () => {
     useEffect(() => {
         // Fetch prices to calculate appropriate payment amount
         const fetchPrices = async () => {
+            setPricesLoading(true);
             try {
                 const prices = await apiRequest('/vendors/prices');
-                setBoothPrices(prices);
+                if (prices && typeof prices === 'object') {
+                    setBoothPrices(prices);
+                }
             } catch (error) {
                 console.error('Error fetching prices:', error);
+            } finally {
+                setPricesLoading(false);
             }
         };
         fetchPrices();
@@ -69,24 +75,29 @@ const CompletePayment = () => {
         // Check if there are location-specific prices
         const locationPrices = boothPrices[vendorData.selected_location] || boothPrices['Default'] || boothPrices || {};
         if (locationPrices[vendorData.booth_type]) {
-            return locationPrices[vendorData.booth_type];
+            return Number(locationPrices[vendorData.booth_type]);
         }
 
         // Case-insensitive lookup fallback
         const targetType = String(vendorData.booth_type || '').trim().toLowerCase();
         const matchKey = Object.keys(locationPrices).find(k => k.trim().toLowerCase() === targetType);
         if (matchKey && locationPrices[matchKey]) {
-            return locationPrices[matchKey];
+            return Number(locationPrices[matchKey]);
         }
 
-        return 195000;
+        return 0; // Return 0 if not found so we don't charge an arbitrary amount
     };
 
     const handlePayment = () => {
         if (!vendorData) return;
+        const dueAmount = calculateAmount();
+        if (dueAmount <= 0) {
+            toast.error('Unable to determine booth fee. Please contact fair organizers.');
+            return;
+        }
 
         setStatus('paying');
-        const amountToCharge = calculateAmount() * 100; // Paystack expects amount in kobo
+        const amountToCharge = dueAmount * 100; // Paystack expects amount in kobo
 
         const paystack = new PaystackPop();
         paystack.newTransaction({
@@ -226,17 +237,26 @@ const CompletePayment = () => {
                                 <div className="border-t border-gray-300 pt-6">
                                     <div className="flex justify-between items-center mb-6">
                                         <span className="font-bold uppercase tracking-wider">Amount Due:</span>
-                                        <span className="text-3xl font-black font-mono">₦{calculateAmount().toLocaleString()}</span>
+                                        <span className="text-3xl font-black font-mono">
+                                            {pricesLoading ? 'Loading...' : calculateAmount() > 0 ? `₦${calculateAmount().toLocaleString()}` : 'Contact Support'}
+                                        </span>
                                     </div>
+
+                                    {calculateAmount() <= 0 && !pricesLoading && (
+                                        <div className="bg-amber-50 border border-amber-300 p-3 text-xs text-amber-800 mb-4">
+                                            We could not automatically determine the price for booth type &quot;{vendorData.booth_type}&quot;. Please contact the event team for payment details.
+                                        </div>
+                                    )}
 
                                     <button
                                         onClick={handlePayment}
-                                        disabled={status === 'paying' || status === 'verifying'}
-                                        className="w-full bg-gold text-black px-8 py-4 font-black uppercase tracking-widest hover:bg-black hover:text-white transition-all transform hover:-translate-y-1 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-y-0 active:shadow-none disabled:opacity-50 disabled:hover:-translate-y-0 disabled:hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-lg"
+                                        disabled={status === 'paying' || status === 'verifying' || pricesLoading || calculateAmount() <= 0}
+                                        className="w-full bg-gold text-black px-8 py-4 font-black uppercase tracking-widest hover:bg-black hover:text-white transition-all transform hover:-translate-y-1 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-y-0 active:shadow-none disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:-translate-y-0 disabled:hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-lg"
                                     >
                                         {status === 'paying' ? 'Opening Paystack...' :
                                             status === 'verifying' ? 'Verifying Payment...' :
-                                                `Pay ₦${calculateAmount().toLocaleString()} Now`}
+                                                pricesLoading ? 'Loading Price...' :
+                                                    calculateAmount() > 0 ? `Pay ₦${calculateAmount().toLocaleString()} Now` : 'Fee Unavailable'}
                                     </button>
                                 </div>
                             )}

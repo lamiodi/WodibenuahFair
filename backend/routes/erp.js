@@ -1150,41 +1150,22 @@ router.get('/paystack/verify/:reference', requireErpAuth(['ceo', 'rep', 'admin']
   res.json({ ok: true, paystack: response.data, local: row.rows[0] || null });
 }));
 
-// -- webhook (Paystack-signed) --
-//   Idempotency: handled by UNIQUE(reference) in the table. The
-//   application-level guard below short-circuits duplicate deliveries
-//   with a 200 so Paystack stops retrying.
-router.post('/paystack/webhook', safe(async (req, res) => {
-  if (!getPaystackKey()) {
-    return res.status(503).send('Paystack not configured');
-  }
-
-  // 1) verify HMAC SHA-512 signature over the EXACT raw body
-  const signature = req.headers['x-paystack-signature'];
-  if (!signature) return res.status(400).send('Missing signature');
-  if (!Buffer.isBuffer(req.rawBody)) {
-    return res.status(500).send('Server misconfigured (rawBody unavailable)');
-  }
-  const expected = crypto.createHmac('sha512', getPaystackKey()).update(req.rawBody).digest('hex');
-  if (expected !== signature) return res.status(400).send('Invalid signature');
-
-  const event = JSON.parse(req.rawBody.toString('utf8'));
-  if (event.event !== 'charge.success') return res.status(200).send('Ignored');
-
+// Helper function for processing ERP Paystack events (callable by both webhooks)
+export async function processErpPaystackEvent(event) {
   const data = event.data || {};
   const reference = data.reference;
-  if (!reference) return res.status(200).send('Ignored (no reference)');
+  if (!reference) return { status: 'no_reference' };
 
-  // 2) idempotency guard — if the row is already success, return 200 immediately.
+  // 1) idempotency guard — if the row is already success, return 200 immediately.
   const existing = await pool.query(
     `SELECT status FROM erp.paystack_transactions WHERE reference = $1`,
     [reference]
   );
   if (existing.rows.length > 0 && existing.rows[0].status === 'success') {
-    return res.status(200).json({ status: 'duplicate', reference });
+    return { status: 'duplicate', reference };
   }
 
-  // 3) upsert
+  // 2) upsert
   await pool.query(
     `INSERT INTO erp.paystack_transactions
        (reference, sale_id, amount_kobo, currency, email, status, paystack_status, channel, paid_at, raw_response, updated_at)
@@ -1209,7 +1190,7 @@ router.post('/paystack/webhook', safe(async (req, res) => {
     ]
   );
 
-  // 4) mark the linked sale as paid, if any
+  // 3) mark the linked sale as paid, if any
   await pool.query(
     `UPDATE erp.sales
      SET payment_method = COALESCE(payment_method, 'Card'),
@@ -1220,7 +1201,32 @@ router.post('/paystack/webhook', safe(async (req, res) => {
     [reference]
   ).catch(() => { /* no linked sale; safe to ignore */ });
 
-  res.status(200).json({ status: 'processed', reference });
+  return { status: 'processed', reference };
+}
+
+// -- webhook (Paystack-signed) --
+//   Idempotency: handled by UNIQUE(reference) in the table. The
+//   application-level guard below short-circuits duplicate deliveries
+//   with a 200 so Paystack stops retrying.
+router.post('/paystack/webhook', safe(async (req, res) => {
+  if (!getPaystackKey()) {
+    return res.status(503).send('Paystack not configured');
+  }
+
+  // 1) verify HMAC SHA-512 signature over the EXACT raw body
+  const signature = req.headers['x-paystack-signature'];
+  if (!signature) return res.status(400).send('Missing signature');
+  if (!Buffer.isBuffer(req.rawBody)) {
+    return res.status(500).send('Server misconfigured (rawBody unavailable)');
+  }
+  const expected = crypto.createHmac('sha512', getPaystackKey()).update(req.rawBody).digest('hex');
+  if (expected !== signature) return res.status(400).send('Invalid signature');
+
+  const event = JSON.parse(req.rawBody.toString('utf8'));
+  if (event.event !== 'charge.success') return res.status(200).send('Ignored');
+
+  const result = await processErpPaystackEvent(event);
+  res.status(200).json(result);
 }));
 
 // -- list recent transactions (auth required) --

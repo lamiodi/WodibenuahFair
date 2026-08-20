@@ -69,15 +69,21 @@ export const sendProfessionalEmail = async ({ to, subject, title, content, actio
   const fromEmail = process.env.EMAIL_FROM || 'Wodibenuah Fair <hello@wodibenuahfair.org>';
   
   try {
-    const data = await resend.emails.send({
+    const response = await resend.emails.send({
       from: fromEmail,
       to,
       subject,
       html
     });
-    return { success: true, data };
+
+    if (response?.error) {
+      console.error('Error from Resend API in sendProfessionalEmail:', response.error);
+      return { success: false, error: response.error };
+    }
+
+    return { success: true, data: response?.data || response };
   } catch (error) {
-    console.error('Error sending professional email:', error);
+    console.error('Unexpected error sending professional email:', error);
     return { success: false, error };
   }
 };
@@ -87,16 +93,22 @@ export const sendWithAttachments = async ({ to, subject, title, content, attachm
   const fromEmail = process.env.EMAIL_FROM || 'Wodibenuah Fair <hello@wodibenuahfair.org>';
   
   try {
-    const data = await resend.emails.send({
+    const response = await resend.emails.send({
       from: fromEmail,
       to,
       subject,
       html,
       attachments
     });
-    return { success: true, data };
+
+    if (response?.error) {
+      console.error('Error from Resend API in sendWithAttachments:', response.error);
+      return { success: false, error: response.error };
+    }
+
+    return { success: true, data: response?.data || response };
   } catch (error) {
-    console.error('Error sending email with attachments:', error);
+    console.error('Unexpected error sending email with attachments:', error);
     return { success: false, error };
   }
 };

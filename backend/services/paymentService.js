@@ -61,15 +61,21 @@ export const processSuccessfulPayment = async (reference, amountPaid, vendorIdOr
 
     let expectedAmount = Number(priceConfig[vendor.booth_type]) || Number(defaultPrices[vendor.booth_type]);
 
-    // Fallback: check case-insensitive match or default to 195,000 (minimum standard slot)
-    if (!expectedAmount) {
-      const matchKey = Object.keys(priceConfig).find(k => k.toLowerCase() === String(vendor.booth_type).toLowerCase()) ||
-                       Object.keys(defaultPrices).find(k => k.toLowerCase() === String(vendor.booth_type).toLowerCase());
+    // Check case-insensitive match if direct lookup missed
+    if (!expectedAmount && vendor.booth_type) {
+      const cleanBoothType = String(vendor.booth_type).trim().toLowerCase();
+      const matchKey = Object.keys(priceConfig).find(k => k.trim().toLowerCase() === cleanBoothType) ||
+                       Object.keys(defaultPrices).find(k => k.trim().toLowerCase() === cleanBoothType);
       if (matchKey) {
         expectedAmount = Number(priceConfig[matchKey] || defaultPrices[matchKey]);
-      } else {
-        expectedAmount = 195000;
       }
+    }
+
+    // Reject unknown booth types explicitly rather than assuming lowest tier
+    if (!expectedAmount || expectedAmount <= 0) {
+      console.warn(`Unknown booth type '${vendor.booth_type}' for vendor ${vendor.email}. Price cannot be determined.`);
+      await client.query('ROLLBACK');
+      throw new Error(`Unrecognized booth type "${vendor.booth_type}". Please contact Wodibenuah Fair support.`);
     }
 
     const paidAmount = Number(amountPaid);
@@ -131,9 +137,14 @@ export const processSuccessfulPayment = async (reference, amountPaid, vendorIdOr
       `;
 
       const adminEmail = process.env.ADMIN_EMAIL || 'Wodibenuah@yahoo.com';
+      const notifyEmails = process.env.ADMIN_NOTIFY_EMAILS 
+        ? process.env.ADMIN_NOTIFY_EMAILS.split(',').map(e => e.trim()).filter(Boolean)
+        : [adminEmail];
+
+      const recipients = Array.from(new Set([updatedVendor.email, ...notifyEmails]));
 
       await sendWithAttachments({
-        to: [updatedVendor.email, adminEmail, 'bukolabc@gmail.com'],
+        to: recipients,
         subject: 'Payment Receipt & Invoice - Wodibenuah Fair 2026',
         title: 'Payment Confirmed',
         content: emailContent,

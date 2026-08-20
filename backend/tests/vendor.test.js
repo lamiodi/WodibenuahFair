@@ -65,14 +65,16 @@ describe('Vendor Registration & Payment Flow', () => {
   it('should verify payment successfully', async () => {
     if (!vendorId) throw new Error('Vendor registration failed, cannot test payment');
 
-    // Mock Paystack Success
+    // Mock Paystack Success with matching customer email & metadata
     mockAxios.get.mockResolvedValue({
       data: {
         status: true,
         data: {
           status: 'success',
           amount: 19500000, // 195,000 * 100 (Half Booth Price)
-          reference: 'TEST_REF_123'
+          reference: 'TEST_REF_123',
+          customer: { email: testEmail },
+          metadata: { vendorId: vendorId }
         }
       }
     });
@@ -102,6 +104,55 @@ describe('Vendor Registration & Payment Flow', () => {
     );
   });
 
+  it('should reject payment verification if transaction customer does not match vendor', async () => {
+    // Register another vendor
+    const victimEmail = `victim_${Date.now()}@example.com`;
+    const regRes = await request(app).post('/api/vendors/register').send({
+      email: victimEmail,
+      fullName: 'Victim Vendor',
+      phoneNumber: '08000000000',
+      whatsappNumber: '08000000000',
+      instagramHandle: '@victim',
+      businessName: 'Victim Biz',
+      sector: 'Fashion',
+      boothType: 'Half Booth',
+      selectedLocation: 'Abuja',
+      isPreviousVendor: false,
+      liveInAbuja: true,
+      categoryAccepted: true,
+      agreeToMarket: true,
+      agreeToWhatsapp: true,
+      agreeToTerms: true
+    });
+    const victimId = regRes.body.vendor.id;
+
+    // Mock Paystack with completely different customer email and vendorId
+    mockAxios.get.mockResolvedValueOnce({
+      data: {
+        status: true,
+        data: {
+          status: 'success',
+          amount: 19500000,
+          reference: 'MISMATCH_REF_999',
+          customer: { email: 'stranger@example.com' },
+          metadata: { vendorId: 99999 }
+        }
+      }
+    });
+
+    const res = await request(app)
+      .post('/api/vendors/verify-payment')
+      .send({
+        reference: 'MISMATCH_REF_999',
+        vendorId: victimId
+      });
+
+    expect(res.statusCode).toEqual(403);
+    expect(res.body.message).toContain('Transaction does not match');
+
+    await pool.query('DELETE FROM vendors WHERE id = $1', [victimId]);
+  });
+
   it('should fail payment verification if amount is insufficient', async () => {
      // Register another vendor for this test
      const cheapEmail = `cheap_${Date.now()}@example.com`;
@@ -124,14 +175,16 @@ describe('Vendor Registration & Payment Flow', () => {
      });
      const cheapId = regRes.body.vendor.id;
 
-     // Mock Paystack with insufficient amount (e.g. 5000)
+     // Mock Paystack with insufficient amount (e.g. 5000) matching this customer
      mockAxios.get.mockResolvedValueOnce({
       data: {
         status: true,
         data: {
           status: 'success',
           amount: 500000, // 5,000 * 100
-          reference: 'CHEAP_REF'
+          reference: 'CHEAP_REF',
+          customer: { email: cheapEmail },
+          metadata: { vendorId: cheapId }
         }
       }
     });
@@ -143,38 +196,10 @@ describe('Vendor Registration & Payment Flow', () => {
         vendorId: cheapId
       });
 
-    // Expect 500 or 400 depending on implementation. 
-    // My implementation throws error in paymentService? 
-    // Or vendors.js handles it?
-    // Let's check vendors.js logic. 
-    // Wait, vendors.js calculates `amountPaid` and passes it to `processSuccessfulPayment`.
-    // BUT `vendors.js` DOES check amount?
-    // Checking previous Read output of vendors.js...
-    // It says: `const amountPaid = data.data.amount / 100;` then `processSuccessfulPayment(...)`.
-    // Does `processSuccessfulPayment` check amount? 
-    // No, it just updates.
-    // DOES `vendors.js` check amount?
-    // I recall adding validation in the FIRST summary but maybe I missed it in the file content I read earlier?
-    // Let's check `vendors.js` content from the Read toolcall earlier.
-    
-    // Line 90 in vendors.js:
-    // if (data.status && data.data.status === 'success') {
-    //   const amountPaid = data.data.amount / 100;
-    //   try { const result = await processSuccessfulPayment(...) ... }
-    
-    // IT DOES NOT SEEM TO CHECK THE AMOUNT in the code I read!
-    // The summary said "backend payment validation (matching paid amount to booth price)".
-    // Maybe I *thought* I added it, or it was in the plan but not the code?
-    // Or maybe I missed it in the file read.
-    // Let's re-verify `vendors.js` content.
-    // If it's missing, THIS TEST WILL FAIL (or pass with wrong expectation), and I found a BUG!
-    // This is exactly why we test.
-    
-    // I will expect it to FAIL for now if I assume it should block.
-    // If it succeeds, then we have a security issue (paying 5k for 195k booth).
+    expect(res.statusCode).toEqual(400);
+    expect(res.body.message).toContain('Insufficient payment');
     
     await pool.query('DELETE FROM vendors WHERE id = $1', [cheapId]);
-    expect(res.statusCode).not.toEqual(200); 
   });
 
   it('should update vendor approval status via PATCH /api/vendors/:id/status', async () => {

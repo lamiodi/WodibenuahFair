@@ -1,5 +1,6 @@
 import express from 'express';
 import axios from 'axios';
+import rateLimit from 'express-rate-limit';
 import { body } from 'express-validator';
 import pool from '../db.js';
 import { validate } from '../middleware/validate.js';
@@ -11,8 +12,22 @@ import { BOOTH_PRICES } from '../config/pricing.js';
 const router = express.Router();
 const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
 
+// Dedicated rate limiter for public lookup to prevent vendor email harvesting
+const lookupLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 30, // 30 lookup attempts per IP per 15 minutes
+  message: { error: 'Too many lookup requests. Please try again later.' }
+});
+
+// Dedicated rate limiter for verify-payment to prevent reference brute-force
+const verifyPaymentLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 30,
+  message: { error: 'Too many verification requests. Please try again later.' }
+});
+
 // Public: Lookup Vendor for Payment
-router.post('/lookup', validate([
+router.post('/lookup', lookupLimiter, validate([
   body('email').isEmail().normalizeEmail()
 ]), async (req, res, next) => {
   const { email } = req.body;
@@ -159,14 +174,22 @@ router.post('/register', validate([
 });
 
 // Verify Payment
-router.post('/verify-payment', validate([
+router.post('/verify-payment', verifyPaymentLimiter, validate([
   body('reference').trim().notEmpty().escape(),
   body('vendorId').isInt()
 ]), async (req, res) => {
   const { reference, vendorId } = req.body;
 
   try {
-    const response = await axios.get(`https://api.paystack.co/transaction/verify/${reference}`, {
+    // 1. Fetch the target vendor record
+    const vendorRes = await pool.query('SELECT * FROM vendors WHERE id = $1', [vendorId]);
+    if (vendorRes.rows.length === 0) {
+      return res.status(404).json({ status: 'error', message: 'Vendor not found' });
+    }
+    const targetVendor = vendorRes.rows[0];
+
+    // 2. Query Paystack
+    const response = await axios.get(`https://api.paystack.co/transaction/verify/${encodeURIComponent(reference)}`, {
       headers: {
         Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`
       }
@@ -175,6 +198,27 @@ router.post('/verify-payment', validate([
     const data = response.data;
 
     if (data.status && data.data.status === 'success') {
+      // 3. Verify that Paystack transaction matches this vendor (by email or metadata vendorId)
+      const paystackCustomerEmail = (data.data.customer?.email || '').toLowerCase().trim();
+      const vendorEmail = (targetVendor.email || '').toLowerCase().trim();
+
+      let paystackMetadata = data.data.metadata;
+      if (typeof paystackMetadata === 'string') {
+        try { paystackMetadata = JSON.parse(paystackMetadata); } catch { paystackMetadata = {}; }
+      }
+      const metadataVendorId = paystackMetadata?.vendorId;
+
+      const matchesId = metadataVendorId && Number(metadataVendorId) === Number(vendorId);
+      const matchesEmail = paystackCustomerEmail && paystackCustomerEmail === vendorEmail;
+
+      if (!matchesId && !matchesEmail) {
+        console.warn(`Security alert: Reference ${reference} belongs to '${paystackCustomerEmail}' (meta vendorId: ${metadataVendorId}), but was submitted for vendor ${vendorId} ('${vendorEmail}')`);
+        return res.status(403).json({
+          status: 'error',
+          message: 'Payment verification failed: Transaction does not match this vendor account.'
+        });
+      }
+
       // Amount is in kobo from Paystack, convert to Naira
       const amountPaid = data.data.amount / 100;
 

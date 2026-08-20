@@ -26,25 +26,25 @@ export const generateInvoice = (vendor, paymentDetails) => {
     doc
       .fillColor('#000000')
       .fontSize(20)
-      .text('INVOICE', 50, 160);
+      .text('INVOICE', 50, 120);
 
     // Invoice Details
     doc
       .fontSize(10)
-      .text(`Invoice Number: ${paymentDetails.reference}`, 50, 200)
-      .text(`Date: ${new Date().toLocaleDateString()}`, 50, 215)
-      .text(`Balance Due: 0.00`, 50, 130, { align: 'right' });
+      .text(`Invoice Number: ${paymentDetails.reference}`, 50, 150)
+      .text(`Date: ${new Date().toLocaleDateString()}`, 50, 165)
+      .text(`Balance Due: NGN 0.00`, 50, 150, { align: 'right' });
 
     // Vendor Details
     doc
-      .text(`Bill To:`, 50, 250)
-      .text(vendor.business_name, 50, 265)
-      .text(vendor.full_name, 50, 280)
-      .text(vendor.email, 50, 295)
-      .text(vendor.phone_number, 50, 310);
+      .text(`Bill To:`, 50, 200)
+      .text(vendor.business_name || '', 50, 215)
+      .text(vendor.full_name || '', 50, 230)
+      .text(vendor.email || '', 50, 245)
+      .text(vendor.phone_number || '', 50, 260);
 
     // Line Items Header
-    const invoiceTableTop = 350;
+    const invoiceTableTop = 300;
 
     doc.font('Helvetica-Bold');
     generateTableRow(
@@ -64,8 +64,8 @@ export const generateInvoice = (vendor, paymentDetails) => {
     generateTableRow(
       doc,
       invoiceTableItem,
-      vendor.booth_type,
-      `Vendor Registration - ${vendor.selected_location}`,
+      vendor.booth_type || 'Exhibition Booth',
+      `Vendor Registration - ${vendor.selected_location || 'Lagos'}`,
       formatCurrency(paymentDetails.amount),
       1,
       formatCurrency(paymentDetails.amount)
@@ -138,5 +138,6 @@ function generateHr(doc, y) {
 }
 
 function formatCurrency(amount) {
-  return 'N' + amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const num = Number(amount) || 0;
+  return 'NGN ' + num.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
