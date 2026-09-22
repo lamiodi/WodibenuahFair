@@ -54,16 +54,18 @@ export const processSuccessfulPayment = async (reference, amountPaid, vendorIdOr
     }
 
     // Validate Payment Amount
-    // Determine price based on location
+    // Determine price based on location.
+    // Trim booth_type to guard against trailing whitespace stored in DB.
+    const boothType = (vendor.booth_type || '').trim();
     const location = vendor.selected_location || 'Default';
     const priceConfig = BOOTH_PRICES[location] || BOOTH_PRICES['Default'] || {};
     const defaultPrices = BOOTH_PRICES['Default'] || {};
 
-    let expectedAmount = Number(priceConfig[vendor.booth_type]) || Number(defaultPrices[vendor.booth_type]);
+    let expectedAmount = Number(priceConfig[boothType]) || Number(defaultPrices[boothType]);
 
     // Check case-insensitive match if direct lookup missed
-    if (!expectedAmount && vendor.booth_type) {
-      const cleanBoothType = String(vendor.booth_type).trim().toLowerCase();
+    if (!expectedAmount && boothType) {
+      const cleanBoothType = boothType.toLowerCase();
       const matchKey = Object.keys(priceConfig).find(k => k.trim().toLowerCase() === cleanBoothType) ||
                        Object.keys(defaultPrices).find(k => k.trim().toLowerCase() === cleanBoothType);
       if (matchKey) {

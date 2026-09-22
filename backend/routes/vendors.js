@@ -27,17 +27,21 @@ const verifyPaymentLimiter = rateLimit({
 });
 
 // Public: Lookup Vendor for Payment
+// NOTE: Do NOT use normalizeEmail() here — it strips dots and lowercases Gmail
+// addresses, causing real customers to get 404 if their stored email differs.
 router.post('/lookup', lookupLimiter, validate([
-  body('email').isEmail().normalizeEmail()
+  body('email').isEmail().trim().toLowerCase()
 ]), async (req, res, next) => {
-  const { email } = req.body;
+  // Normalise manually: lowercase + trim (without stripping dots like normalizeEmail() does)
+  const email = (req.body.email || '').toLowerCase().trim();
   try {
+    // Use LOWER() on both sides for a case-insensitive match
     const result = await pool.query(
-      'SELECT id, email, full_name, business_name, booth_type, selected_location, payment_status, amount_paid FROM vendors WHERE email = $1',
+      'SELECT id, email, full_name, business_name, booth_type, selected_location, payment_status, amount_paid FROM vendors WHERE LOWER(email) = $1',
       [email]
     );
     if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'No registration found with this email.' });
+      return res.status(404).json({ error: 'No registration found with this email. Please check your email and try again.' });
     }
     res.json({ vendor: result.rows[0] });
   } catch (error) {
@@ -83,7 +87,10 @@ router.get('/', authenticateToken, async (req, res, next) => {
 
 // Register Vendor
 router.post('/register', validate([
-  body('email').isEmail().normalizeEmail(),
+  // Same normalisation as /lookup: lowercase + trim, WITHOUT stripping
+  // Gmail dots. normalizeEmail() here would store 'monicae@gmail.com' for
+  // 'Monica.E@gmail.com' and the dot-preserving lookup would 404 them.
+  body('email').isEmail().trim().toLowerCase(),
   body('fullName').trim().notEmpty().escape(),
   body('phoneNumber').trim().notEmpty().escape(),
   body('whatsappNumber').trim().notEmpty().escape(),
@@ -114,8 +121,8 @@ router.post('/register', validate([
   const isLocalResident = Boolean(liveInLagos !== undefined ? liveInLagos : (liveInAbuja !== undefined ? liveInAbuja : false));
 
   try {
-    // Check for existing registration
-    const existingVendor = await pool.query('SELECT * FROM vendors WHERE email = $1', [email]);
+    // Case-insensitive check for existing registration (matches /lookup semantics)
+    const existingVendor = await pool.query('SELECT * FROM vendors WHERE LOWER(email) = $1', [email]);
     if (existingVendor.rows.length > 0) {
       const vendor = existingVendor.rows[0];
       if (vendor.payment_status === 'paid') {
@@ -130,7 +137,7 @@ router.post('/register', validate([
             is_previous_vendor = $10, live_in_abuja = $11, category_accepted = $12, 
             agree_to_market = $13, agree_to_whatsapp = $14, agree_to_terms = $15, event_id = $16,
             updated_at = NOW()
-          WHERE email = $1
+          WHERE LOWER(email) = $1
           RETURNING *;
         `;
         const updateValues = [

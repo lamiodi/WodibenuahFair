@@ -39,12 +39,16 @@ export const apiRequest = async (endpoint, options = {}) => {
   try {
     const response = await fetch(url, config);
 
-    // Handle 401 Unauthorized (Session expired)
+    // Handle 401 Unauthorized — only redirect for admin/auth routes.
+    // Public payment routes (e.g. /vendors/lookup) should NEVER redirect
+    // a customer to the admin login page.
     if (response.status === 401) {
-      localStorage.removeItem('token');
-      // Optional: Redirect to login or dispatch event
-      if (!window.location.pathname.includes('/admin/login')) {
-        window.location.href = '/admin/login';
+      const isAdminRoute = endpoint.includes('/auth') || endpoint.includes('/admin') || endpoint.includes('/erp');
+      if (isAdminRoute) {
+        localStorage.removeItem('token');
+        if (!window.location.pathname.includes('/admin/login')) {
+          window.location.href = '/admin/login';
+        }
       }
     }
 

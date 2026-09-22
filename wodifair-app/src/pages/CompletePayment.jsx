@@ -192,8 +192,17 @@ const CompletePayment = () => {
                     </form>
 
                     {errorMessage && (
-                        <div className="bg-red-50 text-red-600 p-4 border border-red-200 mb-8 text-sm">
-                            {errorMessage}
+                        <div className="bg-red-50 text-red-700 p-4 border border-red-200 mb-8 text-sm rounded">
+                            <p className="font-semibold mb-1">⚠️ {errorMessage}</p>
+                            {status === 'error' && (
+                                <p className="text-red-600 mt-2">
+                                    Please double-check the email address you used when registering.
+                                    If you continue to have issues,{' '}
+                                    <a href="/contact" className="underline font-bold hover:text-red-800">
+                                        contact our support team
+                                    </a>.
+                                </p>
+                            )}
                         </div>
                     )}
 
