@@ -51,12 +51,77 @@ const AdminDashboard = () => {
     displayOrder: 0
   });
 
+  // Event Templates for 1-Click Generation
+  const EVENT_TEMPLATES = [
+    {
+      name: '🌟 Lagos Holiday Fair (2026)',
+      data: {
+        title: 'Wodibenuah Fair Lagos 2026',
+        location: 'The Five Palm Oniru, Lagos',
+        mapLink: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d209927.16994260912!2d3.3535174980813856!3d6.520877071059808!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x103bf57f27da3ee1%3A0x3a690cd5fd98ed0e!2sThe%20Five%20Palm%20Oniru!5e1!3m2!1sen!2sng!4v1785822446153!5m2!1sen!2sng',
+        startDate: '2026-12-13T10:00',
+        endDate: '2026-12-13T22:00',
+        description: 'The Wodibenuah Fair stands as a premier exhibition in Lagos, hosting luxury cultural, fashion, and lifestyle brands.',
+        imageUrl: 'https://res.cloudinary.com/dwmz4youk/image/upload/v1779310067/wodifair/Lagosdecember12thedition.png',
+        status: 'upcoming',
+        isRegistrationOpen: true,
+        isFeatured: true
+      }
+    },
+    {
+      name: '🏛️ Abuja Grand Exhibition',
+      data: {
+        title: 'Wodibenuah Fair Abuja Edition',
+        location: 'Baze University Multi-Purpose Hall, Abuja',
+        mapLink: 'https://maps.google.com/?q=Baze+University+Abuja',
+        startDate: '2026-11-20T09:00',
+        endDate: '2026-11-21T21:00',
+        description: 'Connecting top northern vendors, luxury fashion designers, artisans, and culinary connoisseurs in the Federal Capital Territory.',
+        imageUrl: 'https://res.cloudinary.com/dwmz4youk/image/upload/v1779310064/wodifair/Gemini_Generated_Image_euj3e6euj3e6euj3.png',
+        status: 'upcoming',
+        isRegistrationOpen: true,
+        isFeatured: false
+      }
+    },
+    {
+      name: '👗 Fashion & Lifestyle Pop-Up',
+      data: {
+        title: 'Wodibenuah Pop-Up Fashion Fair',
+        location: 'Victoria Island, Lagos',
+        mapLink: 'https://maps.google.com/?q=Victoria+Island+Lagos',
+        startDate: '2026-10-15T11:00',
+        endDate: '2026-10-15T20:00',
+        description: 'An exclusive boutique experience spotlighting contemporary African streetwear, couture fashion, skincare, and bespoke accessories.',
+        imageUrl: 'https://res.cloudinary.com/dwmz4youk/image/upload/v1779310112/wodifair/IMG_0162.jpg',
+        status: 'upcoming',
+        isRegistrationOpen: true,
+        isFeatured: false
+      }
+    },
+    {
+      name: '🍽️ Food, Drinks & Crafts Showcase',
+      data: {
+        title: 'Wodibenuah Taste & Craft Expo',
+        location: 'Lekki Phase 1, Lagos',
+        mapLink: 'https://maps.google.com/?q=Lekki+Phase+1+Lagos',
+        startDate: '2026-09-25T12:00',
+        endDate: '2026-09-25T22:00',
+        description: 'A vibrant weekend celebration of culinary mastery, artisan cocktails, handmade crafts, and family entertainment.',
+        imageUrl: 'https://res.cloudinary.com/dwmz4youk/image/upload/v1779310101/wodifair/IMG_8966.jpg',
+        status: 'upcoming',
+        isRegistrationOpen: true,
+        isFeatured: false
+      }
+    }
+  ];
+
   // Event Modal State
   const [showEventModal, setShowEventModal] = useState(false);
   const [currentEvent, setCurrentEvent] = useState(null);
   const [eventForm, setEventForm] = useState({
     title: '',
     location: '',
+    mapLink: '',
     startDate: '',
     endDate: '',
     description: '',
@@ -121,7 +186,7 @@ const AdminDashboard = () => {
     return Array.from(new Set(vendors.map(v => v.booth_type).filter(Boolean))).sort();
   }, [vendors]);
 
-  const uniqueVendorSectors = useMemo(() => {
+  const _uniqueVendorSectors = useMemo(() => {
     return Array.from(new Set(vendors.map(v => v.sector).filter(Boolean))).sort();
   }, [vendors]);
 
@@ -583,19 +648,21 @@ const AdminDashboard = () => {
       setEventForm({
         title: event.title,
         location: event.location,
+        mapLink: event.map_link || '',
         startDate: event.start_date ? new Date(event.start_date).toISOString().slice(0, 16) : '',
         endDate: event.end_date ? new Date(event.end_date).toISOString().slice(0, 16) : '',
         description: event.description || '',
         imageUrl: event.image_url || '',
         status: event.status || 'upcoming',
-        isRegistrationOpen: event.is_registration_open,
-        isFeatured: event.is_featured
+        isRegistrationOpen: event.is_registration_open !== undefined ? Boolean(event.is_registration_open) : true,
+        isFeatured: Boolean(event.is_featured)
       });
     } else {
       setCurrentEvent(null);
       setEventForm({
         title: '',
         location: '',
+        mapLink: '',
         startDate: '',
         endDate: '',
         description: '',
@@ -663,16 +730,23 @@ const AdminDashboard = () => {
     const method = currentEvent ? 'PUT' : 'POST';
     const endpoint = currentEvent ? `/events/${currentEvent.id}` : `/events`;
 
+    const payload = {
+      ...eventForm,
+      endDate: eventForm.endDate && eventForm.endDate.trim() ? eventForm.endDate : null,
+      mapLink: eventForm.mapLink && eventForm.mapLink.trim() ? eventForm.mapLink.trim() : null,
+      imageUrl: eventForm.imageUrl && eventForm.imageUrl.trim() ? eventForm.imageUrl.trim() : null
+    };
+
     try {
       const savedEvent = await apiRequest(endpoint, {
         method,
-        body: eventForm
+        body: payload
       });
 
-      toast.success(`Event ${currentEvent ? 'updated' : 'created'} successfully`);
+      toast.success(`Event ${currentEvent ? 'updated' : 'generated'} successfully`);
 
       if (currentEvent) {
-        setEvents(events.map(e => e.id === savedEvent.id ? savedEvent : e));
+        setEvents(events.map(ev => ev.id === savedEvent.id ? savedEvent : ev));
       } else {
         setEvents([savedEvent, ...events]);
         setStats(prev => ({ ...prev, events: prev.events + 1 }));
@@ -681,6 +755,22 @@ const AdminDashboard = () => {
     } catch (err) {
       console.error(err);
       toast.error(err.message || 'Error saving event');
+    }
+  };
+
+  const handleDuplicateEvent = async (event) => {
+    if (!event || !event.id) return;
+    toast.loading(`Cloning ${event.title}...`, { id: 'dup-toast' });
+    try {
+      const cloned = await apiRequest(`/events/${event.id}/duplicate`, {
+        method: 'POST'
+      });
+      setEvents(prev => [cloned, ...prev]);
+      setStats(prev => ({ ...prev, events: prev.events + 1 }));
+      toast.success(`Event duplicated as "${cloned.title}"! Click Edit to customize.`, { id: 'dup-toast' });
+    } catch (err) {
+      console.error(err);
+      toast.error(err.message || 'Failed to duplicate event', { id: 'dup-toast' });
     }
   };
 
@@ -1113,7 +1203,7 @@ const AdminDashboard = () => {
     const approvedCount = filteredRegistrations.filter(v => v.is_approved || v.approval_status === 'approved' || v.payment_status === 'paid').length;
     const pendingReviewCount = filteredRegistrations.filter(v => !v.is_approved && v.approval_status !== 'rejected' && v.payment_status !== 'paid').length;
     const rejectedCount = filteredRegistrations.filter(v => v.approval_status === 'rejected').length;
-    const paidCount = filteredRegistrations.filter(v => v.payment_status === 'paid').length;
+    const _paidCount = filteredRegistrations.filter(v => v.payment_status === 'paid').length;
 
     return (
       <div className="space-y-6">
@@ -1521,7 +1611,8 @@ const AdminDashboard = () => {
                     </span>
                   </td>
                   <td className="py-4">
-                    <button onClick={() => openEventModal(event)} className="text-xs font-bold uppercase tracking-wider text-gray-600 hover:text-deep-black mr-4">Edit</button>
+                    <button onClick={() => openEventModal(event)} className="text-xs font-bold uppercase tracking-wider text-gray-600 hover:text-deep-black mr-3">Edit</button>
+                    <button onClick={() => handleDuplicateEvent(event)} className="text-xs font-bold uppercase tracking-wider text-gold hover:text-deep-black mr-3" title="Duplicate this event">Duplicate</button>
                     <button onClick={() => handleDelete('events', event.id)} className="text-xs font-bold uppercase tracking-wider text-red-500 hover:text-red-700">Delete</button>
                   </td>
                 </tr>
@@ -1918,7 +2009,7 @@ const AdminDashboard = () => {
         return (
           <div className="space-y-8">
             <h2 className="text-3xl font-heading font-bold uppercase">Dashboard Overview</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 md:gap-6">
               <div
                 onClick={() => { setVendorApprovalFilter('all'); setActiveTab('vendors'); }}
                 className="bg-white border border-deep-black p-6 hover:border-gold hover:shadow-md transition-all cursor-pointer group"
@@ -1965,6 +2056,26 @@ const AdminDashboard = () => {
                 </div>
                 <p className="text-3xl font-bold mt-3 font-mono text-green-700">₦{totalRevenue.toLocaleString()}</p>
                 <p className="text-[10px] text-gray-400 uppercase tracking-wider mt-2">Verified payments</p>
+              </div>
+
+              <div
+                onClick={() => { setActiveTab('events'); }}
+                className="bg-white border border-deep-black p-6 hover:border-gold hover:shadow-md transition-all cursor-pointer group"
+              >
+                <div className="flex justify-between items-start">
+                  <h3 className="text-xs font-heading font-bold uppercase text-gray-500 tracking-wider">Exhibitions</h3>
+                  <span className="text-xs text-gold font-bold group-hover:translate-x-1 transition-transform">→</span>
+                </div>
+                <p className="text-4xl font-bold mt-3 text-deep-black">{events.length}</p>
+                <div className="flex justify-between items-center mt-2">
+                  <span className="text-[10px] text-gray-400 uppercase tracking-wider">{events.filter(ev => ev.status === 'upcoming').length} Upcoming</span>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); openEventModal(); }}
+                    className="text-[10px] bg-deep-black text-white hover:bg-gold hover:text-deep-black font-bold uppercase px-2 py-0.5 rounded transition-colors"
+                  >
+                    + Generate
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -2309,36 +2420,75 @@ const AdminDashboard = () => {
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
             </button>
 
-            <h2 className="text-2xl font-heading font-bold uppercase mb-6">
-              {currentEvent ? 'Edit Event' : 'Add New Event'}
+            <h2 className="text-2xl font-heading font-bold uppercase mb-2">
+              {currentEvent ? 'Edit Event' : 'Generate New Event'}
             </h2>
+            <p className="text-xs text-gray-500 mb-6 uppercase tracking-wider">Fill in the event parameters or select a pre-configured template below.</p>
+
+            {/* Quick Generate from Template */}
+            <div className="bg-gray-50 border border-gray-200 p-4 rounded mb-6">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-bold uppercase tracking-wider text-deep-black flex items-center gap-1.5">
+                  <svg className="w-4 h-4 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                  Quick Generate from Presets
+                </span>
+                <span className="text-[10px] text-gray-400 uppercase">Click to pre-fill</span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {EVENT_TEMPLATES.map((tmpl, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => setEventForm(prev => ({ ...prev, ...tmpl.data }))}
+                    className="text-left text-xs font-bold px-3 py-2 bg-white border border-gray-300 hover:border-gold hover:bg-gold/10 transition-colors truncate"
+                  >
+                    {tmpl.name}
+                  </button>
+                ))}
+              </div>
+            </div>
 
             <form onSubmit={handleSaveEvent} className="space-y-6">
               <div>
-                <label className="block text-sm font-bold uppercase tracking-wider mb-2">Title</label>
+                <label className="block text-sm font-bold uppercase tracking-wider mb-2">Event Title *</label>
                 <input
                   type="text"
                   value={eventForm.title}
                   onChange={e => setEventForm({ ...eventForm, title: e.target.value })}
                   className="w-full px-4 py-3 border border-deep-black focus:outline-none focus:ring-2 focus:ring-gold"
+                  placeholder="e.g. Wodibenuah Fair Lagos 2026"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-bold uppercase tracking-wider mb-2">Location</label>
+                <label className="block text-sm font-bold uppercase tracking-wider mb-2">Location & Venue *</label>
                 <input
                   type="text"
                   value={eventForm.location}
                   onChange={e => setEventForm({ ...eventForm, location: e.target.value })}
                   className="w-full px-4 py-3 border border-deep-black focus:outline-none focus:ring-2 focus:ring-gold"
+                  placeholder="e.g. The Five Palm Oniru, Lagos"
                   required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold uppercase tracking-wider mb-2">Google Maps Embed / Link (Optional)</label>
+                <input
+                  type="text"
+                  value={eventForm.mapLink || ''}
+                  onChange={e => setEventForm({ ...eventForm, mapLink: e.target.value })}
+                  className="w-full px-4 py-3 border border-deep-black focus:outline-none focus:ring-2 focus:ring-gold"
+                  placeholder="https://maps.google.com/?q=..."
                 />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-bold uppercase tracking-wider mb-2">Start Date</label>
+                  <div className="flex justify-between items-center mb-2">
+                    <label className="text-sm font-bold uppercase tracking-wider">Start Date & Time *</label>
+                  </div>
                   <input
                     type="datetime-local"
                     value={eventForm.startDate}
@@ -2346,6 +2496,35 @@ const AdminDashboard = () => {
                     className="w-full px-4 py-3 border border-deep-black focus:outline-none focus:ring-2 focus:ring-gold"
                     required
                   />
+                  {/* Quick Dates Helper */}
+                  <div className="flex flex-wrap gap-1.5 mt-2">
+                    {[
+                      { label: 'In 1 Mo', offsetMonths: 1 },
+                      { label: 'In 3 Mos', offsetMonths: 3 },
+                      { label: 'Dec 13, 2026', fixed: '2026-12-13T10:00' }
+                    ].map((btn, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => {
+                          if (btn.fixed) {
+                            setEventForm(prev => ({ ...prev, startDate: btn.fixed, endDate: btn.fixed.replace('10:00', '22:00') }));
+                          } else {
+                            const d = new Date();
+                            d.setMonth(d.getMonth() + btn.offsetMonths);
+                            d.setHours(10, 0, 0, 0);
+                            const startIso = d.toISOString().slice(0, 16);
+                            d.setHours(22, 0, 0, 0);
+                            const endIso = d.toISOString().slice(0, 16);
+                            setEventForm(prev => ({ ...prev, startDate: startIso, endDate: endIso }));
+                          }
+                        }}
+                        className="text-[10px] font-bold uppercase px-2 py-0.5 bg-gray-100 hover:bg-gold hover:text-deep-black border border-gray-200 transition-colors"
+                      >
+                        {btn.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
                 <div>
                   <label className="block text-sm font-bold uppercase tracking-wider mb-2">End Date (Optional)</label>
@@ -2355,28 +2534,48 @@ const AdminDashboard = () => {
                     onChange={e => setEventForm({ ...eventForm, endDate: e.target.value })}
                     className="w-full px-4 py-3 border border-deep-black focus:outline-none focus:ring-2 focus:ring-gold"
                   />
+                  <span className="text-[10px] text-gray-400 block mt-2">Leave blank if single-day event without end time.</span>
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-bold uppercase tracking-wider mb-2">Description</label>
+                <label className="block text-sm font-bold uppercase tracking-wider mb-2">Description *</label>
                 <textarea
                   value={eventForm.description}
                   onChange={e => setEventForm({ ...eventForm, description: e.target.value })}
-                  className="w-full px-4 py-3 border border-deep-black focus:outline-none focus:ring-2 focus:ring-gold h-32"
+                  className="w-full px-4 py-3 border border-deep-black focus:outline-none focus:ring-2 focus:ring-gold h-28"
+                  placeholder="Describe the fair edition, exhibition highlights, and vendor focus..."
                   required
                 ></textarea>
               </div>
 
               <div>
-                <label className="block text-sm font-bold uppercase tracking-wider mb-2">Image URL (Optional)</label>
+                <label className="block text-sm font-bold uppercase tracking-wider mb-2">Banner Image URL (Optional)</label>
                 <input
                   type="text"
                   value={eventForm.imageUrl}
                   onChange={e => setEventForm({ ...eventForm, imageUrl: e.target.value })}
                   className="w-full px-4 py-3 border border-deep-black focus:outline-none focus:ring-2 focus:ring-gold"
-                  placeholder="https://..."
+                  placeholder="https://res.cloudinary.com/..."
                 />
+                {/* Sample Banner Image Buttons */}
+                <div className="flex flex-wrap gap-1.5 mt-2">
+                  <span className="text-[10px] font-bold uppercase text-gray-400 self-center mr-1">Presets:</span>
+                  {[
+                    { label: 'Lagos Dec Banner', url: 'https://res.cloudinary.com/dwmz4youk/image/upload/v1779310067/wodifair/Lagosdecember12thedition.png' },
+                    { label: 'Exhibition Hall', url: 'https://res.cloudinary.com/dwmz4youk/image/upload/v1779310064/wodifair/Gemini_Generated_Image_euj3e6euj3e6euj3.png' },
+                    { label: 'Fashion Fair', url: 'https://res.cloudinary.com/dwmz4youk/image/upload/v1779310112/wodifair/IMG_0162.jpg' }
+                  ].map((img, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => setEventForm(prev => ({ ...prev, imageUrl: img.url }))}
+                      className="text-[10px] font-bold uppercase px-2 py-0.5 bg-gray-100 hover:bg-gold hover:text-deep-black border border-gray-200 transition-colors"
+                    >
+                      {img.label}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               <div className="flex flex-col gap-4 bg-gray-50 p-6 border border-gray-200">
@@ -2402,8 +2601,8 @@ const AdminDashboard = () => {
                     className="w-5 h-5 text-gold border-deep-black focus:ring-gold"
                   />
                   <label htmlFor="isFeatured" className="text-sm font-bold uppercase tracking-wider cursor-pointer flex flex-col">
-                    <span>Set as Next Event</span>
-                    <span className="text-xs text-gray-500 font-normal normal-case tracking-normal">This will replace the countdown on the home page. Only one event can be the &quot;Next Event&quot;.</span>
+                    <span>Set as Featured Next Event Countdown</span>
+                    <span className="text-xs text-gray-500 font-normal normal-case tracking-normal">This will immediately become the active countdown on the homepage.</span>
                   </label>
                 </div>
               </div>
@@ -2420,7 +2619,7 @@ const AdminDashboard = () => {
                   type="submit"
                   className="bg-deep-black text-white px-8 py-3 text-sm font-bold uppercase tracking-wider hover:bg-gold hover:text-deep-black transition-colors"
                 >
-                  {currentEvent ? 'Update Event' : 'Create Event'}
+                  {currentEvent ? 'Update Event' : 'Generate Event'}
                 </button>
               </div>
             </form>

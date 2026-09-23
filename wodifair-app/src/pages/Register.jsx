@@ -127,7 +127,7 @@ const Register = () => {
     }
 
     const phoneRegex = /^\+?[0-9]{10,15}$/;
-    const phoneClean = formData.phoneNumber.replace(/\s/g, '');
+    const phoneClean = formData.phoneNumber.replace(/[^\d+]/g, '');
     if (!formData.phoneNumber.trim()) {
       errors.phoneNumber = 'Phone number is required.';
       errorList.push('Phone number is missing.');
@@ -136,7 +136,7 @@ const Register = () => {
       errorList.push('Phone number must be between 10 and 15 digits.');
     }
 
-    const whatsappClean = formData.whatsappNumber.replace(/\s/g, '');
+    const whatsappClean = formData.whatsappNumber.replace(/[^\d+]/g, '');
     if (!formData.whatsappNumber.trim()) {
       errors.whatsappNumber = 'WhatsApp number is required.';
       errorList.push('WhatsApp number is missing.');
@@ -218,7 +218,11 @@ const Register = () => {
     try {
       const data = await apiRequest('/vendors/register', {
         method: 'POST',
-        body: formData
+        body: {
+          ...formData,
+          phoneNumber: formData.phoneNumber.replace(/[^\d+]/g, ''),
+          whatsappNumber: formData.whatsappNumber.replace(/[^\d+]/g, '')
+        }
       });
 
       if (data.vendor) {
@@ -312,19 +316,32 @@ const Register = () => {
               <div className="space-y-3 text-sm text-gray-700">
                 <div className="flex items-start gap-3">
                   <span className="w-6 h-6 rounded-full bg-deep-black text-white text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">1</span>
-                  <p><strong className="text-deep-black">Application Review:</strong> Our team is reviewing your details for booth selection and category confirmation.</p>
+                  <p><strong className="text-deep-black">Payment Link Dispatched:</strong> Your official payment link has been dispatched to <span className="underline font-bold text-deep-black">{formData.email || 'your registered email'}</span>. Please check your inbox (and spam/promotions folder).</p>
                 </div>
 
                 <div className="flex items-start gap-3">
                   <span className="w-6 h-6 rounded-full bg-deep-black text-white text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">2</span>
-                  <p><strong className="text-deep-black">Payment Link via Email:</strong> You will receive an email with your official payment link at <span className="underline font-bold text-deep-black">{formData.email || 'your registered email'}</span> within <strong>24 hours</strong>.</p>
+                  <p><strong className="text-deep-black">Secure Your Booth Immediately:</strong> You can click the button below to complete your payment online right away, or use the link in your email.</p>
                 </div>
 
                 <div className="flex items-start gap-3">
                   <span className="w-6 h-6 rounded-full bg-deep-black text-white text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">3</span>
-                  <p><strong className="text-deep-black">Secure Your Booth:</strong> Complete payment via your email link to lock in your preferred slot!</p>
+                  <p><strong className="text-deep-black">Instant Confirmation:</strong> Once payment is completed, your booth is immediately locked in and your official receipt + vendor tags are issued!</p>
                 </div>
               </div>
+            </div>
+
+            {/* Direct Pay Action */}
+            <div className="mb-8">
+              <a
+                href={`/complete-payment?email=${encodeURIComponent(formData.email)}`}
+                className="inline-flex items-center justify-center gap-3 bg-gold text-deep-black px-10 py-5 text-sm font-bold uppercase tracking-[0.2em] hover:bg-deep-black hover:text-white border border-deep-black transition-all duration-300 shadow-xl hover:shadow-2xl w-full sm:w-auto font-heading"
+              >
+                Proceed to Complete Payment Now
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                </svg>
+              </a>
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -831,8 +848,8 @@ const Register = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 002-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                 </svg>
                 <div className="text-xs md:text-sm text-deep-black font-medium leading-normal">
-                  <strong className="uppercase tracking-wider block font-bold mb-0.5">Note on Payment:</strong>
-                  After submitting your registration, our team will review your application and send your official payment link via email within <strong>24 hours</strong>.
+                  <strong className="uppercase tracking-wider block font-bold mb-0.5">Instant Payment Link:</strong>
+                  Upon submitting your registration, you will receive your official payment link via email immediately, and you can also proceed directly to secure your booth.
                 </div>
               </div>
 

@@ -16,6 +16,8 @@ const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
 const lookupLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 30, // 30 lookup attempts per IP per 15 minutes
+  standardHeaders: true,
+  legacyHeaders: false,
   message: { error: 'Too many lookup requests. Please try again later.' }
 });
 
@@ -23,8 +25,54 @@ const lookupLimiter = rateLimit({
 const verifyPaymentLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
   message: { error: 'Too many verification requests. Please try again later.' }
 });
+
+/**
+ * Helper to dispatch the official payment link email to a vendor and update DB metadata (Option B)
+ */
+export const sendVendorPaymentLinkEmail = async (vendor, origin = null) => {
+  if (!vendor || !vendor.email) return false;
+  const clientUrl = process.env.CLIENT_URL || origin || 'https://wodibenuahfair.org';
+  const paymentLink = `${clientUrl}/complete-payment?email=${encodeURIComponent(vendor.email)}`;
+
+  const content = `
+    <p style="font-size: 16px; line-height: 1.6; color: #555555; margin-bottom: 20px;">Dear <strong style="color: #000000;">${vendor.full_name || vendor.business_name}</strong>,</p>
+    <p style="font-size: 16px; line-height: 1.6; color: #555555; margin-bottom: 20px;">Thank you for registering your business (<strong style="color: #000000;">${vendor.business_name}</strong>) for <strong>Wodibenuah Fair Lagos 2026</strong>.</p>
+    <p style="font-size: 16px; line-height: 1.6; color: #555555; margin-bottom: 20px;">Your registration application has been received for your selected booth type (<strong>${vendor.booth_type}</strong>).</p>
+    <p style="font-size: 16px; line-height: 1.6; color: #555555; margin-bottom: 20px;">Please click the button below to complete your payment securely and lock in your preferred booth space.</p>
+  `;
+
+  try {
+    const emailResult = await sendProfessionalEmail({
+      to: vendor.email,
+      subject: 'Wodibenuah Fair Lagos 2026 - Official Vendor Payment Link',
+      title: 'Complete Your Booth Payment',
+      content,
+      actionLink: paymentLink,
+      actionText: 'COMPLETE PAYMENT NOW'
+    });
+
+    if (emailResult && emailResult.success) {
+      await pool.query(
+        `UPDATE vendors 
+         SET payment_link_sent_at = NOW(), 
+             payment_link_sent_count = COALESCE(payment_link_sent_count, 0) + 1, 
+             is_approved = TRUE,
+             approval_status = 'approved',
+             updated_at = NOW() 
+         WHERE id = $1`,
+        [vendor.id]
+      );
+      return true;
+    }
+  } catch (emailErr) {
+    console.error('[sendVendorPaymentLinkEmail] Error dispatching email:', emailErr.message);
+  }
+  return false;
+};
 
 // Public: Lookup Vendor for Payment
 // NOTE: Do NOT use normalizeEmail() here — it strips dots and lowercases Gmail
@@ -91,14 +139,14 @@ router.post('/register', validate([
   // Gmail dots. normalizeEmail() here would store 'monicae@gmail.com' for
   // 'Monica.E@gmail.com' and the dot-preserving lookup would 404 them.
   body('email').isEmail().trim().toLowerCase(),
-  body('fullName').trim().notEmpty().escape(),
-  body('phoneNumber').trim().notEmpty().escape(),
-  body('whatsappNumber').trim().notEmpty().escape(),
-  body('instagramHandle').trim().notEmpty().escape(),
-  body('businessName').trim().notEmpty().escape(),
-  body('sector').trim().notEmpty().escape(),
-  body('boothType').trim().notEmpty().escape(),
-  body('selectedLocation').trim().notEmpty().escape(),
+  body('fullName').trim().notEmpty(),
+  body('phoneNumber').trim().notEmpty(),
+  body('whatsappNumber').trim().notEmpty(),
+  body('instagramHandle').trim().notEmpty(),
+  body('businessName').trim().notEmpty(),
+  body('sector').trim().notEmpty(),
+  body('boothType').trim().notEmpty(),
+  body('selectedLocation').trim().notEmpty(),
   body('isPreviousVendor').isBoolean(),
   body('liveInAbuja').optional().isBoolean(),
   body('liveInLagos').optional().isBoolean(),
@@ -116,6 +164,20 @@ router.post('/register', validate([
 
   // Ensure eventId is null if it's an empty string (to avoid Postgres integer type errors)
   eventId = eventId || null;
+
+  // If eventId was not provided, automatically link to the active upcoming Lagos event if available
+  if (!eventId) {
+    try {
+      const activeEvent = await pool.query(
+        "SELECT id FROM events WHERE (location ILIKE '%Lagos%' OR title ILIKE '%Lagos%') AND status = 'upcoming' LIMIT 1"
+      );
+      if (activeEvent.rows.length > 0) {
+        eventId = activeEvent.rows[0].id;
+      }
+    } catch {
+      // Non-fatal fallback
+    }
+  }
 
   // Handle either liveInLagos or liveInAbuja
   const isLocalResident = Boolean(liveInLagos !== undefined ? liveInLagos : (liveInAbuja !== undefined ? liveInAbuja : false));
@@ -147,10 +209,12 @@ router.post('/register', validate([
         ];
 
         const updatedResult = await pool.query(updateQuery, updateValues);
+        const updatedVendor = updatedResult.rows[0];
 
-        // Email removed as per request - feedback is shown on frontend instead
+        // Send payment link email (Option B)
+        await sendVendorPaymentLinkEmail(updatedVendor, req.headers.origin);
 
-        return res.status(200).json({ message: 'Registration updated', vendor: updatedResult.rows[0] });
+        return res.status(200).json({ message: 'Registration updated', vendor: updatedVendor });
       }
     }
 
@@ -170,10 +234,12 @@ router.post('/register', validate([
     ];
 
     const result = await pool.query(query, values);
+    const createdVendor = result.rows[0];
 
-    // Email removed as per request - feedback is shown on frontend instead
+    // Send payment link email (Option B)
+    await sendVendorPaymentLinkEmail(createdVendor, req.headers.origin);
 
-    res.status(201).json({ message: 'Vendor registered successfully', vendor: result.rows[0] });
+    res.status(201).json({ message: 'Vendor registered successfully', vendor: createdVendor });
   } catch (error) {
     console.error('Error registering vendor:', error);
     next(error);
@@ -182,7 +248,7 @@ router.post('/register', validate([
 
 // Verify Payment
 router.post('/verify-payment', verifyPaymentLimiter, validate([
-  body('reference').trim().notEmpty().escape(),
+  body('reference').trim().notEmpty(),
   body('vendorId').isInt()
 ]), async (req, res) => {
   const { reference, vendorId } = req.body;
@@ -285,40 +351,11 @@ router.post('/:id/send-payment-link', authenticateToken, async (req, res, next) 
     }
 
     const vendor = result.rows[0];
-    const clientUrl = process.env.CLIENT_URL || req.headers.origin || 'https://wodibenuahfair.org';
-    const paymentLink = `${clientUrl}/complete-payment?email=${encodeURIComponent(vendor.email)}`;
+    const emailSent = await sendVendorPaymentLinkEmail(vendor, req.headers.origin);
 
-    const content = `
-      <p style="font-size: 16px; line-height: 1.6; color: #555555; margin-bottom: 20px;">Dear <strong style="color: #000000;">${vendor.full_name || vendor.business_name}</strong>,</p>
-      <p style="font-size: 16px; line-height: 1.6; color: #555555; margin-bottom: 20px;">Thank you for registering your business (<strong style="color: #000000;">${vendor.business_name}</strong>) for <strong>Wodibenuah Fair Lagos 2026</strong>.</p>
-      <p style="font-size: 16px; line-height: 1.6; color: #555555; margin-bottom: 20px;">Your registration application has been reviewed and approved for your selected booth type (<strong>${vendor.booth_type}</strong>).</p>
-      <p style="font-size: 16px; line-height: 1.6; color: #555555; margin-bottom: 20px;">Please click the button below to complete your payment securely and lock in your preferred booth space.</p>
-    `;
-
-    const emailResult = await sendProfessionalEmail({
-      to: vendor.email,
-      subject: 'Wodibenuah Fair Lagos 2026 - Official Vendor Payment Link',
-      title: 'Complete Your Booth Payment',
-      content,
-      actionLink: paymentLink,
-      actionText: 'COMPLETE PAYMENT NOW'
-    });
-
-    if (!emailResult.success) {
+    if (!emailSent) {
       return res.status(500).json({ error: 'Failed to send email. Please check server email settings.' });
     }
-
-    // Record the timestamp and count of link dispatch & mark approved
-    await pool.query(
-      `UPDATE vendors 
-       SET payment_link_sent_at = NOW(), 
-           payment_link_sent_count = COALESCE(payment_link_sent_count, 0) + 1, 
-           is_approved = TRUE,
-           approval_status = 'approved',
-           updated_at = NOW() 
-       WHERE id = $1`,
-      [vendor.id]
-    );
 
     res.json({
       message: 'Payment link email sent successfully',

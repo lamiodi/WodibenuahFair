@@ -56,6 +56,7 @@ import AppError from './utils/AppError.js';
 dotenv.config();
 
 const app = express();
+app.set('trust proxy', 1);
 const PORT = process.env.PORT || 5000;
 
 // Validate Environment Variables
@@ -189,7 +190,9 @@ app.use(morgan('dev')); // Logging
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100, // limit each IP to 100 requests per windowMs
-  message: 'Too many requests from this IP, please try again later'
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests from this IP. Please try again in a few minutes.' }
 });
 app.use('/api/', limiter);
 

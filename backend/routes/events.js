@@ -50,35 +50,56 @@ router.get('/admin', authenticateToken, async (req, res) => {
   }
 });
 
+// Helper to sanitize payload and handle optional timestamp/URL fields
+const sanitizeEventPayload = (data) => {
+  const title = (data.title || '').trim();
+  const location = (data.location || '').trim();
+  const mapLink = data.mapLink && typeof data.mapLink === 'string' && data.mapLink.trim() ? data.mapLink.trim() : null;
+  const startDate = data.startDate;
+  const endDate = data.endDate && typeof data.endDate === 'string' && data.endDate.trim() ? data.endDate.trim() : null;
+  const description = (data.description || '').trim();
+  const imageUrl = data.imageUrl && typeof data.imageUrl === 'string' && data.imageUrl.trim() ? data.imageUrl.trim() : null;
+  const status = data.status || 'upcoming';
+  const isRegistrationOpen = data.isRegistrationOpen !== undefined ? Boolean(data.isRegistrationOpen) : true;
+  const isFeatured = Boolean(data.isFeatured);
+
+  return { title, location, mapLink, startDate, endDate, description, imageUrl, status, isRegistrationOpen, isFeatured };
+};
+
 // Admin: Create Event
 router.post('/', authenticateToken, validate([
-  body('title').trim().notEmpty().escape(),
-  body('location').trim().notEmpty().escape(),
-  body('startDate').isISO8601(),
-  body('description').trim().notEmpty()
+  body('title').trim().notEmpty().withMessage('Title is required'),
+  body('location').trim().notEmpty().withMessage('Location is required'),
+  body('startDate').isISO8601().withMessage('Valid start date is required'),
+  body('description').trim().notEmpty().withMessage('Description is required')
 ]), async (req, res) => {
-  const { title, location, mapLink, startDate, endDate, description, imageUrl, status, isRegistrationOpen, isFeatured } = req.body;
+  const { title, location, mapLink, startDate, endDate, description, imageUrl, status, isRegistrationOpen, isFeatured } = sanitizeEventPayload(req.body);
   try {
-    // If setting as featured, unset others if desired (optional, but good UX)
+    // If setting as featured, unset others
     if (isFeatured) {
       await pool.query('UPDATE events SET is_featured = FALSE WHERE is_featured = TRUE');
     }
 
     const result = await pool.query(
       'INSERT INTO events (title, location, map_link, start_date, end_date, description, image_url, status, is_registration_open, is_featured) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *',
-      [title, location, mapLink, startDate, endDate, description, imageUrl, status || 'upcoming', isRegistrationOpen !== undefined ? isRegistrationOpen : true, isFeatured || false]
+      [title, location, mapLink, startDate, endDate, description, imageUrl, status, isRegistrationOpen, isFeatured]
     );
     res.status(201).json(result.rows[0]);
   } catch (error) {
     console.error('Error creating event:', error);
-    res.status(500).json({ error: 'Database error' });
+    res.status(500).json({ error: error.message || 'Database error' });
   }
 });
 
 // Admin: Update Event
-router.put('/:id', authenticateToken, async (req, res) => {
+router.put('/:id', authenticateToken, validate([
+  body('title').trim().notEmpty().withMessage('Title is required'),
+  body('location').trim().notEmpty().withMessage('Location is required'),
+  body('startDate').isISO8601().withMessage('Valid start date is required'),
+  body('description').trim().notEmpty().withMessage('Description is required')
+]), async (req, res) => {
   const { id } = req.params;
-  const { title, location, mapLink, startDate, endDate, description, imageUrl, status, isRegistrationOpen, isFeatured } = req.body;
+  const { title, location, mapLink, startDate, endDate, description, imageUrl, status, isRegistrationOpen, isFeatured } = sanitizeEventPayload(req.body);
   try {
     // If setting as featured, unset others
     if (isFeatured) {
@@ -93,7 +114,27 @@ router.put('/:id', authenticateToken, async (req, res) => {
     res.json(result.rows[0]);
   } catch (error) {
     console.error('Error updating event:', error);
-    res.status(500).json({ error: 'Database error' });
+    res.status(500).json({ error: error.message || 'Database error' });
+  }
+});
+
+// Admin: Duplicate / Clone Event
+router.post('/:id/duplicate', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const existing = await pool.query('SELECT * FROM events WHERE id = $1', [id]);
+    if (existing.rows.length === 0) return res.status(404).json({ error: 'Source event not found' });
+
+    const src = existing.rows[0];
+    const newTitle = `Copy of ${src.title}`;
+    const result = await pool.query(
+      'INSERT INTO events (title, location, map_link, start_date, end_date, description, image_url, status, is_registration_open, is_featured) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *',
+      [newTitle, src.location, src.map_link, src.start_date, src.end_date, src.description, src.image_url, 'upcoming', false, false]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    console.error('Error duplicating event:', error);
+    res.status(500).json({ error: error.message || 'Database error' });
   }
 });
 

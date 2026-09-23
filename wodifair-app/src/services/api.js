@@ -52,7 +52,13 @@ export const apiRequest = async (endpoint, options = {}) => {
       }
     }
 
-    const data = await response.json();
+    let data;
+    const text = await response.text();
+    try {
+      data = text ? JSON.parse(text) : {};
+    } catch {
+      data = { message: text || response.statusText };
+    }
 
     if (!response.ok) {
       // Prioritize structured error message from backend
@@ -68,7 +74,9 @@ export const apiRequest = async (endpoint, options = {}) => {
       }
 
       if (!errorMessage) {
-        errorMessage = 'An unexpected error occurred';
+        errorMessage = response.status === 429
+          ? 'Too many requests. Please wait a few moments and try again.'
+          : (response.statusText || 'An unexpected error occurred');
       }
 
       throw new Error(errorMessage);

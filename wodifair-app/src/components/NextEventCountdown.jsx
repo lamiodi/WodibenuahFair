@@ -1,18 +1,33 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { apiRequest } from '../services/api';
 
 const NEXT_EVENT_DATA = {
   title: "Wodibenuah Fair Lagos 2026",
   start_date: "2026-12-13T10:00:00",
-  location: "Lagos, Nigeria",
+  location: "The Five Palm Oniru, Lagos",
   venue: "The Five Palm Oniru",
-  is_registration_open: true
+  is_registration_open: true,
+  image_url: "https://res.cloudinary.com/dwmz4youk/image/upload/v1779310064/wodifair/Gemini_Generated_Image_euj3e6euj3e6euj3.png"
 };
 
 const NextEventCountdown = () => {
-  const [nextEvent] = useState(NEXT_EVENT_DATA);
+  const [nextEvent, setNextEvent] = useState(NEXT_EVENT_DATA);
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+
+  useEffect(() => {
+    apiRequest('/events/next')
+      .then(data => {
+        if (data && data.start_date) {
+          setNextEvent(prev => ({
+            ...prev,
+            ...data
+          }));
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (!nextEvent || !nextEvent.start_date) return;
@@ -40,6 +55,8 @@ const NextEventCountdown = () => {
 
   if (!nextEvent) return null;
 
+  const bgImage = nextEvent.image_url || 'https://res.cloudinary.com/dwmz4youk/image/upload/v1779310064/wodifair/Gemini_Generated_Image_euj3e6euj3e6euj3.png';
+
   return (
     <section className="relative w-full min-h-[700px] h-auto py-16 md:py-0 overflow-hidden bg-deep-black border-b border-deep-black flex items-center">
       {/* Background Image with Parallax-like feel */}
@@ -51,7 +68,7 @@ const NextEventCountdown = () => {
       >
         <div 
           className="w-full h-full bg-cover bg-center opacity-55"
-          style={{ backgroundImage: 'url(https://res.cloudinary.com/dwmz4youk/image/upload/v1779310064/wodifair/Gemini_Generated_Image_euj3e6euj3e6euj3.png)' }}
+          style={{ backgroundImage: `url(${bgImage})` }}
         ></div>
         <div className="absolute inset-0 bg-gradient-to-t from-deep-black via-deep-black/60 to-transparent"></div>
         <div className="absolute inset-0 bg-gradient-to-r from-deep-black via-transparent to-deep-black"></div>
