@@ -111,10 +111,14 @@ const corsOptions = {
     ? (origin, callback) => {
         // Allow requests with no origin (like mobile apps, Paystack webhooks, curl requests)
         if (!origin) return callback(null, true);
+        // Hostname comparison with dot-boundary — a bare endsWith('wodibenuahfair.org')
+        // would also match 'evilwodibenuahfair.org'.
+        const hostname = origin.replace(/^https?:\/\//, '').split(/[:/]/)[0].toLowerCase();
         if (
           allowedOrigins.indexOf(origin) !== -1 ||
-          origin.endsWith('.vercel.app') ||
-          origin.endsWith('wodibenuahfair.org')
+          hostname === 'wodibenuahfair.org' ||
+          hostname.endsWith('.wodibenuahfair.org') ||
+          hostname.endsWith('.vercel.app') // Vercel preview deployments (deliberate: staging previews)
         ) {
           callback(null, true);
         } else {

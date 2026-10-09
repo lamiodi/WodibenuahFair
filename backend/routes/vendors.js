@@ -6,7 +6,8 @@ import pool from '../db.js';
 import { validate } from '../middleware/validate.js';
 import { authenticateToken } from '../middleware/auth.js';
 import { processSuccessfulPayment } from '../services/paymentService.js';
-import { sendProfessionalEmail } from '../services/emailTemplates.js';
+import { sendProfessionalEmail, sendWithAttachments } from '../services/emailTemplates.js';
+import { generateInvoice } from '../utils/invoiceGenerator.js';
 import { BOOTH_PRICES } from '../config/pricing.js';
 
 const router = express.Router();
@@ -88,10 +89,32 @@ router.post('/lookup', lookupLimiter, validate([
       'SELECT id, email, full_name, business_name, booth_type, selected_location, payment_status, amount_paid FROM vendors WHERE LOWER(email) = $1',
       [email]
     );
-    if (result.rows.length === 0) {
+    let rows = result.rows;
+
+    // Legacy fallback: rows created before normalizeEmail() was removed
+    // may have Gmail dots/+tags stripped. If the exact address misses,
+    // retry the legacy dotless form — but only accept it when it
+    // unambiguously matches exactly one row.
+    if (rows.length === 0) {
+      const [local, domain] = email.split('@');
+      if (domain === 'gmail.com' || domain === 'googlemail.com') {
+        const legacyEmail = `${local.split('+')[0].replace(/\./g, '')}@${domain}`;
+        if (legacyEmail !== email) {
+          const fallback = await pool.query(
+            'SELECT id, email, full_name, business_name, booth_type, selected_location, payment_status, amount_paid FROM vendors WHERE LOWER(email) = $1',
+            [legacyEmail]
+          );
+          if (fallback.rows.length === 1) {
+            rows = fallback.rows;
+          }
+        }
+      }
+    }
+
+    if (rows.length === 0) {
       return res.status(404).json({ error: 'No registration found with this email. Please check your email and try again.' });
     }
-    res.json({ vendor: result.rows[0] });
+    res.json({ vendor: rows[0] });
   } catch (error) {
     next(error);
   }
@@ -271,6 +294,12 @@ router.post('/verify-payment', verifyPaymentLimiter, validate([
     const data = response.data;
 
     if (data.status && data.data.status === 'success') {
+      // Booth prices are Naira-only; a non-NGN charge would have its
+      // subunit amount compared against Naira prices — meaningless.
+      if (data.data.currency && data.data.currency !== 'NGN') {
+        return res.status(400).json({ status: 'error', message: 'Unexpected transaction currency. Please contact Wodibenuah Fair support.' });
+      }
+
       // 3. Verify that Paystack transaction matches this vendor (by email or metadata vendorId)
       const paystackCustomerEmail = (data.data.customer?.email || '').toLowerCase().trim();
       const vendorEmail = (targetVendor.email || '').toLowerCase().trim();
@@ -281,10 +310,26 @@ router.post('/verify-payment', verifyPaymentLimiter, validate([
       }
       const metadataVendorId = paystackMetadata?.vendorId;
 
-      const matchesId = metadataVendorId && Number(metadataVendorId) === Number(vendorId);
+      const matchesId = metadataVendorId !== undefined && metadataVendorId !== null && Number(metadataVendorId) === Number(vendorId);
       const matchesEmail = paystackCustomerEmail && paystackCustomerEmail === vendorEmail;
 
-      if (!matchesId && !matchesEmail) {
+      // Ownership requires the metadata vendorId to match. An email-only
+      // match is accepted ONLY when the transaction metadata carried no
+      // vendorId at all (unusual channel), and only if the reference is
+      // not already claimed by an ERP transaction — otherwise any
+      // same-email charge (e.g. an ERP retail sale) could be submitted
+      // as booth-payment proof.
+      let ownershipVerified = matchesId;
+      if (!ownershipVerified && !metadataVendorId && matchesEmail) {
+        try {
+          const erpClaim = await pool.query('SELECT 1 FROM erp.paystack_transactions WHERE reference = $1 LIMIT 1', [reference]);
+          ownershipVerified = erpClaim.rows.length === 0;
+        } catch {
+          ownershipVerified = true; // ERP schema unavailable; fall back to email match
+        }
+      }
+
+      if (!ownershipVerified) {
         console.warn(`Security alert: Reference ${reference} belongs to '${paystackCustomerEmail}' (meta vendorId: ${metadataVendorId}), but was submitted for vendor ${vendorId} ('${vendorEmail}')`);
         return res.status(403).json({
           status: 'error',
@@ -366,6 +411,59 @@ router.post('/:id/send-payment-link', authenticateToken, async (req, res, next) 
     });
   } catch (error) {
     console.error('Error sending payment link email:', error);
+    next(error);
+  }
+});
+
+// Protected: Resend Payment Receipt & Invoice (recovery for lost emails —
+// PDF/email failures after a successful payment are log-only, so this is
+// the admin's way to re-issue a receipt without DB surgery)
+router.post('/:id/resend-invoice', authenticateToken, async (req, res, next) => {
+  const { id } = req.params;
+  try {
+    const result = await pool.query('SELECT * FROM vendors WHERE id = $1', [id]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Vendor not found' });
+    }
+    const vendor = result.rows[0];
+    if (vendor.payment_status !== 'paid' || !vendor.payment_reference) {
+      return res.status(400).json({ error: 'Vendor has no completed payment; no invoice to resend.' });
+    }
+
+    let pdfBuffer;
+    try {
+      pdfBuffer = await generateInvoice(vendor, { reference: vendor.payment_reference, amount: vendor.amount_paid });
+    } catch (pdfError) {
+      console.error('Error regenerating PDF invoice:', pdfError);
+      // Send the email without the attachment rather than failing outright
+    }
+
+    const emailContent = `
+      <p style="font-size: 16px; line-height: 1.6; margin-bottom: 20px; color: #555555;">Dear <span style="color: #000000; font-weight: bold;">${vendor.full_name || vendor.business_name}</span>,</p>
+      <p style="font-size: 16px; line-height: 1.6; margin-bottom: 20px; color: #555555;">This is a re-issued receipt for your payment of <span style="color: #000000; font-weight: bold;">₦${Number(vendor.amount_paid || 0).toLocaleString()}</span> for your <strong>${vendor.booth_type}</strong> at Wodibenuah Fair.</p>
+      <div style="background-color: #f9f9f9; padding: 15px; border-left: 4px solid #D4AF37; margin: 20px 0;">
+        <p style="margin: 0; font-size: 14px; color: #555;"><strong>Payment Reference:</strong> ${vendor.payment_reference}</p>
+      </div>
+      <p style="font-size: 16px; line-height: 1.6; margin-bottom: 20px; color: #555555;">Your official invoice is attached to this email. If you did not request this re-issue, you can safely ignore it.</p>
+      <p style="font-size: 16px; line-height: 1.6; margin-bottom: 20px; color: #555555;">Best regards,<br/>The Wodibenuah Fair Team</p>
+    `;
+
+    await sendWithAttachments({
+      to: [vendor.email],
+      subject: 'Payment Receipt & Invoice (Re-issue) - Wodibenuah Fair 2026',
+      title: 'Payment Receipt (Re-issue)',
+      content: emailContent,
+      attachments: pdfBuffer ? [
+        {
+          filename: `Invoice-${vendor.payment_reference}.pdf`,
+          content: pdfBuffer.toString('base64')
+        }
+      ] : []
+    });
+
+    res.json({ message: 'Invoice resent successfully', email: vendor.email });
+  } catch (error) {
+    console.error('Error resending invoice:', error);
     next(error);
   }
 });

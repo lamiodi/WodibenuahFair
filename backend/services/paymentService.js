@@ -5,6 +5,19 @@ import { BOOTH_PRICES } from '../config/pricing.js';
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 
+// Errors that retrying can NEVER fix (wrong vendor, duplicate charge,
+// underpayment). The webhook handler uses this to decide: acknowledge
+// with 200 (Paystack stops redelivering a doomed event) instead of 500
+// (Paystack retries — right choice only for transient faults).
+export class PaymentPermanentError extends Error {
+  constructor(message, code) {
+    super(message);
+    this.name = 'PaymentPermanentError';
+    this.code = code;
+    this.permanent = true;
+  }
+}
+
 export const processSuccessfulPayment = async (reference, amountPaid, vendorIdOrEmail, isEmail = false) => {
   // We acquire a single dedicated client for the whole flow so the
   // FOR UPDATE row lock + status flip + side effects live inside one
@@ -25,17 +38,36 @@ export const processSuccessfulPayment = async (reference, amountPaid, vendorIdOr
     let vendorQuery;
     let vendorParams;
 
+    let lookupEmail;
     if (isEmail) {
-      vendorQuery = 'SELECT * FROM vendors WHERE email = $1 FOR UPDATE';
-      vendorParams = [vendorIdOrEmail];
+      // Case-insensitive on purpose — matches the /lookup and /register
+      // semantics. An exact-case match here silently drops payments when
+      // the Paystack customer email case differs from the stored row.
+      lookupEmail = String(vendorIdOrEmail).toLowerCase().trim();
+      vendorQuery = 'SELECT * FROM vendors WHERE LOWER(email) = $1 FOR UPDATE';
+      vendorParams = [lookupEmail];
     } else {
       vendorQuery = 'SELECT * FROM vendors WHERE id = $1 FOR UPDATE';
       vendorParams = [vendorIdOrEmail];
     }
 
-    const vendorResult = await client.query(vendorQuery, vendorParams);
+    let vendorResult = await client.query(vendorQuery, vendorParams);
+
+    // Legacy fallback: rows created before normalizeEmail() was removed
+    // may have Gmail dots (and +tags) stripped. If the exact address
+    // misses and this is a Gmail address, retry the legacy dotless form.
+    if (isEmail && vendorResult.rows.length === 0) {
+      const [local, domain] = lookupEmail.split('@');
+      if (domain === 'gmail.com' || domain === 'googlemail.com') {
+        const legacyEmail = `${local.split('+')[0].replace(/\./g, '')}@${domain}`;
+        if (legacyEmail !== lookupEmail) {
+          vendorResult = await client.query(vendorQuery, [legacyEmail]);
+        }
+      }
+    }
+
     if (vendorResult.rows.length === 0) {
-      throw new Error(`Vendor not found: ${vendorIdOrEmail}`);
+      throw new PaymentPermanentError(`Vendor not found: ${vendorIdOrEmail}`, 'VENDOR_NOT_FOUND');
     }
 
     const vendor = vendorResult.rows[0];
@@ -47,10 +79,23 @@ export const processSuccessfulPayment = async (reference, amountPaid, vendorIdOr
     // re-issuing an UPDATE. The DB UNIQUE on payment_reference
     // (layer 3, see add_unique_vendor_payment_reference.sql) is the
     // last line of defence if layers 1 and 2 ever race.
-    if (vendor.payment_status === 'paid' && vendor.payment_reference === reference) {
-      console.log(`Vendor ${vendor.email} already paid for reference ${reference}. Skipping duplicate.`);
-      await client.query('ROLLBACK');
-      return { status: 'already_paid', vendor };
+    if (vendor.payment_status === 'paid') {
+      if (vendor.payment_reference === reference) {
+        // Same reference re-delivered (webhook retry, double verify):
+        // true idempotent replay — do nothing.
+        console.log(`Vendor ${vendor.email} already paid for reference ${reference}. Skipping duplicate.`);
+        await client.query('ROLLBACK');
+        return { status: 'already_paid', vendor };
+      }
+      // Paid with a DIFFERENT reference: the customer has been charged
+      // twice. Never overwrite the first record — it is their proof of
+      // payment for charge #1. Flag loudly; the second charge needs a
+      // manual refund in the Paystack dashboard.
+      console.error(`DOUBLE CHARGE: vendor ${vendor.email} already paid with ref ${vendor.payment_reference}; second charge ${reference} received. Refund needed.`);
+      throw new PaymentPermanentError(
+        `This registration is already paid (reference ${vendor.payment_reference}). A second payment (${reference}) was received and will be refunded — please contact Wodibenuah Fair support.`,
+        'ALREADY_PAID_DIFFERENT_REF'
+      );
     }
 
     // Validate Payment Amount
@@ -85,7 +130,7 @@ export const processSuccessfulPayment = async (reference, amountPaid, vendorIdOr
     if (paidAmount < expectedAmount) {
       console.warn(`Insufficient payment attempt for ${vendor.email}. Expected: ${expectedAmount}, Paid: ${paidAmount}`);
       await client.query('ROLLBACK');
-      throw new Error(`Insufficient payment. Expected ₦${expectedAmount.toLocaleString()}, but received ₦${paidAmount.toLocaleString()}.`);
+      throw new PaymentPermanentError(`Insufficient payment. Expected ₦${expectedAmount.toLocaleString()}, but received ₦${paidAmount.toLocaleString()}.`, 'INSUFFICIENT_PAYMENT');
     }
 
     // Update Vendor (still inside the locked transaction).

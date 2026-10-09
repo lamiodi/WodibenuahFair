@@ -21,7 +21,11 @@ router.post('/paystack', async (req, res) => {
             .digest('hex');
 
         const signature = req.headers['x-paystack-signature'];
-        if (!signature || expected !== signature) {
+        // Length-guarded timing-safe comparison — string === leaks timing
+        // on the HMAC prefix in principle.
+        const expectedBuf = Buffer.from(expected, 'utf8');
+        const receivedBuf = Buffer.from(String(signature || ''), 'utf8');
+        if (!signature || receivedBuf.length !== expectedBuf.length || !crypto.timingSafeEqual(expectedBuf, receivedBuf)) {
             return res.status(400).send('Invalid signature');
         }
 
@@ -92,11 +96,29 @@ router.post('/paystack', async (req, res) => {
                     return res.sendStatus(200);
                 }
 
+                // Booth prices are Naira-only. A non-NGN charge would have its
+                // subunit amount compared against Naira prices — meaningless.
+                if (data.currency && data.currency !== 'NGN') {
+                    console.warn(`[Paystack Webhook] Ignoring non-NGN vendor payment for ref ${reference} (currency: ${data.currency})`);
+                    return res.sendStatus(200);
+                }
+
                 try {
                     const result = await processSuccessfulPayment(reference, amountPaid, identifier, isEmailLookup);
                     console.log(`[Paystack Webhook] Vendor payment ${result.status} for ${identifier} (ref: ${reference})`);
                 } catch (vendorErr) {
                     console.error(`[Paystack Webhook] Failed to process vendor payment for ${identifier}:`, vendorErr.message);
+                    if (!vendorErr.permanent) {
+                        // Transient fault (DB blip, unknown booth type pending a
+                        // data fix): return 5xx so Paystack RETRIES this delivery.
+                        // Returning 200 here is how payments get taken but never
+                        // recorded — the customer's only other verification path
+                        // is the frontend, which may be long gone.
+                        return res.status(500).send('Transient error processing vendor payment');
+                    }
+                    // Permanent (already paid with a different ref, vendor not
+                    // found, underpayment): acknowledge so Paystack stops
+                    // redelivering an event that can never succeed.
                 }
             }
         }

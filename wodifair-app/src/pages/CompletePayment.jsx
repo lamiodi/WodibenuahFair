@@ -14,6 +14,10 @@ const CompletePayment = () => {
     const [errorMessage, setErrorMessage] = useState('');
     const [boothPrices, setBoothPrices] = useState({});
     const [pricesLoading, setPricesLoading] = useState(true);
+    // Reference of the last successful Paystack charge. Kept so the
+    // customer can re-run verification if the first attempt failed
+    // (network blip, backend cold start) without paying again.
+    const [pendingRef, setPendingRef] = useState(null);
     const navigate = useNavigate();
 
     const performLookup = async (targetEmail) => {
@@ -88,6 +92,37 @@ const CompletePayment = () => {
         return 0; // Return 0 if not found so we don't charge an arbitrary amount
     };
 
+    const verifyPayment = (reference) => {
+        if (!vendorData || !reference) return;
+        setStatus('verifying');
+        apiRequest('/vendors/verify-payment', {
+            method: 'POST',
+            body: {
+                reference,
+                vendorId: vendorData.id
+            }
+        })
+            .then(data => {
+                if (data.status === 'success') {
+                    toast.success('Payment successful!');
+                    setStatus('success');
+                    navigate(`/thank-you?reference=${reference}&location=${encodeURIComponent(vendorData.selected_location || 'your location')}`);
+                } else {
+                    const msg = data.message || 'Payment verification failed.';
+                    toast.error(msg);
+                    setErrorMessage(msg);
+                    setStatus('error');
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                const msg = err.message || 'Error verifying payment.';
+                toast.error(msg);
+                setErrorMessage(msg);
+                setStatus('error');
+            });
+    };
+
     const handlePayment = () => {
         if (!vendorData) return;
         const dueAmount = calculateAmount();
@@ -112,34 +147,8 @@ const CompletePayment = () => {
                 ]
             },
             onSuccess: (transaction) => {
-                setStatus('verifying');
-                // Verify payment on backend
-                apiRequest('/vendors/verify-payment', {
-                    method: 'POST',
-                    body: {
-                        reference: transaction.reference,
-                        vendorId: vendorData.id
-                    }
-                })
-                    .then(data => {
-                        if (data.status === 'success') {
-                            toast.success('Payment successful!');
-                            setStatus('success');
-                            navigate(`/thank-you?reference=${transaction.reference}&location=${encodeURIComponent(vendorData.selected_location || 'your location')}`);
-                        } else {
-                            const msg = data.message || 'Payment verification failed.';
-                            toast.error(msg);
-                            setErrorMessage(msg);
-                            setStatus('error');
-                        }
-                    })
-                    .catch(err => {
-                        console.error(err);
-                        const msg = err.message || 'Error verifying payment.';
-                        toast.error(msg);
-                        setErrorMessage(msg);
-                        setStatus('error');
-                    });
+                setPendingRef(transaction.reference);
+                verifyPayment(transaction.reference);
             },
             onCancel: () => {
                 setStatus('found');
@@ -203,6 +212,22 @@ const CompletePayment = () => {
                                     </a>.
                                 </p>
                             )}
+                        </div>
+                    )}
+
+                    {vendorData && pendingRef && status === 'error' && (
+                        <div className="bg-amber-50 border border-amber-300 p-4 mb-8 text-sm rounded">
+                            <p className="text-amber-800 mb-3">
+                                If you were charged but verification failed, your payment may still have gone through.
+                                Use the button below to re-check — you will not be charged again.
+                            </p>
+                            <button
+                                onClick={() => verifyPayment(pendingRef)}
+                                disabled={status === 'verifying'}
+                                className="bg-black text-white px-6 py-2 font-bold uppercase tracking-wider hover:bg-gold hover:text-black transition-colors disabled:opacity-50"
+                            >
+                                {status === 'verifying' ? 'Checking...' : 'Re-check my payment status'}
+                            </button>
                         </div>
                     )}
 
