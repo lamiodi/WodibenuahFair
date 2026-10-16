@@ -39,12 +39,15 @@ export const apiRequest = async (endpoint, options = {}) => {
   try {
     const response = await fetch(url, config);
 
-    // Handle 401 Unauthorized — only redirect for admin/auth routes.
-    // Public payment routes (e.g. /vendors/lookup) should NEVER redirect
-    // a customer to the admin login page.
+    // Handle 401 Unauthorized — redirect when this was an authenticated
+    // session. Admin data comes from /vendors, /blog/all, /highlights and
+    // /contact too, so matching '/auth'/'/admin' path names alone leaves the
+    // dashboard stuck on "Unauthorized" toasts when the 1h JWT expires.
+    // Public payment routes never 401 (no auth middleware) and carry no
+    // token, so vendors paying are never redirected to the admin login.
     if (response.status === 401) {
       const isAdminRoute = endpoint.includes('/auth') || endpoint.includes('/admin') || endpoint.includes('/erp');
-      if (isAdminRoute) {
+      if (isAdminRoute || token) {
         localStorage.removeItem('token');
         if (!window.location.pathname.includes('/admin/login')) {
           window.location.href = '/admin/login';

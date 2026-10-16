@@ -7,6 +7,23 @@ import PaystackPop from '@paystack/inline-js';
 import { apiRequest } from '../services/api';
 import SEO from '../components/SEO';
 
+// Booth types no longer sold but still held by existing registrations.
+// Must mirror LEGACY_BOOTH_PRICES in backend/config/pricing.js — without
+// this, legacy registrants would see "Contact Support" instead of a Pay button.
+const LEGACY_BOOTH_PRICES = {
+    'Food Slot': 320000
+};
+
+const lookupBoothPrice = (prices, boothType) => {
+    if (!boothType) return 0;
+    const targetType = String(boothType).trim().toLowerCase();
+    const activeMatch = Object.keys(prices).find(k => k.trim().toLowerCase() === targetType);
+    if (activeMatch && prices[activeMatch]) return Number(prices[activeMatch]);
+    const legacyMatch = Object.keys(LEGACY_BOOTH_PRICES).find(k => k.trim().toLowerCase() === targetType);
+    if (legacyMatch) return Number(LEGACY_BOOTH_PRICES[legacyMatch]);
+    return 0;
+};
+
 const CompletePayment = () => {
     const [email, setEmail] = useState('');
     const [vendorData, setVendorData] = useState(null);
@@ -78,18 +95,7 @@ const CompletePayment = () => {
 
         // Check if there are location-specific prices
         const locationPrices = boothPrices[vendorData.selected_location] || boothPrices['Default'] || boothPrices || {};
-        if (locationPrices[vendorData.booth_type]) {
-            return Number(locationPrices[vendorData.booth_type]);
-        }
-
-        // Case-insensitive lookup fallback
-        const targetType = String(vendorData.booth_type || '').trim().toLowerCase();
-        const matchKey = Object.keys(locationPrices).find(k => k.trim().toLowerCase() === targetType);
-        if (matchKey && locationPrices[matchKey]) {
-            return Number(locationPrices[matchKey]);
-        }
-
-        return 0; // Return 0 if not found so we don't charge an arbitrary amount
+        return lookupBoothPrice(locationPrices, vendorData.booth_type); // 0 if not found so we don't charge an arbitrary amount
     };
 
     const verifyPayment = (reference) => {
@@ -292,6 +298,20 @@ const CompletePayment = () => {
                                                 pricesLoading ? 'Loading Price...' :
                                                     calculateAmount() > 0 ? `Pay ₦${calculateAmount().toLocaleString()} Now` : 'Fee Unavailable'}
                                     </button>
+
+                                    {status === 'paying' && (
+                                        <p className="text-center text-xs text-gray-500 mt-3">
+                                            If a payment window is already open, complete your payment there.
+                                            Not showing at all?{' '}
+                                            <button
+                                                type="button"
+                                                onClick={() => setStatus('found')}
+                                                className="underline font-bold hover:text-deep-black"
+                                            >
+                                                Click here to try again
+                                            </button>
+                                        </p>
+                                    )}
                                 </div>
                             )}
                         </div>

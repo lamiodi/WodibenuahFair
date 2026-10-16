@@ -1,7 +1,7 @@
 import pool from '../db.js';
 import { sendWithAttachments, sendProfessionalEmail } from './emailTemplates.js';
 import { generateInvoice } from '../utils/invoiceGenerator.js';
-import { BOOTH_PRICES } from '../config/pricing.js';
+import { BOOTH_PRICES, LEGACY_BOOTH_PRICES } from '../config/pricing.js';
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 
@@ -115,6 +115,16 @@ export const processSuccessfulPayment = async (reference, amountPaid, vendorIdOr
                        Object.keys(defaultPrices).find(k => k.trim().toLowerCase() === cleanBoothType);
       if (matchKey) {
         expectedAmount = Number(priceConfig[matchKey] || defaultPrices[matchKey]);
+      }
+    }
+
+    // Retired booth types (e.g. 'Food Slot') are still held by existing
+    // registrations — price them from the legacy map before giving up.
+    if (!expectedAmount && boothType) {
+      const legacyMatchKey = Object.keys(LEGACY_BOOTH_PRICES)
+        .find(k => k.trim().toLowerCase() === boothType.toLowerCase());
+      if (legacyMatchKey) {
+        expectedAmount = Number(LEGACY_BOOTH_PRICES[legacyMatchKey]);
       }
     }
 

@@ -44,6 +44,7 @@ export const sendVendorPaymentLinkEmail = async (vendor, origin = null) => {
     <p style="font-size: 16px; line-height: 1.6; color: #555555; margin-bottom: 20px;">Thank you for registering your business (<strong style="color: #000000;">${vendor.business_name}</strong>) for <strong>Wodibenuah Fair Lagos 2026</strong>.</p>
     <p style="font-size: 16px; line-height: 1.6; color: #555555; margin-bottom: 20px;">Your registration application has been received for your selected booth type (<strong>${vendor.booth_type}</strong>).</p>
     <p style="font-size: 16px; line-height: 1.6; color: #555555; margin-bottom: 20px;">Please click the button below to complete your payment securely and lock in your preferred booth space.</p>
+    <p style="font-size: 14px; line-height: 1.8; color: #777777; margin-bottom: 20px; word-break: break-all;">If the button above does not work on your device, copy and paste this link into your browser:<br/><a href="${paymentLink}" style="color: #D4AF37;">${paymentLink}</a></p>
   `;
 
   try {
