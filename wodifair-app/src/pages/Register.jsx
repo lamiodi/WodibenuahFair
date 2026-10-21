@@ -644,7 +644,6 @@ const Register = () => {
                     <option value="Kids & Maternity">Kids & Maternity</option>
                     <option value="Tech & Gadgets">Tech & Gadgets</option>
                     <option value="Services & Consultancy">Services & Consultancy</option>
-                    <option value="Other">Other</option>
                   </select>
                   {fieldErrors.sector && (
                     <p className="text-xs text-red-600 font-semibold mt-1.5 flex items-center gap-1">
