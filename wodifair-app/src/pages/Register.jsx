@@ -60,13 +60,12 @@ const Register = () => {
   const [allPrices, setAllPrices] = useState({
     'Default': {
       'Royal Booth': 390000,
-      'Drinks': 320000,
       'Half Booth': 195000
     }
   });
 
   // Prices — single location (Lagos) for 2026
-  const boothPrices = allPrices['Default'] || allPrices;
+  const boothPrices = allPrices['Lagos'] || allPrices['Default'] || allPrices;
 
   useEffect(() => {
     // Fetch prices configuration

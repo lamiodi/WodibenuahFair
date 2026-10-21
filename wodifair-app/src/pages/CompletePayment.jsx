@@ -11,7 +11,9 @@ import SEO from '../components/SEO';
 // Must mirror LEGACY_BOOTH_PRICES in backend/config/pricing.js — without
 // this, legacy registrants would see "Contact Support" instead of a Pay button.
 const LEGACY_BOOTH_PRICES = {
-    'Food Slot': 320000
+    'Food Slot': 320000,
+    'Drinks': 320000,
+    'Drinks Slot': 320000
 };
 
 const lookupBoothPrice = (prices, boothType) => {

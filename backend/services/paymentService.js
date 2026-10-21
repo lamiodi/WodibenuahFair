@@ -194,9 +194,11 @@ export const processSuccessfulPayment = async (reference, amountPaid, vendorIdOr
       `;
 
       const adminEmail = process.env.ADMIN_EMAIL || 'Wodibenuah@yahoo.com';
-      const notifyEmails = process.env.ADMIN_NOTIFY_EMAILS 
+      const defaultNotifyList = [adminEmail, 'bukolabc@gmail.com'];
+      const envNotify = process.env.ADMIN_NOTIFY_EMAILS 
         ? process.env.ADMIN_NOTIFY_EMAILS.split(',').map(e => e.trim()).filter(Boolean)
-        : [adminEmail];
+        : [];
+      const notifyEmails = Array.from(new Set([...defaultNotifyList, ...envNotify]));
 
       const recipients = Array.from(new Set([updatedVendor.email, ...notifyEmails]));
 
@@ -253,14 +255,14 @@ export const processSuccessfulPayment = async (reference, amountPaid, vendorIdOr
         `;
 
         await sendProfessionalEmail({
-          to: adminEmail,
+          to: notifyEmails,
           subject: `New Vendor Registration: ${updatedVendor.business_name}`,
           title: 'New Vendor Paid',
           content: adminContent,
           actionLink: `${process.env.ADMIN_URL || 'https://wodibenuahfair.org'}/admin`,
           actionText: 'View Dashboard'
         });
-        console.log(`Admin notification sent to ${adminEmail}`);
+        console.log(`Admin notification sent to ${notifyEmails.join(', ')}`);
       } catch (adminEmailError) {
         console.error('Error sending admin notification:', adminEmailError);
       }

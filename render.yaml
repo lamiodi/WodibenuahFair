@@ -41,6 +41,9 @@ services:
       - key: ADMIN_EMAIL
         value: Wodibenuah@yahoo.com
         sync: true
+      - key: ADMIN_NOTIFY_EMAILS
+        value: Wodibenuah@yahoo.com,bukolabc@gmail.com
+        sync: true
 
   - type: static_site
     name: wodifair-app
