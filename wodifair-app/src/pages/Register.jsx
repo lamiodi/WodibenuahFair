@@ -638,8 +638,6 @@ const Register = () => {
                     <option value="">SELECT A SECTOR</option>
                     <option value="Fashion & Apparel">Fashion & Apparel</option>
                     <option value="Beauty, Cosmetics & Skincare">Beauty, Cosmetics & Skincare</option>
-                    <option value="Food & Beverages">Food & Beverages</option>
-                    <option value="Drinks">Drinks</option>
                     <option value="Art, Crafts & Lifestyle">Art, Crafts & Lifestyle</option>
                     <option value="Home & Interior Decor">Home & Interior Decor</option>
                     <option value="Health & Wellness">Health & Wellness</option>
@@ -803,7 +801,7 @@ const Register = () => {
 
                   <div>
                     <h5 className="font-bold text-deep-black uppercase tracking-wider mb-1">4. Product Category Rules</h5>
-                    <p>Vendors may not combine more than two product categories at their booth. Food vendors serving drinks must ensure drinks do not exceed 30% of total offering.</p>
+                    <p>Vendors may not combine more than two product categories at their booth.</p>
                   </div>
 
                   <div>
