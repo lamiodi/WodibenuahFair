@@ -7,22 +7,22 @@ import PaystackPop from '@paystack/inline-js';
 import { apiRequest } from '../services/api';
 import SEO from '../components/SEO';
 
-// Booth types no longer sold but still held by existing registrations.
-// Must mirror LEGACY_BOOTH_PRICES in backend/config/pricing.js — without
-// this, legacy registrants would see "Contact Support" instead of a Pay button.
-const LEGACY_BOOTH_PRICES = {
-    'Food Slot': 320000,
-    'Drinks': 320000,
-    'Drinks Slot': 320000
+// Booth types that are completely sold out — payments are closed.
+const SOLD_OUT_BOOTHS = ['food slot', 'drinks', 'drinks slot'];
+
+export const isBoothSoldOut = (boothType) => {
+    if (!boothType) return false;
+    return SOLD_OUT_BOOTHS.includes(String(boothType).trim().toLowerCase());
 };
 
 const lookupBoothPrice = (prices, boothType) => {
     if (!boothType) return 0;
     const targetType = String(boothType).trim().toLowerCase();
+    // Do not return a price for sold-out categories
+    if (isBoothSoldOut(targetType)) return 0;
+
     const activeMatch = Object.keys(prices).find(k => k.trim().toLowerCase() === targetType);
     if (activeMatch && prices[activeMatch]) return Number(prices[activeMatch]);
-    const legacyMatch = Object.keys(LEGACY_BOOTH_PRICES).find(k => k.trim().toLowerCase() === targetType);
-    if (legacyMatch) return Number(LEGACY_BOOTH_PRICES[legacyMatch]);
     return 0;
 };
 
@@ -274,6 +274,40 @@ const CompletePayment = () => {
                                 <div className="bg-green-50 border border-green-200 p-4 text-center">
                                     <p className="text-green-800 font-bold mb-2">You have already completed your payment!</p>
                                     <p className="text-sm text-green-700">Thank you for securing your booth.</p>
+                                </div>
+                            ) : isBoothSoldOut(vendorData.booth_type) ? (
+                                <div className="border-t border-gray-300 pt-6">
+                                    <div className="bg-red-50 border border-red-200 p-6 md:p-8 text-center rounded-sm">
+                                        <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-red-100 text-red-600 mb-4">
+                                            <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                            </svg>
+                                        </div>
+                                        <h3 className="text-xl md:text-2xl font-bold uppercase tracking-wider text-red-950 mb-2 font-heading">
+                                            Booth Category Sold Out
+                                        </h3>
+                                        <p className="text-sm md:text-base text-red-800 max-w-lg mx-auto mb-3 font-body leading-relaxed">
+                                            All allocated spaces for <strong>&quot;{vendorData.booth_type}&quot;</strong> are officially sold out, and payment for this category is now closed.
+                                        </p>
+                                        <p className="text-xs text-gray-600 mb-6 max-w-md mx-auto">
+                                            If you would like to exhibit at Wodibenuah Fair Lagos 2026, please contact the event team to inquire about switching to an available booth space (Royal Booth or Half Booth).
+                                        </p>
+                                        <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+                                            <a
+                                                href={`mailto:hello@wodibenuahfair.org?subject=${encodeURIComponent(`Sold Out Booth Inquiry - ${vendorData.business_name} (${vendorData.booth_type})`)}&body=${encodeURIComponent(`Hello Wodibenuah Fair Team,\n\nI previously registered for a ${vendorData.booth_type} booth for ${vendorData.business_name} (${vendorData.email}). Since this category is sold out, I would like to inquire about available booth options.\n\nThank you,\n${vendorData.full_name || vendorData.business_name}`)}`}
+                                                className="w-full sm:w-auto bg-deep-black text-white px-8 py-3.5 text-xs font-bold uppercase tracking-widest hover:bg-gold hover:text-deep-black transition-colors"
+                                            >
+                                                Contact Event Team
+                                            </a>
+                                            <button
+                                                type="button"
+                                                onClick={() => { setVendorData(null); setStatus('idle'); setEmail(''); }}
+                                                className="w-full sm:w-auto border border-gray-400 text-gray-700 px-6 py-3.5 text-xs font-bold uppercase tracking-widest hover:bg-gray-100 transition-colors"
+                                            >
+                                                Look Up Another Email
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                             ) : (
                                 <div className="border-t border-gray-300 pt-6">

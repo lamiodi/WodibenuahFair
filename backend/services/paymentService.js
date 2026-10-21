@@ -1,7 +1,7 @@
 import pool from '../db.js';
 import { sendWithAttachments, sendProfessionalEmail } from './emailTemplates.js';
 import { generateInvoice } from '../utils/invoiceGenerator.js';
-import { BOOTH_PRICES, LEGACY_BOOTH_PRICES } from '../config/pricing.js';
+import { BOOTH_PRICES, LEGACY_BOOTH_PRICES, SOLD_OUT_BOOTHS } from '../config/pricing.js';
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 
@@ -102,6 +102,19 @@ export const processSuccessfulPayment = async (reference, amountPaid, vendorIdOr
     // Determine price based on location.
     // Trim booth_type to guard against trailing whitespace stored in DB.
     const boothType = (vendor.booth_type || '').trim();
+    const cleanBoothType = boothType.toLowerCase();
+
+    // Permanently block payments for sold-out booth categories
+    const isSoldOut = Array.isArray(SOLD_OUT_BOOTHS) && SOLD_OUT_BOOTHS.some(b => b.toLowerCase() === cleanBoothType);
+    if (isSoldOut && vendor.payment_status !== 'paid') {
+      console.warn(`Payment rejected: booth tier '${vendor.booth_type}' for vendor ${vendor.email} is sold out.`);
+      await client.query('ROLLBACK');
+      throw new PaymentPermanentError(
+        `Booth category "${vendor.booth_type}" is officially sold out. Payments for this category are closed.`,
+        'BOOTH_SOLD_OUT'
+      );
+    }
+
     const location = vendor.selected_location || 'Default';
     const priceConfig = BOOTH_PRICES[location] || BOOTH_PRICES['Default'] || {};
     const defaultPrices = BOOTH_PRICES['Default'] || {};
